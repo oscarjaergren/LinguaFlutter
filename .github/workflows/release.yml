@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+
+jobs:
+  create-release-builds:
+    name: Create Release Builds
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: web
+            build-command: flutter build web --release
+            artifact-path: build/web/
+            artifact-name: web-release
+          - os: windows-latest
+            platform: windows
+            build-command: flutter build windows --release
+            artifact-path: build/windows/x64/runner/Release/
+            artifact-name: windows-release
+          - os: macos-latest
+            platform: macos
+            build-command: flutter build macos --release
+            artifact-path: build/macos/Build/Products/Release/
+            artifact-name: macos-release
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Java (for Android builds)
+      if: matrix.platform == 'android'
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.5'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: flutter pub get
+      
+    - name: Generate code
+      run: dart run build_runner build --delete-conflicting-outputs
+      
+    - name: Build for ${{ matrix.platform }}
+      run: ${{ matrix.build-command }}
+      
+    - name: Create archive
+      shell: bash
+      run: |
+        if [ "${{ matrix.platform }}" == "windows" ]; then
+          cd build/windows/x64/runner/Release && 7z a -r ../../../../../LinguaFlutter-${{ matrix.platform }}.zip .
+        elif [ "${{ matrix.platform }}" == "web" ]; then
+          cd build/web && tar -czf ../../LinguaFlutter-${{ matrix.platform }}.tar.gz .
+        elif [ "${{ matrix.platform }}" == "macos" ]; then
+          cd build/macos/Build/Products/Release && tar -czf ../../../../../LinguaFlutter-${{ matrix.platform }}.tar.gz .
+        fi
+      
+    - name: Upload release asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: LinguaFlutter-${{ matrix.platform }}.${{ matrix.platform == 'windows' && 'zip' || 'tar.gz' }}
+        asset_name: LinguaFlutter-${{ matrix.platform }}.${{ matrix.platform == 'windows' && 'zip' || 'tar.gz' }}
+        asset_content_type: application/${{ matrix.platform == 'windows' && 'zip' || 'gzip' }}

@@ -44,9 +44,6 @@ dependencies:
   # State management
   provider: ^6.1.1
   
-  # Caching for images and network requests
-  cached_network_image: ^3.3.0
-  
   # JSON serialization
   json_annotation: ^4.9.0
 

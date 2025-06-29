@@ -62,21 +62,6 @@ class IconifyService {
     }
   }
 
-  /// Get SVG content for an icon
-  Future<String> getIconSvg(String iconId) async {
-    try {
-      final response = await _client.get(Uri.parse('$_baseUrl/$iconId.svg'));
-      
-      if (response.statusCode == 200) {
-        return response.body;
-      } else {
-        throw Exception('Failed to get SVG: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error getting SVG: $e');
-    }
-  }
-
   void dispose() {
     _client.close();
   }

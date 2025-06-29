@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/icon_model.dart';
 
 /// A widget that displays an icon from the Iconify API
@@ -43,38 +42,20 @@ class IconifyIcon extends StatelessWidget {
               : null,
         ),
         child: Center(
-          child: CachedNetworkImage(
-            imageUrl: icon.svgUrl,
+          child: SvgPicture.network(
+            icon.svgUrl,
             width: size,
             height: size,
-            placeholder: (context, url) => SizedBox(
+            colorFilter: ColorFilter.mode(
+              iconColor,
+              BlendMode.srcIn,
+            ),
+            placeholderBuilder: (context) => SizedBox(
               width: size,
               height: size,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: iconColor.withOpacity(0.5),
-              ),
-            ),
-            errorWidget: (context, url, error) => Icon(
-              Icons.broken_image,
-              size: size,
-              color: iconColor.withOpacity(0.5),
-            ),
-            imageBuilder: (context, imageProvider) => SvgPicture.network(
-              icon.svgUrl,
-              width: size,
-              height: size,
-              colorFilter: ColorFilter.mode(
-                iconColor,
-                BlendMode.srcIn,
-              ),
-              placeholderBuilder: (context) => SizedBox(
-                width: size,
-                height: size,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: iconColor.withOpacity(0.5),
-                ),
+                color: iconColor.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -145,7 +126,7 @@ class IconGridItem extends StatelessWidget {
                         fontSize: 10,
                         color: (isSelected 
                             ? theme.colorScheme.onPrimaryContainer 
-                            : theme.textTheme.bodySmall?.color)?.withOpacity(0.7),
+                            : theme.textTheme.bodySmall?.color)?.withValues(alpha: 0.7),
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
