@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/icon_provider.dart';
+import 'providers/card_provider.dart';
 import 'screens/icon_search_screen.dart';
+import 'screens/card_list_screen.dart';
+import 'screens/card_creation_screen.dart';
 
 void main() {
   runApp(const LinguaFlutterApp());
@@ -15,6 +18,7 @@ class LinguaFlutterApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => IconProvider()),
+        ChangeNotifierProvider(create: (_) => CardProvider()),
       ],
       child: MaterialApp(
         title: 'LinguaFlutter',
@@ -73,25 +77,38 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
+                      builder: (context) => const CardListScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.quiz),
+                label: const Text('My Cards'),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CardCreationScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_card),
+                label: const Text('Create Card'),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
                       builder: (context) => const IconSearchScreen(),
                     ),
                   );
                 },
                 icon: const Icon(Icons.search),
                 label: const Text('Search Icons'),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Navigate to card creation screen
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Card creation coming soon!'),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add_card),
-                label: const Text('Create Cards'),
               ),
             ],
           ),

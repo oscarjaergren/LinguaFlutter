@@ -8,15 +8,20 @@ A card-based language learning app with advanced icon search functionality, buil
 - 🎨 **SVG Support**: High-quality vector icons that scale perfectly
 - 📱 **Modern UI**: Clean, Material Design 3 interface
 - 🎯 **Icon Selection**: Select icons for use in language learning cards
+- 🃏 **Card Management**: Create, edit, and organize language learning cards
+- 📚 **Swipeable Review**: Anki/Duocards-style flashcard review with swipe gestures
+- 🧠 **Spaced Repetition**: Intelligent scheduling based on your performance
+- 📊 **Progress Tracking**: Track your learning progress and statistics
+- ❤️ **Favorites & Categories**: Organize cards with favorites and custom categories
 - ⚡ **Fast Performance**: Optimized with caching and state management
 
 ## Project Structure
 
 ```
 lib/
-├── models/          # Data models (IconModel, etc.)
-├── services/        # API services (IconifyService)
-├── providers/       # State management (IconProvider)
+├── models/          # Data models (IconModel, CardModel, etc.)
+├── services/        # API services (IconifyService, CardStorageService)
+├── providers/       # State management (IconProvider, CardProvider)
 ├── widgets/         # Reusable UI components
 ├── screens/         # Main app screens
 └── main.dart        # App entry point
@@ -55,19 +60,34 @@ lib/
 
 ## Usage
 
-1. **Home Screen**: Welcome screen with navigation to icon search
+1. **Home Screen**: Welcome screen with navigation to main features
 2. **Icon Search**: 
    - Search for icons using keywords
    - Browse popular icons
    - Select icons for use in cards
    - View icon details (name, set, category)
 
+3. **Card Management**:
+   - Create new language learning cards with text, icons, and metadata
+   - Edit existing cards
+   - Organize cards by categories and tags
+   - Mark cards as favorites
+   - Archive cards you no longer need
+
+4. **Review System**:
+   - Swipe-based flashcard review (like Anki/Duocards)
+   - Flip cards to reveal answers
+   - Rate your performance (correct/incorrect)
+   - Automatic spaced repetition scheduling
+   - Track learning progress and statistics
+
 ## Architecture
 
 - **State Management**: Provider pattern for reactive UI updates
+- **Data Persistence**: Local storage with SharedPreferences for cards
 - **API Integration**: HTTP client for Iconify API requests
-- **Caching**: Efficient caching with `cached_network_image`
 - **SVG Rendering**: High-quality vector graphics with `flutter_svg`
+- **Spaced Repetition**: Custom algorithm for optimal learning intervals
 
 ## API Integration
 
@@ -95,13 +115,17 @@ Available VS Code tasks:
 
 ## Roadmap
 
-- [ ] Card creation and management
-- [ ] Language learning features
-- [ ] Favorites system for icons
-- [ ] Offline icon caching
-- [ ] Advanced search filters
-- [ ] Custom icon collections
-- [ ] Export functionality
+- [x] Icon search and selection
+- [x] Card creation and management
+- [x] Swipeable flashcard review system
+- [x] Spaced repetition algorithm
+- [x] Local data persistence
+- [ ] Advanced statistics and analytics
+- [ ] Import/export functionality
+- [ ] Multiple language support
+- [ ] Custom card templates
+- [ ] Cloud synchronization
+- [ ] Offline mode improvements
 
 ## License
 
