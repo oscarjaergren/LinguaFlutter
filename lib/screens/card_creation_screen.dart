@@ -73,11 +73,16 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
     // Clear any previous selection
     context.read<IconProvider>().clearSelection();
     
-    // Navigate to icon search screen
+    // Get the front text to use as initial search query
+    final frontText = _frontTextController.text.trim();
+    
+    // Navigate to icon search screen with auto-search
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const IconSearchScreen(),
+        builder: (context) => IconSearchScreen(
+          initialSearchQuery: frontText.isNotEmpty ? frontText : null,
+        ),
       ),
     );
     

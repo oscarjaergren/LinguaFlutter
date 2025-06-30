@@ -7,7 +7,12 @@ import '../models/icon_model.dart';
 
 /// Screen for searching and selecting icons
 class IconSearchScreen extends StatefulWidget {
-  const IconSearchScreen({super.key});
+  final String? initialSearchQuery;
+  
+  const IconSearchScreen({
+    super.key,
+    this.initialSearchQuery,
+  });
   
   @override
   State<IconSearchScreen> createState() => _IconSearchScreenState();
@@ -21,9 +26,20 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
   @override
   void initState() {
     super.initState();
-    // Load popular icons when the screen opens
+    // Initialize search controller with initial query if provided
+    if (widget.initialSearchQuery != null && widget.initialSearchQuery!.trim().isNotEmpty) {
+      _searchController.text = widget.initialSearchQuery!.trim();
+    }
+    
+    // Load content when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<IconProvider>().loadPopularCollections();
+      if (widget.initialSearchQuery != null && widget.initialSearchQuery!.trim().isNotEmpty) {
+        // Auto-search with the initial query
+        context.read<IconProvider>().searchIcons(widget.initialSearchQuery!.trim());
+      } else {
+        // Load popular icons when no initial query
+        context.read<IconProvider>().loadPopularCollections();
+      }
     });
   }
   
@@ -38,7 +54,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
   void _onSearchChanged(String query) {
     // Cancel the previous timer
     _debounceTimer?.cancel();
-    
+     
     // Start a new timer
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
