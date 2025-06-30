@@ -136,6 +136,46 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
             },
           ),
           
+          // Results counter
+          Consumer<IconProvider>(
+            builder: (context, provider, child) {
+              if (provider.searchResults.isNotEmpty && !provider.isLoading) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${provider.searchResults.length} icons found',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      if (provider.searchQuery.isNotEmpty) ...[
+                        const Spacer(),
+                        Text(
+                          'for "${provider.searchQuery}"',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          
           // Search results
           Expanded(
             child: Consumer<IconProvider>(
@@ -215,10 +255,10 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                 return GridView.builder(
                   padding: const EdgeInsets.all(16.0),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
+                    crossAxisCount: 8,
                     childAspectRatio: 1.0,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 4,
                   ),
                   itemCount: provider.searchResults.length,
                   itemBuilder: (context, index) {

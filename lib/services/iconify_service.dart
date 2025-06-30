@@ -9,7 +9,7 @@ class IconifyService {
   IconifyService({http.Client? client}) : _client = client ?? http.Client();
 
   /// Search for icons using the Iconify API
-  Future<List<IconModel>> searchIcons(String query, {int limit = 50}) async {
+  Future<List<IconModel>> searchIcons(String query, {int limit = 999}) async {
     if (query.trim().isEmpty) return [];
 
     try {

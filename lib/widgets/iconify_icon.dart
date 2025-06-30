@@ -22,42 +22,27 @@ class IconifyIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconColor = color ?? theme.iconTheme.color ?? Colors.black;
+    final iconColor = color ?? theme.colorScheme.onSurface;
     
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: size + 16,
-        height: size + 16,
-        decoration: BoxDecoration(
-          color: isSelected 
-              ? theme.colorScheme.primaryContainer 
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: isSelected 
-              ? Border.all(
-                  color: theme.colorScheme.primary, 
-                  width: 2,
-                ) 
-              : null,
-        ),
-        child: Center(
-          child: SvgPicture.network(
-            icon.svgUrl,
-            width: size,
-            height: size,
-            colorFilter: ColorFilter.mode(
-              iconColor,
-              BlendMode.srcIn,
-            ),
-            placeholderBuilder: (context) => SizedBox(
-              width: size,
-              height: size,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: iconColor.withValues(alpha: 0.5),
-              ),
-            ),
+      child: SvgPicture.network(
+        icon.svgUrl,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        colorFilter: color != null 
+            ? ColorFilter.mode(
+                iconColor,
+                BlendMode.srcIn,
+              ) 
+            : null, // Let icons keep their original colors
+        placeholderBuilder: (context) => SizedBox(
+          width: size,
+          height: size,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: iconColor.withValues(alpha: 0.5),
           ),
         ),
       ),
@@ -82,60 +67,31 @@ class IconGridItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return Card(
-      elevation: isSelected ? 4 : 1,
-      color: isSelected 
-          ? theme.colorScheme.primaryContainer 
-          : null,
+    return Tooltip(
+      message: '${icon.name} (${icon.set})',
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 3,
-                child: IconifyIcon(
-                  icon: icon,
-                  size: 32,
-                  isSelected: isSelected,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                flex: 1,
-                child: Column(
-                  children: [
-                    Text(
-                      icon.name,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: isSelected 
-                            ? theme.colorScheme.onPrimaryContainer 
-                            : null,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      icon.set,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontSize: 10,
-                        color: (isSelected 
-                            ? theme.colorScheme.onPrimaryContainer 
-                            : theme.textTheme.bodySmall?.color)?.withValues(alpha: 0.7),
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isSelected 
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(4),
+            border: isSelected 
+                ? Border.all(
+                    color: theme.colorScheme.primary, 
+                    width: 2,
+                  ) 
+                : null,
+          ),
+          child: Center(
+            child: IconifyIcon(
+              icon: icon,
+              size: 48, // Even larger to fill most of the grid cell
+              // Don't pass color to preserve original icon colors
+              isSelected: false, // Don't double-highlight
+            ),
           ),
         ),
       ),
