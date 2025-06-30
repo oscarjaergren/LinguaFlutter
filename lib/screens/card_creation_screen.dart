@@ -29,7 +29,6 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
   
   String _frontLanguage = 'en';
   String _backLanguage = 'es';
-  int _difficulty = 1;
   IconModel? _selectedIcon;
   bool _isLoading = false;
   
@@ -57,7 +56,6 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
       _tagsController.text = card.tags.join(', ');
       _frontLanguage = card.frontLanguage;
       _backLanguage = card.backLanguage;
-      _difficulty = card.difficulty;
       _selectedIcon = card.icon;
     }
   }
@@ -127,7 +125,6 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
           backLanguage: _backLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          difficulty: _difficulty,
           updatedAt: DateTime.now(),
         );
         
@@ -142,7 +139,6 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
           backLanguage: _backLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          difficulty: _difficulty,
         );
         
         await cardProvider.addCard(newCard);
@@ -398,50 +394,7 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
               ),
               textInputAction: TextInputAction.next,
             ),
-            
-            const SizedBox(height: 16),
-            
-            // Difficulty
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Difficulty Level: $_difficulty',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    Slider(
-                      value: _difficulty.toDouble(),
-                      min: 1,
-                      max: 5,
-                      divisions: 4,
-                      label: _getDifficultyLabel(_difficulty),
-                      onChanged: (value) {
-                        setState(() {
-                          _difficulty = value.round();
-                        });
-                      },
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Easy',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          'Hard',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+
             
             const SizedBox(height: 32),
             
@@ -509,14 +462,4 @@ class _CardCreationScreenState extends State<CardCreationScreen> {
     );
   }
 
-  String _getDifficultyLabel(int difficulty) {
-    switch (difficulty) {
-      case 1: return 'Very Easy';
-      case 2: return 'Easy';
-      case 3: return 'Medium';
-      case 4: return 'Hard';
-      case 5: return 'Very Hard';
-      default: return 'Medium';
-    }
-  }
 }

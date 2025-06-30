@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../models/card_model.dart';
 import '../services/card_storage_service.dart';
+import 'streak_provider.dart';
 
 /// Provider for managing card state and operations
 class CardProvider extends ChangeNotifier {
   final CardStorageService _storageService = CardStorageService();
+  StreakProvider? _streakProvider;
   
   // Card collections
   List<CardModel> _allCards = [];
@@ -16,6 +18,10 @@ class CardProvider extends ChangeNotifier {
   int _currentReviewIndex = 0;
   bool _isReviewMode = false;
   bool _showingBack = false;
+  
+  // Session tracking
+  int _sessionCardsReviewed = 0;
+  DateTime? _sessionStartTime;
   
   // Filters and search
   String _searchQuery = '';
@@ -39,6 +45,8 @@ class CardProvider extends ChangeNotifier {
   int get currentReviewIndex => _currentReviewIndex;
   bool get isReviewMode => _isReviewMode;
   bool get showingBack => _showingBack;
+  int get sessionCardsReviewed => _sessionCardsReviewed;
+  DateTime? get sessionStartTime => _sessionStartTime;
   String get searchQuery => _searchQuery;
   String get selectedCategory => _selectedCategory;
   List<String> get selectedTags => _selectedTags;
@@ -174,15 +182,26 @@ class CardProvider extends ChangeNotifier {
     _currentReviewIndex = 0;
     _isReviewMode = true;
     _showingBack = false;
+    _sessionCardsReviewed = 0;
+    _sessionStartTime = DateTime.now();
     notifyListeners();
   }
 
   /// End the current review session
-  void endReviewSession() {
+  Future<void> endReviewSession() async {
+    // Update streak if cards were reviewed
+    if (_sessionCardsReviewed > 0 && _streakProvider != null) {
+      await _streakProvider!.updateStreakWithReview(
+        cardsReviewed: _sessionCardsReviewed,
+      );
+    }
+    
     _currentReviewSession = [];
     _currentReviewIndex = 0;
     _isReviewMode = false;
     _showingBack = false;
+    _sessionCardsReviewed = 0;
+    _sessionStartTime = null;
     notifyListeners();
   }
 
@@ -207,6 +226,9 @@ class CardProvider extends ChangeNotifier {
     
     await updateCard(updatedCard);
     
+    // Increment session cards reviewed
+    _sessionCardsReviewed++;
+    
     // Move to next card
     if (_currentReviewIndex < _currentReviewSession.length - 1) {
       _currentReviewIndex++;
@@ -214,7 +236,7 @@ class CardProvider extends ChangeNotifier {
       notifyListeners();
     } else {
       // End review session
-      endReviewSession();
+      await endReviewSession();
     }
   }
 
@@ -346,6 +368,11 @@ class CardProvider extends ChangeNotifier {
     }
     
     return DateTime.now().add(Duration(days: intervals[nextInterval]));
+  }
+
+  /// Set the streak provider for session tracking
+  void setStreakProvider(StreakProvider streakProvider) {
+    _streakProvider = streakProvider;
   }
 
   @override

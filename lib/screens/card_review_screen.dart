@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/card_model.dart';
 import '../providers/card_provider.dart';
+import '../providers/streak_provider.dart';
 import '../widgets/iconify_icon.dart';
+import '../widgets/milestone_celebration_dialog.dart';
 
 /// Screen for reviewing cards with swipe gestures (like Anki/Duocards)
 class CardReviewScreen extends StatefulWidget {
@@ -88,6 +90,15 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     
     // Answer the card
     await provider.answerCard(wasCorrect);
+    
+    // Check for milestone celebrations when session ends
+    if (!provider.isReviewMode && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          MilestoneCelebrationDialog.showIfNeeded(context);
+        }
+      });
+    }
     
     // Reset animations
     _flipController.reset();

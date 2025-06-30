@@ -54,29 +54,6 @@ void main() {
       expect(find.byType(DropdownButtonFormField<String>), findsNWidgets(2));
     });
 
-    testWidgets('should show difficulty slider', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-
-      expect(find.byType(Slider), findsOneWidget);
-      expect(find.text('Easy'), findsOneWidget);
-      expect(find.text('Hard'), findsOneWidget);
-    });
-
-    testWidgets('should update difficulty when slider changes', (tester) async {
-      await tester.pumpWidget(createTestWidget());
-
-      final slider = find.byType(Slider);
-      expect(slider, findsOneWidget);
-
-      // Move slider to position 3 (value 3.0)
-      await tester.drag(slider, const Offset(100, 0));
-      await tester.pump();
-
-      // Note: Due to the complexity of testing slider interactions,
-      // this test verifies the slider exists and can be interacted with.
-      // More detailed slider testing would require more complex setup.
-    });
-
     testWidgets('should show form validation errors', (tester) async {
       await tester.pumpWidget(createTestWidget());
 

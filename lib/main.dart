@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/icon_provider.dart';
 import 'providers/card_provider.dart';
+import 'providers/streak_provider.dart';
 import 'screens/icon_search_screen.dart';
 import 'screens/card_list_screen.dart';
 import 'screens/card_creation_screen.dart';
@@ -18,7 +19,14 @@ class LinguaFlutterApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => IconProvider()),
-        ChangeNotifierProvider(create: (_) => CardProvider()),
+        ChangeNotifierProvider(create: (_) => StreakProvider()),
+        ChangeNotifierProxyProvider<StreakProvider, CardProvider>(
+          create: (_) => CardProvider(),
+          update: (_, streakProvider, cardProvider) {
+            cardProvider?.setStreakProvider(streakProvider);
+            return cardProvider!;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'LinguaFlutter',

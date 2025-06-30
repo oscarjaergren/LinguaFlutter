@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/card_model.dart';
 import '../providers/card_provider.dart';
+import '../providers/streak_provider.dart';
 import '../widgets/iconify_icon.dart';
+import '../widgets/streak_status_widget.dart';
+import '../widgets/milestone_celebration_dialog.dart';
 import 'card_creation_screen.dart';
 import 'card_review_screen.dart';
 
@@ -23,9 +26,10 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     
-    // Initialize card provider
+    // Initialize providers
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CardProvider>().initialize();
+      context.read<StreakProvider>().loadStreak();
     });
   }
 
@@ -74,6 +78,12 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
       ),
       body: Column(
         children: [
+          // Streak status
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: StreakStatusWidget(compact: true),
+          ),
+          
           // Search bar
           Padding(
             padding: const EdgeInsets.all(16.0),
