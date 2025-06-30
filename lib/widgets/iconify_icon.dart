@@ -45,6 +45,16 @@ class IconifyIcon extends StatelessWidget {
             color: iconColor.withValues(alpha: 0.5),
           ),
         ),
+        // Add error handling for failed SVG loads
+        errorBuilder: (context, error, stackTrace) => SizedBox(
+          width: size,
+          height: size,
+          child: Icon(
+            Icons.broken_image_outlined,
+            size: size * 0.6,
+            color: iconColor.withValues(alpha: 0.5),
+          ),
+        ),
       ),
     );
   }
@@ -72,25 +82,31 @@ class IconGridItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(4),
-        child: Container(
-          decoration: BoxDecoration(
-            color: isSelected 
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(4),
-            border: isSelected 
-                ? Border.all(
-                    color: theme.colorScheme.primary, 
-                    width: 2,
-                  ) 
-                : null,
-          ),
-          child: Center(
-            child: IconifyIcon(
-              icon: icon,
-              size: 48, // Even larger to fill most of the grid cell
-              // Don't pass color to preserve original icon colors
-              isSelected: false, // Don't double-highlight
+        child: Semantics(
+          label: 'Icon: ${icon.name} from ${icon.set} collection',
+          button: true,
+          enabled: onTap != null,
+          selected: isSelected,
+          child: Container(
+            decoration: BoxDecoration(
+              color: isSelected 
+                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(4),
+              border: isSelected 
+                  ? Border.all(
+                      color: theme.colorScheme.primary, 
+                      width: 2,
+                    ) 
+                  : null,
+            ),
+            child: Center(
+              child: IconifyIcon(
+                icon: icon,
+                size: 48, // Even larger to fill most of the grid cell
+                // Don't pass color to preserve original icon colors
+                isSelected: false, // Don't double-highlight
+              ),
             ),
           ),
         ),

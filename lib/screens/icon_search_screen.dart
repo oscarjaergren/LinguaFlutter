@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import '../providers/icon_provider.dart';
 import '../widgets/iconify_icon.dart';
 import '../models/icon_model.dart';
@@ -15,6 +16,7 @@ class IconSearchScreen extends StatefulWidget {
 class _IconSearchScreenState extends State<IconSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+  Timer? _debounceTimer;
   
   @override
   void initState() {
@@ -27,15 +29,19 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
   
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
   
   void _onSearchChanged(String query) {
-    // Debounce the search to avoid too many API calls
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_searchController.text == query) {
+    // Cancel the previous timer
+    _debounceTimer?.cancel();
+    
+    // Start a new timer
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
         context.read<IconProvider>().searchIcons(query);
       }
     });
@@ -56,6 +62,21 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
         ),
       ),
     );
+  }
+
+  /// Calculate the number of columns based on screen width
+  int _calculateCrossAxisCount(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final itemWidth = 60.0; // Approximate width for each icon item
+    final padding = 32.0; // Total horizontal padding
+    final spacing = 4.0; // Spacing between items
+    
+    // Calculate how many items can fit
+    final availableWidth = screenWidth - padding;
+    final crossAxisCount = ((availableWidth + spacing) / (itemWidth + spacing)).floor();
+    
+    // Ensure we have at least 3 columns and at most 12
+    return crossAxisCount.clamp(3, 12);
   }
   
   @override
@@ -254,21 +275,26 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                 
                 return GridView.builder(
                   padding: const EdgeInsets.all(16.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 8,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: _calculateCrossAxisCount(context),
                     childAspectRatio: 1.0,
                     crossAxisSpacing: 4,
                     mainAxisSpacing: 4,
                   ),
                   itemCount: provider.searchResults.length,
+                  // Add cache extent for better performance
+                  cacheExtent: 200,
                   itemBuilder: (context, index) {
                     final icon = provider.searchResults[index];
                     final isSelected = provider.selectedIcon?.id == icon.id;
                     
-                    return IconGridItem(
-                      icon: icon,
-                      isSelected: isSelected,
-                      onTap: () => _onIconSelected(icon),
+                    return Tooltip(
+                      message: '${icon.name}\n${icon.set}',
+                      child: IconGridItem(
+                        icon: icon,
+                        isSelected: isSelected,
+                        onTap: () => _onIconSelected(icon),
+                      ),
                     );
                   },
                 );

@@ -100,4 +100,10 @@ class IconProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  @override
+  void dispose() {
+    _iconifyService.dispose();
+    super.dispose();
+  }
 }

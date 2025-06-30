@@ -1,19 +1,20 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/icon_model.dart';
+import '../utils/constants.dart';
 
 class IconifyService {
-  static const String _baseUrl = 'https://api.iconify.design';
   final http.Client _client;
 
   IconifyService({http.Client? client}) : _client = client ?? http.Client();
 
   /// Search for icons using the Iconify API
-  Future<List<IconModel>> searchIcons(String query, {int limit = 999}) async {
+  Future<List<IconModel>> searchIcons(String query, {int? limit}) async {
     if (query.trim().isEmpty) return [];
 
     try {
-      final uri = Uri.parse('$_baseUrl/search?query=${Uri.encodeComponent(query)}&limit=$limit');
+      final searchLimit = limit ?? AppConstants.defaultSearchLimit;
+      final uri = Uri.parse('${AppConstants.iconifyBaseUrl}/search?query=${Uri.encodeComponent(query)}&limit=$searchLimit');
       final response = await _client.get(uri);
 
       if (response.statusCode == 200) {
@@ -28,14 +29,14 @@ class IconifyService {
             .map((iconId) {
               // Extract collection info if available
               final parts = iconId.split(':');
-              final collectionKey = parts.length > 1 ? parts[0] : null;
-              final collectionInfo = collections?[collectionKey] as Map<String, dynamic>?;
-              
+              final collectionId = parts.length > 1 ? parts[0] : null;
+              final collectionName = collectionId != null
+                  ? collections?[collectionId]?['name'] as String?
+                  : null;
+
               return IconModel.fromIconify(
                 iconId: iconId,
-                collectionName: collectionInfo?['name'] ?? collectionKey,
-                tags: (collectionInfo?['tags'] as List<dynamic>?)
-                    ?.cast<String>() ?? [],
+                collectionName: collectionName,
               );
             })
             .toList();
@@ -47,11 +48,12 @@ class IconifyService {
     }
   }
 
-  /// Get icon collections
+  /// Get available icon collections
   Future<Map<String, dynamic>> getCollections() async {
     try {
-      final response = await _client.get(Uri.parse('$_baseUrl/collections'));
-      
+      final uri = Uri.parse('${AppConstants.iconifyBaseUrl}/collections');
+      final response = await _client.get(uri);
+
       if (response.statusCode == 200) {
         return json.decode(response.body) as Map<String, dynamic>;
       } else {
