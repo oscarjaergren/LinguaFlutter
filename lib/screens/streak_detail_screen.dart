@@ -171,7 +171,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                       decoration: BoxDecoration(
                         color: cardsReviewed > 0 
                             ? colorScheme.primary
-                            : colorScheme.surfaceVariant,
+                            : colorScheme.surfaceContainerHighest,
                         shape: BoxShape.circle,
                         border: isToday 
                             ? Border.all(color: colorScheme.secondary, width: 2)

@@ -40,16 +40,14 @@ void main() {
       final card1 = CardModel.create(
         frontText: 'Hello',
         backText: 'Hola',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Greetings',
       );
 
       final card2 = CardModel.create(
         frontText: 'Goodbye',
         backText: 'Adiós',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Greetings',
       );
 
@@ -76,8 +74,7 @@ void main() {
       final card = CardModel.create(
         frontText: 'Hello',
         backText: 'Hola',
-        frontLanguage: 'en',
-        backLanguage: 'es',  
+        language: 'es',
         category: 'Greetings',
       );
 
@@ -154,22 +151,19 @@ void main() {
         CardModel.create(
           frontText: 'Card 1',
           backText: 'Tarjeta 1',
-          frontLanguage: 'en',
-          backLanguage: 'es',
+          language: 'es',
           category: 'Test',
         ),
         CardModel.create(
           frontText: 'Card 2',
           backText: 'Tarjeta 2',
-          frontLanguage: 'en',
-          backLanguage: 'es',
+          language: 'es',
           category: 'Test',
         ),
         CardModel.create(
           frontText: 'Card 3',
           backText: 'Tarjeta 3',
-          frontLanguage: 'en',
-          backLanguage: 'es',
+          language: 'es',
           category: 'Test',
         ),
       ];

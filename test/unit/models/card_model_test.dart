@@ -18,8 +18,7 @@ void main() {
         frontText: 'Hello',
         backText: 'Hola',
         icon: testIcon,
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Greetings',
         tags: ['basic', 'common'],
         difficulty: 2,
@@ -28,8 +27,7 @@ void main() {
       expect(card.frontText, 'Hello');
       expect(card.backText, 'Hola');
       expect(card.icon, testIcon);
-      expect(card.frontLanguage, 'en');
-      expect(card.backLanguage, 'es');
+      expect(card.language, 'es');
       expect(card.category, 'Greetings');
       expect(card.tags, ['basic', 'common']);
       expect(card.difficulty, 2);
@@ -46,8 +44,7 @@ void main() {
       final card = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Test',
       );
 
@@ -73,8 +70,7 @@ void main() {
       final baseCard = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Test',
       );
 
@@ -105,8 +101,7 @@ void main() {
       final card = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Test',
       );
 
@@ -130,8 +125,7 @@ void main() {
       final card = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Test',
       );
 
@@ -161,8 +155,7 @@ void main() {
       final card = CardModel.create(
         frontText: 'Hello',
         backText: 'Hola',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Greetings',
         tags: ['basic', 'common'],
         difficulty: 3,
@@ -174,8 +167,7 @@ void main() {
       expect(reconstructedCard.id, card.id);
       expect(reconstructedCard.frontText, card.frontText);
       expect(reconstructedCard.backText, card.backText);
-      expect(reconstructedCard.frontLanguage, card.frontLanguage);
-      expect(reconstructedCard.backLanguage, card.backLanguage);
+      expect(reconstructedCard.language, card.language);
       expect(reconstructedCard.category, card.category);
       expect(reconstructedCard.tags, card.tags);
       expect(reconstructedCard.difficulty, card.difficulty);
@@ -187,8 +179,7 @@ void main() {
       final card1 = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Test',
       );
 
@@ -204,8 +195,7 @@ void main() {
       final originalCard = CardModel.create(
         frontText: 'Original',
         backText: 'Original Back',
-        frontLanguage: 'en',
-        backLanguage: 'es',
+        language: 'es',
         category: 'Original Category',
         difficulty: 1,
       );
@@ -224,8 +214,29 @@ void main() {
       expect(updatedCard.category, 'Updated Category');
       expect(updatedCard.difficulty, 3);
       expect(updatedCard.isFavorite, true);
-      expect(updatedCard.frontLanguage, originalCard.frontLanguage); // Unchanged
-      expect(updatedCard.backLanguage, originalCard.backLanguage); // Unchanged
+      expect(updatedCard.language, originalCard.language); // Unchanged
+    });
+
+    test('should handle German article correctly', () {
+      final germanCard = CardModel.create(
+        frontText: 'Haus',
+        backText: 'House',
+        language: 'de',
+        category: 'Vocabulary',
+        germanArticle: 'das',
+      );
+
+      expect(germanCard.germanArticle, 'das');
+      expect(germanCard.language, 'de');
+
+      final nonGermanCard = CardModel.create(
+        frontText: 'Casa',
+        backText: 'House',
+        language: 'es',
+        category: 'Vocabulary',
+      );
+
+      expect(nonGermanCard.germanArticle, null);
     });
   });
 }

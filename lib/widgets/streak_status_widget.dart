@@ -241,7 +241,7 @@ class StreakStatusWidget extends StatelessWidget {
                     label: Text('$milestone days'),
                     backgroundColor: isNew 
                         ? colorScheme.secondary 
-                        : colorScheme.surfaceVariant,
+                        : colorScheme.surfaceContainerHighest,
                     labelStyle: TextStyle(
                       color: isNew 
                           ? colorScheme.onSecondary 
@@ -273,7 +273,7 @@ class StreakStatusWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.3)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

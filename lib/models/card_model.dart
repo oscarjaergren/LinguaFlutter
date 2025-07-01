@@ -18,11 +18,8 @@ class CardModel {
   /// Optional icon associated with the card
   final IconModel? icon;
   
-  /// Language of the front text (e.g., 'en', 'es', 'fr')
-  final String frontLanguage;
-  
-  /// Language of the back text
-  final String backLanguage;
+  /// Language code for this card (e.g., 'de', 'es', 'fr')
+  final String language;
   
   /// Category or deck this card belongs to
   final String category;
@@ -32,6 +29,9 @@ class CardModel {
   
   /// Difficulty level (1-5, where 1 is easiest)
   final int difficulty;
+  
+  /// German article for nouns (der, die, das) - only used for German language cards
+  final String? germanArticle;
   
   /// Number of times this card has been reviewed
   final int reviewCount;
@@ -62,11 +62,11 @@ class CardModel {
     required this.frontText,
     required this.backText,
     this.icon,
-    required this.frontLanguage,
-    required this.backLanguage,
+    required this.language,
     required this.category,
     this.tags = const [],
     this.difficulty = 1,
+    this.germanArticle,
     this.reviewCount = 0,
     this.correctCount = 0,
     this.lastReviewed,
@@ -82,11 +82,11 @@ class CardModel {
     required String frontText,
     required String backText,
     IconModel? icon,
-    required String frontLanguage,
-    required String backLanguage,
+    required String language,
     required String category,
     List<String> tags = const [],
     int difficulty = 1,
+    String? germanArticle,
   }) {
     final now = DateTime.now();
     final id = 'card_${now.millisecondsSinceEpoch}';
@@ -96,11 +96,11 @@ class CardModel {
       frontText: frontText,
       backText: backText,
       icon: icon,
-      frontLanguage: frontLanguage,
-      backLanguage: backLanguage,
+      language: language,
       category: category,
       tags: tags,
       difficulty: difficulty,
+      germanArticle: germanArticle,
       createdAt: now,
       updatedAt: now,
     );
@@ -149,11 +149,11 @@ class CardModel {
     String? frontText,
     String? backText,
     IconModel? icon,
-    String? frontLanguage,
-    String? backLanguage,
+    String? language,
     String? category,
     List<String>? tags,
     int? difficulty,
+    String? germanArticle,
     int? reviewCount,
     int? correctCount,
     DateTime? lastReviewed,
@@ -168,11 +168,11 @@ class CardModel {
       frontText: frontText ?? this.frontText,
       backText: backText ?? this.backText,
       icon: icon ?? this.icon,
-      frontLanguage: frontLanguage ?? this.frontLanguage,
-      backLanguage: backLanguage ?? this.backLanguage,
+      language: language ?? this.language,
       category: category ?? this.category,
       tags: tags ?? this.tags,
       difficulty: difficulty ?? this.difficulty,
+      germanArticle: germanArticle ?? this.germanArticle,
       reviewCount: reviewCount ?? this.reviewCount,
       correctCount: correctCount ?? this.correctCount,
       lastReviewed: lastReviewed ?? this.lastReviewed,

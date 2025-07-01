@@ -5,8 +5,7 @@ import '../providers/card_provider.dart';
 import '../providers/streak_provider.dart';
 import '../widgets/iconify_icon.dart';
 import '../widgets/streak_status_widget.dart';
-import '../widgets/milestone_celebration_dialog.dart';
-import 'card_creation_screen.dart';
+import 'simple_card_creation_screen.dart';
 import 'card_review_screen.dart';
 
 /// Screen for displaying and managing the list of cards
@@ -215,7 +214,7 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const CardCreationScreen(),
+              builder: (context) => const SimpleCardCreationScreen(),
             ),
           );
         },
@@ -315,7 +314,7 @@ class _CardListView extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const CardCreationScreen(),
+                          builder: (context) => const SimpleCardCreationScreen(),
                         ),
                       );
                     },
@@ -396,7 +395,9 @@ class _CardListItem extends StatelessWidget {
                 ),
               ),
         title: Text(
-          card.frontText,
+          card.germanArticle != null 
+              ? '${card.germanArticle} ${card.frontText}'
+              : card.frontText,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -450,7 +451,7 @@ class _CardListItem extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => CardCreationScreen(cardToEdit: card),
+                    builder: (context) => SimpleCardCreationScreen(cardToEdit: card),
                   ),
                 );
                 break;
@@ -465,7 +466,7 @@ class _CardListItem extends StatelessWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Delete Card'),
-                    content: Text('Are you sure you want to delete "${card.frontText}"?'),
+                    content: Text('Are you sure you want to delete "${card.germanArticle != null ? '${card.germanArticle} ${card.frontText}' : card.frontText}"?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),

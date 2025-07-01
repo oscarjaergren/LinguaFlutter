@@ -13,13 +13,13 @@ CardModel _$CardModelFromJson(Map<String, dynamic> json) => CardModel(
   icon: json['icon'] == null
       ? null
       : IconModel.fromJson(json['icon'] as Map<String, dynamic>),
-  frontLanguage: json['frontLanguage'] as String,
-  backLanguage: json['backLanguage'] as String,
+  language: json['language'] as String,
   category: json['category'] as String,
   tags:
       (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
       const [],
   difficulty: (json['difficulty'] as num?)?.toInt() ?? 1,
+  germanArticle: json['germanArticle'] as String?,
   reviewCount: (json['reviewCount'] as num?)?.toInt() ?? 0,
   correctCount: (json['correctCount'] as num?)?.toInt() ?? 0,
   lastReviewed: json['lastReviewed'] == null
@@ -39,11 +39,11 @@ Map<String, dynamic> _$CardModelToJson(CardModel instance) => <String, dynamic>{
   'frontText': instance.frontText,
   'backText': instance.backText,
   'icon': instance.icon,
-  'frontLanguage': instance.frontLanguage,
-  'backLanguage': instance.backLanguage,
+  'language': instance.language,
   'category': instance.category,
   'tags': instance.tags,
   'difficulty': instance.difficulty,
+  'germanArticle': instance.germanArticle,
   'reviewCount': instance.reviewCount,
   'correctCount': instance.correctCount,
   'lastReviewed': instance.lastReviewed?.toIso8601String(),

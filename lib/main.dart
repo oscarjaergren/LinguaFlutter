@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import 'providers/icon_provider.dart';
 import 'providers/card_provider.dart';
 import 'providers/streak_provider.dart';
+import 'providers/language_provider.dart';
 import 'screens/icon_search_screen.dart';
 import 'screens/card_list_screen.dart';
-import 'screens/card_creation_screen.dart';
+import 'screens/simple_card_creation_screen.dart';
 
 void main() {
   runApp(const LinguaFlutterApp());
@@ -20,6 +21,7 @@ class LinguaFlutterApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => IconProvider()),
         ChangeNotifierProvider(create: (_) => StreakProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProxyProvider<StreakProvider, CardProvider>(
           create: (_) => CardProvider(),
           update: (_, streakProvider, cardProvider) {
@@ -98,7 +100,7 @@ class HomePage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const CardCreationScreen(),
+                      builder: (context) => const SimpleCardCreationScreen(),
                     ),
                   );
                 },

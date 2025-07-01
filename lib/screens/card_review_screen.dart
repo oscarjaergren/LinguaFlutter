@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/card_model.dart';
 import '../providers/card_provider.dart';
-import '../providers/streak_provider.dart';
 import '../widgets/iconify_icon.dart';
 import '../widgets/milestone_celebration_dialog.dart';
 
@@ -287,7 +286,9 @@ class _CardReviewScreenState extends State<CardReviewScreen>
           const SizedBox(height: 24),
         ],
         Text(
-          card.frontText,
+          card.germanArticle != null 
+              ? '${card.germanArticle} ${card.frontText}'
+              : card.frontText,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -295,7 +296,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
         ),
         const SizedBox(height: 16),
         Text(
-          '${card.frontLanguage.toUpperCase()} → ${card.backLanguage.toUpperCase()}',
+          '${card.language.toUpperCase()} STUDY',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             letterSpacing: 1.2,
@@ -335,7 +336,9 @@ class _CardReviewScreenState extends State<CardReviewScreen>
           const SizedBox(height: 16),
         ],
         Text(
-          card.frontText,
+          card.germanArticle != null 
+              ? '${card.germanArticle} ${card.frontText}'
+              : card.frontText,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
