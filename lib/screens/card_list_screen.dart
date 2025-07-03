@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/card_model.dart';
@@ -7,6 +8,7 @@ import '../widgets/iconify_icon.dart';
 import '../widgets/streak_status_widget.dart';
 import 'simple_card_creation_screen.dart';
 import 'card_review_screen.dart';
+import 'debug_menu_screen.dart';
 
 /// Screen for displaying and managing the list of cards
 class CardListScreen extends StatefulWidget {
@@ -73,6 +75,20 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
               return const SizedBox.shrink();
             },
           ),
+          // Debug menu (only in debug mode)
+          if (kDebugMode)
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DebugMenuScreen(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.bug_report),
+              tooltip: 'Debug Menu',
+            ),
         ],
       ),
       body: Column(

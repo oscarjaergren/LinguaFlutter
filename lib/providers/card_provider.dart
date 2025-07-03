@@ -286,6 +286,21 @@ class CardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Clear all cards
+  Future<void> clearAllCards() async {
+    try {
+      await _storageService.clearAllCards();
+      _allCards.clear();
+      _applyFilters();
+      _updateStats();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to clear all cards: $e';
+      debugPrint('Clear all cards error: $e');
+      notifyListeners();
+    }
+  }
+
   /// Apply current filters to cards
   void _applyFilters() {
     _filteredCards = _allCards.where((card) {

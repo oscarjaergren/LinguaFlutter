@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/card_model.dart';
 import '../providers/card_provider.dart';
@@ -154,12 +155,47 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     }
   }
 
+  /// Handle keyboard events for navigation
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      final provider = context.read<CardProvider>();
+      
+      // Only handle keys when in review mode and card is available
+      if (!provider.isReviewMode || provider.currentCard == null) {
+        return KeyEventResult.ignored;
+      }
+      
+      switch (event.logicalKey) {
+        case LogicalKeyboardKey.arrowLeft:
+          // Left arrow = incorrect/swipe left
+          _answerCard(false);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.arrowRight:
+          // Right arrow = correct/swipe right
+          _answerCard(true);
+          return KeyEventResult.handled;
+        case LogicalKeyboardKey.space:
+        case LogicalKeyboardKey.arrowUp:
+        case LogicalKeyboardKey.arrowDown:
+          // Space or up/down arrow = flip card
+          _flipCard();
+          return KeyEventResult.handled;
+        default:
+          return KeyEventResult.ignored;
+      }
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Review Cards'),
-        actions: [
+    return Focus(
+      autofocus: true,
+      onKeyEvent: _handleKeyEvent,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Review Cards'),
+          actions: [
           Consumer<CardProvider>(
             builder: (context, provider, child) {
               if (provider.isReviewMode && provider.currentReviewSession.isNotEmpty) {
@@ -231,7 +267,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
           );
         },
       ),
-    );
+    ), // Focus widget child: Scaffold
+    ); // Focus widget
   }
 
   Widget _buildCard(BuildContext context, CardProvider provider) {
