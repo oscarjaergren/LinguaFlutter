@@ -27,7 +27,11 @@ class CardStorageService {
           .map((cardJson) => CardModel.fromJson(cardJson as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      throw Exception('Failed to load cards from storage: $e');
+      // If there's an error loading cards (likely due to format changes),
+      // clear the storage and return empty list
+      print('Error loading cards, clearing storage: $e');
+      await clearAllCards();
+      return [];
     }
   }
 

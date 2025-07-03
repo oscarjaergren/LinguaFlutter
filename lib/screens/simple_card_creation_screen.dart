@@ -72,7 +72,7 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
     final frontText = _frontTextController.text.trim();
     
     // Navigate to icon search screen with auto-search
-    await Navigator.push(
+    final selectedIcon = await Navigator.push<IconModel>(
       context,
       MaterialPageRoute(
         builder: (context) => IconSearchScreen(
@@ -81,8 +81,7 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
       ),
     );
     
-    // Get the selected icon after returning
-    final selectedIcon = context.read<IconProvider>().selectedIcon;
+    // Set the returned icon if one was selected
     if (selectedIcon != null) {
       setState(() {
         _selectedIcon = selectedIcon;

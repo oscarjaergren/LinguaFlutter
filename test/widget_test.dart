@@ -14,8 +14,7 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const LinguaFlutterApp());
 
-    // Verify that our app starts with the welcome screen
-    expect(find.text('Welcome to LinguaFlutter'), findsOneWidget);
-    expect(find.text('Search Icons'), findsOneWidget);
+    // Verify that our app starts with the CardListScreen (My Cards)
+    expect(find.text('My Cards'), findsOneWidget);
   });
 }

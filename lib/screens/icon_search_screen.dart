@@ -67,17 +67,8 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
     final provider = context.read<IconProvider>();
     provider.selectIcon(icon);
     
-    // Show a snackbar to confirm selection
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Selected "${icon.name}" icon'),
-        duration: const Duration(seconds: 2),
-        action: SnackBarAction(
-          label: 'Clear',
-          onPressed: () => provider.clearSelection(),
-        ),
-      ),
-    );
+    // Automatically close the screen and return the selected icon
+    Navigator.of(context).pop(icon);
   }
 
   /// Calculate the number of columns based on screen width
