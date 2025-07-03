@@ -64,10 +64,15 @@ class CardProvider extends ChangeNotifier {
     return _currentReviewSession[_currentReviewIndex];
   }
   
+  // Check if review session is complete (all cards answered)
+  bool get isReviewSessionComplete {
+    return _isReviewMode && _currentReviewSession.isNotEmpty && _currentReviewIndex >= _currentReviewSession.length;
+  }
+  
   // Progress in current review session
   double get reviewProgress {
     if (_currentReviewSession.isEmpty) return 0.0;
-    return (_currentReviewIndex + 1) / _currentReviewSession.length;
+    return _currentReviewIndex / _currentReviewSession.length;
   }
   
   // Available categories
@@ -235,8 +240,10 @@ class CardProvider extends ChangeNotifier {
       _showingBack = false;
       notifyListeners();
     } else {
-      // End review session
-      await endReviewSession();
+      // On last card, increment index to indicate completion but stay in review mode
+      _currentReviewIndex++;
+      _showingBack = false;
+      notifyListeners();
     }
   }
 

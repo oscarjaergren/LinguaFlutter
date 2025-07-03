@@ -5,6 +5,7 @@ import '../models/card_model.dart';
 import '../providers/card_provider.dart';
 import '../widgets/iconify_icon.dart';
 import '../widgets/milestone_celebration_dialog.dart';
+import 'simple_card_creation_screen.dart';
 
 /// Screen for reviewing cards with swipe gestures (like Anki/Duocards)
 class CardReviewScreen extends StatefulWidget {
@@ -160,8 +161,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     if (event is KeyDownEvent) {
       final provider = context.read<CardProvider>();
       
-      // Only handle keys when in review mode and card is available
-      if (!provider.isReviewMode || provider.currentCard == null) {
+      // Only handle keys when in review mode and session is not complete
+      if (!provider.isReviewMode || provider.isReviewSessionComplete) {
         return KeyEventResult.ignored;
       }
       
@@ -187,6 +188,33 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     return KeyEventResult.ignored;
   }
 
+  Future<void> _editCurrentCard(BuildContext context, CardProvider provider) async {
+    final currentCard = provider.currentCard;
+    if (currentCard == null) return;
+
+    // Navigate to the card creation screen with the current card for editing
+    final result = await Navigator.push(
+      context, 
+      MaterialPageRoute(
+        builder: (context) => SimpleCardCreationScreen(cardToEdit: currentCard),
+      ),
+    );
+
+    // If the card was edited (result is not null), we don't need to do anything special
+    // The provider will automatically update the card in the review session
+    if (result != null) {
+      // Optional: Show a snack bar to confirm the edit
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Card updated successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Focus(
@@ -196,27 +224,44 @@ class _CardReviewScreenState extends State<CardReviewScreen>
         appBar: AppBar(
           title: const Text('Review Cards'),
           actions: [
-          Consumer<CardProvider>(
-            builder: (context, provider, child) {
-              if (provider.isReviewMode && provider.currentReviewSession.isNotEmpty) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Center(
-                    child: Text(
-                      '${provider.currentReviewIndex + 1} / ${provider.currentReviewSession.length}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+            Consumer<CardProvider>(
+              builder: (context, provider, child) {
+                if (provider.isReviewMode && 
+                    provider.currentCard != null && 
+                    !provider.isReviewSessionComplete) {
+                  return IconButton(
+                    onPressed: () => _editCurrentCard(context, provider),
+                    icon: const Icon(Icons.edit),
+                    tooltip: 'Edit Current Card',
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            Consumer<CardProvider>(
+              builder: (context, provider, child) {
+                if (provider.isReviewMode && provider.currentReviewSession.isNotEmpty) {
+                  final currentIndex = provider.isReviewSessionComplete 
+                      ? provider.currentReviewSession.length 
+                      : provider.currentReviewIndex + 1;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Center(
+                      child: Text(
+                        '$currentIndex / ${provider.currentReviewSession.length}',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
       ),
       body: Consumer<CardProvider>(
         builder: (context, provider, child) {
-          if (!provider.isReviewMode || provider.currentCard == null) {
+          if (!provider.isReviewMode || provider.isReviewSessionComplete) {
             return _buildSessionComplete(context, provider);
           }
           
@@ -532,7 +577,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
                 const SizedBox(width: 16),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
+                      await provider.endReviewSession();
                       provider.startReviewSession();
                     },
                     icon: const Icon(Icons.refresh),
