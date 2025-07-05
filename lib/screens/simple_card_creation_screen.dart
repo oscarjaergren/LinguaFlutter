@@ -48,9 +48,9 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
       _selectedIcon = card.icon;
       _germanArticle = card.germanArticle;
       
-      // Set the language in the provider
+      // Set the language in the provider to match the card being edited
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<LanguageProvider>().selectLanguage(card.language);
+        context.read<LanguageProvider>().setActiveLanguage(card.language);
       });
     }
   }
@@ -107,7 +107,7 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
     try {
       final cardProvider = context.read<CardProvider>();
       final languageProvider = context.read<LanguageProvider>();
-      final selectedLanguage = languageProvider.selectedLanguage;
+      final activeLanguage = languageProvider.activeLanguage;
       
       // Parse tags
       final tags = _tagsController.text
@@ -122,10 +122,10 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
           frontText: _frontTextController.text.trim(),
           backText: _backTextController.text.trim(),
           icon: _selectedIcon,
-          language: selectedLanguage,
+          language: activeLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          germanArticle: selectedLanguage == 'de' ? _germanArticle : null,
+          germanArticle: activeLanguage == 'de' ? _germanArticle : null,
           updatedAt: DateTime.now(),
         );
         
@@ -136,10 +136,10 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
           frontText: _frontTextController.text.trim(),
           backText: _backTextController.text.trim(),
           icon: _selectedIcon,
-          language: selectedLanguage,
+          language: activeLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          germanArticle: selectedLanguage == 'de' ? _germanArticle : null,
+          germanArticle: activeLanguage == 'de' ? _germanArticle : null,
         );
         
         await cardProvider.addCard(newCard);
@@ -208,11 +208,11 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16.0),
           children: [
-            // Language selection
+            // Language display (read-only, determined by active language)
             Consumer<LanguageProvider>(
               builder: (context, languageProvider, child) {
-                final selectedLanguage = languageProvider.selectedLanguage;
-                final languageDetails = languageProvider.getLanguageDetails(selectedLanguage)!;
+                final activeLanguage = languageProvider.activeLanguage;
+                final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
                 
                 return Card(
                   child: Padding(
@@ -229,10 +229,10 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: languageProvider.getLanguageColor(selectedLanguage).withValues(alpha: 0.1),
+                            color: languageProvider.getLanguageColor(activeLanguage).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: languageProvider.getLanguageColor(selectedLanguage),
+                              color: languageProvider.getLanguageColor(activeLanguage),
                               width: 1,
                             ),
                           ),
@@ -249,48 +249,20 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
                                   Text(
                                     languageDetails['name'],
                                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      color: languageProvider.getLanguageColor(selectedLanguage),
+                                      color: languageProvider.getLanguageColor(activeLanguage),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   Text(
-                                    languageDetails['nativeName'],
+                                    'Set from home screen',
                                     style: Theme.of(context).textTheme.bodySmall,
                                   ),
                                 ],
                               ),
                               const Spacer(),
-                              PopupMenuButton<String>(
-                                onSelected: (String languageCode) {
-                                  languageProvider.selectLanguage(languageCode);
-                                  // Clear German article if switching away from German
-                                  if (languageCode != 'de') {
-                                    setState(() {
-                                      _germanArticle = null;
-                                    });
-                                  }
-                                },
-                                itemBuilder: (BuildContext context) {
-                                  return languageProvider.availableLanguages.entries
-                                      .map((entry) {
-                                    final code = entry.key;
-                                    final details = entry.value;
-                                    return PopupMenuItem<String>(
-                                      value: code,
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            details['flag'],
-                                            style: const TextStyle(fontSize: 20),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(details['name']),
-                                        ],
-                                      ),
-                                    );
-                                  }).toList();
-                                },
-                                child: const Icon(Icons.arrow_drop_down),
+                              Icon(
+                                Icons.info_outline,
+                                color: languageProvider.getLanguageColor(activeLanguage).withValues(alpha: 0.6),
                               ),
                             ],
                           ),
@@ -370,8 +342,8 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
             // Front text
             Consumer<LanguageProvider>(
               builder: (context, languageProvider, child) {
-                final selectedLanguage = languageProvider.selectedLanguage;
-                final languageDetails = languageProvider.getLanguageDetails(selectedLanguage)!;
+                final activeLanguage = languageProvider.activeLanguage;
+                final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
                 
                 return TextFormField(
                   controller: _frontTextController,
@@ -398,7 +370,7 @@ class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
             // German article selection (only show for German)
             Consumer<LanguageProvider>(
               builder: (context, languageProvider, child) {
-                if (languageProvider.selectedLanguage == 'de') {
+                if (languageProvider.activeLanguage == 'de') {
                   final articles = languageProvider.getLanguageArticles('de');
                   return Column(
                     children: [

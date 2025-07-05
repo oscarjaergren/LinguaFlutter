@@ -64,11 +64,11 @@ class LanguageProvider extends ChangeNotifier {
     },
   };
   
-  // Currently selected language for creating cards
-  String _selectedLanguage = 'de';
+  // Currently active language for both filtering cards and creating new cards
+  String _activeLanguage = 'de';
   
   // Getters
-  String get selectedLanguage => _selectedLanguage;
+  String get activeLanguage => _activeLanguage;
   Map<String, Map<String, dynamic>> get availableLanguages => _availableLanguages;
   
   /// Get language details by code
@@ -76,10 +76,10 @@ class LanguageProvider extends ChangeNotifier {
     return _availableLanguages[languageCode];
   }
   
-  /// Select a language for creating cards
-  void selectLanguage(String languageCode) {
+  /// Set the active language for filtering/viewing cards and creating new cards
+  void setActiveLanguage(String languageCode) {
     if (_availableLanguages.containsKey(languageCode)) {
-      _selectedLanguage = languageCode;
+      _activeLanguage = languageCode;
       notifyListeners();
     }
   }

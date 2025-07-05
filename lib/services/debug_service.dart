@@ -219,12 +219,25 @@ class DebugService {
     ];
   }
 
+  /// Create a mixed language test set to demonstrate language filtering
+  static List<CardModel> createMixedLanguageTestSet() {
+    return [
+      // German cards
+      ...createGermanVocabularyCards().take(3),
+      // Spanish cards
+      ...createSpanishVocabularyCards().take(3),
+      // French cards
+      ...createFrenchVocabularyCards().take(3),
+    ];
+  }
+
   /// Get all available debug card sets
   static Map<String, List<CardModel> Function()> getDebugCardSets() {
     return {
       'German Vocabulary (8 cards)': createGermanVocabularyCards,
       'Spanish Vocabulary (6 cards)': createSpanishVocabularyCards,
       'French Vocabulary (5 cards)': createFrenchVocabularyCards,
+      'Mixed Languages (9 cards)': createMixedLanguageTestSet,
       'Review Test Cards (4 cards)': createReviewTestCards,
     };
   }

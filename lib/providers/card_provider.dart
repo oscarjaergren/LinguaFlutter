@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import '../models/card_model.dart';
 import '../services/card_storage_service.dart';
 import 'streak_provider.dart';
+import 'language_provider.dart';
 
 /// Provider for managing card state and operations
 class CardProvider extends ChangeNotifier {
   final CardStorageService _storageService = CardStorageService();
   StreakProvider? _streakProvider;
+  LanguageProvider? _languageProvider;
   
   // Card collections
   List<CardModel> _allCards = [];
@@ -72,20 +74,31 @@ class CardProvider extends ChangeNotifier {
   // Progress in current review session
   double get reviewProgress {
     if (_currentReviewSession.isEmpty) return 0.0;
-    return _currentReviewIndex / _currentReviewSession.length;
+    // Show progress as (current card + 1) / total cards
+    return (_currentReviewIndex + 1) / _currentReviewSession.length;
   }
   
   // Available categories
   List<String> get categories {
-    final categories = _allCards.map((card) => card.category).toSet().toList();
+    // Get categories for the active language only
+    final activeLanguageCards = _languageProvider != null 
+        ? _allCards.where((card) => card.language == _languageProvider!.activeLanguage).toList()
+        : _allCards;
+    
+    final categories = activeLanguageCards.map((card) => card.category).toSet().toList();
     categories.sort();
     return categories;
   }
   
   // Available tags
   List<String> get availableTags {
+    // Get tags for the active language only
+    final activeLanguageCards = _languageProvider != null 
+        ? _allCards.where((card) => card.language == _languageProvider!.activeLanguage).toList()
+        : _allCards;
+    
     final tags = <String>{};
-    for (final card in _allCards) {
+    for (final card in activeLanguageCards) {
       tags.addAll(card.tags);
     }
     final tagList = tags.toList();
@@ -311,6 +324,11 @@ class CardProvider extends ChangeNotifier {
   /// Apply current filters to cards
   void _applyFilters() {
     _filteredCards = _allCards.where((card) {
+      // Language filter - only show cards matching the active language
+      if (_languageProvider != null && card.language != _languageProvider!.activeLanguage) {
+        return false;
+      }
+      
       // Skip archived cards unless specifically searching for them
       if (card.isArchived && !_searchQuery.contains('archived')) {
         return false;
@@ -358,14 +376,19 @@ class CardProvider extends ChangeNotifier {
 
   /// Update statistics
   void _updateStats() {
+    // Get cards for the active language only
+    final activeLanguageCards = _languageProvider != null 
+        ? _allCards.where((card) => card.language == _languageProvider!.activeLanguage).toList()
+        : _allCards;
+    
     _stats = {
-      'total': _allCards.length,
-      'due': _allCards.where((card) => card.isDueForReview).length,
-      'favorites': _allCards.where((card) => card.isFavorite).length,
-      'archived': _allCards.where((card) => card.isArchived).length,
-      'new': _allCards.where((card) => card.reviewCount == 0).length,
-      'learning': _allCards.where((card) => card.masteryLevel == 'Learning').length,
-      'mastered': _allCards.where((card) => card.masteryLevel == 'Mastered').length,
+      'total': activeLanguageCards.length,
+      'due': activeLanguageCards.where((card) => card.isDueForReview).length,
+      'favorites': activeLanguageCards.where((card) => card.isFavorite).length,
+      'archived': activeLanguageCards.where((card) => card.isArchived).length,
+      'new': activeLanguageCards.where((card) => card.reviewCount == 0).length,
+      'learning': activeLanguageCards.where((card) => card.masteryLevel == 'Learning').length,
+      'mastered': activeLanguageCards.where((card) => card.masteryLevel == 'Mastered').length,
     };
   }
 
@@ -395,6 +418,23 @@ class CardProvider extends ChangeNotifier {
   /// Set the streak provider for session tracking
   void setStreakProvider(StreakProvider streakProvider) {
     _streakProvider = streakProvider;
+  }
+  
+  /// Set the language provider for filtering
+  void setLanguageProvider(LanguageProvider languageProvider) {
+    _languageProvider = languageProvider;
+  }
+  
+  /// Refresh filters when language changes
+  void onLanguageChanged() {
+    // Clear category and tag filters when switching languages
+    // since they might not be relevant to the new language
+    _selectedCategory = '';
+    _selectedTags = [];
+    
+    _applyFilters();
+    _updateStats();
+    notifyListeners();
   }
 
   @override
