@@ -19,14 +19,12 @@ class CardListScreen extends StatefulWidget {
   State<CardListScreen> createState() => _CardListScreenState();
 }
 
-class _CardListScreenState extends State<CardListScreen> with TickerProviderStateMixin {
+class _CardListScreenState extends State<CardListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  late TabController _tabController;
   
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
     
     // Initialize providers
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -44,7 +42,6 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
   @override
   void dispose() {
     _searchController.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
@@ -53,15 +50,6 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Cards'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(icon: Icon(Icons.list), text: 'All'),
-            Tab(icon: Icon(Icons.schedule), text: 'Due'),
-            Tab(icon: Icon(Icons.favorite), text: 'Favorites'),
-            Tab(icon: Icon(Icons.archive), text: 'Archived'),
-          ],
-        ),
         actions: [
           Consumer<CardProvider>(
             builder: (context, provider, child) {
@@ -359,15 +347,7 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
           
           // Card list
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _CardListView(CardListType.all),
-                _CardListView(CardListType.due),
-                _CardListView(CardListType.favorites),
-                _CardListView(CardListType.archived),
-              ],
-            ),
+            child: _CardListView(CardListType.all),
           ),
         ],
       ),
