@@ -49,7 +49,71 @@ class _CardListScreenState extends State<CardListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Cards'),
+        title: Consumer<LanguageProvider>(
+          builder: (context, languageProvider, child) {
+            final activeLanguage = languageProvider.activeLanguage;
+            final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
+            
+            return PopupMenuButton<String>(
+              onSelected: (String languageCode) {
+                languageProvider.setActiveLanguage(languageCode);
+                context.read<CardProvider>().onLanguageChanged();
+              },
+              itemBuilder: (BuildContext context) {
+                return languageProvider.availableLanguages.entries
+                    .map((entry) {
+                  final code = entry.key;
+                  final details = entry.value;
+                  return PopupMenuItem<String>(
+                    value: code,
+                    child: Row(
+                      children: [
+                        Text(
+                          details['flag'],
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(details['name']),
+                        if (code == activeLanguage) ...[
+                          const Spacer(),
+                          Icon(
+                            Icons.check,
+                            color: languageProvider.getLanguageColor(code),
+                            size: 16,
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList();
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    languageDetails['flag'],
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    languageDetails['name'],
+                    style: TextStyle(
+                      color: languageProvider.getLanguageColor(activeLanguage),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: languageProvider.getLanguageColor(activeLanguage),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        centerTitle: true,
         actions: [
           Consumer<CardProvider>(
             builder: (context, provider, child) {
@@ -97,106 +161,6 @@ class _CardListScreenState extends State<CardListScreen> {
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: StreakStatusWidget(compact: true),
-          ),
-          
-          // Language selection
-          Consumer<LanguageProvider>(
-            builder: (context, languageProvider, child) {
-              final activeLanguage = languageProvider.activeLanguage;
-              final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
-              
-              return Container(
-                margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.language,
-                          color: languageProvider.getLanguageColor(activeLanguage),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          languageDetails['flag'],
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                languageDetails['name'],
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: languageProvider.getLanguageColor(activeLanguage),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Learning Language',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuButton<String>(
-                          onSelected: (String languageCode) {
-                            languageProvider.setActiveLanguage(languageCode);
-                            context.read<CardProvider>().onLanguageChanged();
-                          },
-                          itemBuilder: (BuildContext context) {
-                            return languageProvider.availableLanguages.entries
-                                .map((entry) {
-                              final code = entry.key;
-                              final details = entry.value;
-                              return PopupMenuItem<String>(
-                                value: code,
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      details['flag'],
-                                      style: const TextStyle(fontSize: 20),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(details['name']),
-                                    if (code == activeLanguage) ...[
-                                      const Spacer(),
-                                      Icon(
-                                        Icons.check,
-                                        color: languageProvider.getLanguageColor(code),
-                                        size: 16,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              );
-                            }).toList();
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Switch',
-                                style: TextStyle(
-                                  color: languageProvider.getLanguageColor(activeLanguage),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Icon(
-                                Icons.arrow_drop_down,
-                                color: languageProvider.getLanguageColor(activeLanguage),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
           ),
           
           // Search bar
