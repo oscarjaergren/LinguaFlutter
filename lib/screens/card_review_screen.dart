@@ -19,11 +19,16 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     with TickerProviderStateMixin {
   late AnimationController _flipController;
   late AnimationController _slideController;
+  late AnimationController _colorController;
   late Animation<double> _flipAnimation;
   late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<Color?> _colorAnimation;
+  late Animation<double> _rotationAnimation;
   
   bool _isDragging = false;
   double _dragStartX = 0.0;
+  double _currentDragPercent = 0.0;
   
   @override
   void initState() {
@@ -54,17 +59,49 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       parent: _slideController,
       curve: Curves.easeOut,
     ));
+    
+    // Animation for color feedback during swipe
+    _colorController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    
+    // Scale animation for feedback
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(
+      parent: _colorController,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Color animation for swipe feedback
+    _colorAnimation = ColorTween(
+      begin: Colors.transparent,
+      end: Colors.green.withValues(alpha: 0.3),
+    ).animate(_colorController);
+    
+    // Rotation animation for swipe feedback
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.15, // 15 degrees tilt
+    ).animate(CurvedAnimation(
+      parent: _colorController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   @override
   void dispose() {
     _flipController.dispose();
     _slideController.dispose();
+    _colorController.dispose();
     super.dispose();
   }
 
   void _flipCard() {
     final provider = context.read<CardProvider>();
+    if (provider.currentCard == null) return;
     
     if (provider.showingBack) {
       _flipController.reverse();
@@ -104,6 +141,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     // Reset animations
     _flipController.reset();
     _slideController.reset();
+    _colorController.reset();
+    _currentDragPercent = 0.0;
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: Offset.zero,
@@ -113,6 +152,10 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   void _onPanStart(DragStartDetails details) {
     _isDragging = true;
     _dragStartX = details.globalPosition.dx;
+    _currentDragPercent = 0.0;
+    
+    // Start color animation
+    _colorController.reset();
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -122,28 +165,59 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final dragPercent = (dragDistance / screenWidth).clamp(-1.0, 1.0);
     
+    _currentDragPercent = dragPercent;
+    
+    // Update slide animation
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
       end: Offset(dragPercent, 0.0),
     ).animate(_slideController);
     
     _slideController.value = dragPercent.abs();
+    
+    // Update color animation based on swipe direction
+    final isCorrect = dragPercent > 0;
+    _colorAnimation = ColorTween(
+      begin: Colors.transparent,
+      end: isCorrect 
+          ? Colors.green.withValues(alpha: 0.2 + (0.3 * dragPercent.abs()))
+          : Colors.red.withValues(alpha: 0.2 + (0.3 * dragPercent.abs())),
+    ).animate(_colorController);
+    
+    // Update rotation animation
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: dragPercent * 0.15, // Tilt in the direction of swipe
+    ).animate(_colorController);
+    
+    // Animate color feedback
+    _colorController.value = dragPercent.abs();
+    
+    // Haptic feedback at certain thresholds
+    if (dragPercent.abs() > 0.3 && dragPercent.abs() < 0.35) {
+      HapticFeedback.lightImpact();
+    }
   }
 
   void _onPanEnd(DragEndDetails details) {
     if (!_isDragging) return;
     _isDragging = false;
     
+    final provider = context.read<CardProvider>();
+    if (provider.currentCard == null) return;
+    
     final velocity = details.velocity.pixelsPerSecond.dx;
     final screenWidth = MediaQuery.of(context).size.width;
     
     // Determine if swipe was significant enough
-    final swipeThreshold = screenWidth * 0.3;
-    final velocityThreshold = 500.0;
+    final swipeThreshold = screenWidth * 0.25; // Reduced threshold for easier swiping
+    final velocityThreshold = 400.0; // Reduced threshold
     
     if (_slideController.value > (swipeThreshold / screenWidth) || velocity.abs() > velocityThreshold) {
-      // Complete the swipe
-      if (velocity > 0 || _dragStartX < screenWidth / 2) {
+      // Complete the swipe with haptic feedback
+      HapticFeedback.mediumImpact();
+      
+      if (velocity > 0 || _currentDragPercent > 0) {
         // Swipe right (correct)
         _answerCard(true);
       } else {
@@ -151,8 +225,10 @@ class _CardReviewScreenState extends State<CardReviewScreen>
         _answerCard(false);
       }
     } else {
-      // Return to center
+      // Return to center with bounce and light haptic feedback
+      HapticFeedback.lightImpact();
       _slideController.reverse();
+      _colorController.reverse();
     }
   }
 
@@ -169,16 +245,19 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       switch (event.logicalKey) {
         case LogicalKeyboardKey.arrowLeft:
           // Left arrow = incorrect/swipe left
+          HapticFeedback.mediumImpact();
           _answerCard(false);
           return KeyEventResult.handled;
         case LogicalKeyboardKey.arrowRight:
           // Right arrow = correct/swipe right
+          HapticFeedback.mediumImpact();
           _answerCard(true);
           return KeyEventResult.handled;
         case LogicalKeyboardKey.space:
         case LogicalKeyboardKey.arrowUp:
         case LogicalKeyboardKey.arrowDown:
           // Space or up/down arrow = flip card
+          HapticFeedback.lightImpact();
           _flipCard();
           return KeyEventResult.handled;
         default:
@@ -317,42 +396,97 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   Widget _buildCard(BuildContext context, CardProvider provider) {
-    final card = provider.currentCard!;
+    final card = provider.currentCard;
+    if (card == null) {
+      // Return an empty container if no card is available
+      return Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: MediaQuery.of(context).size.height * 0.5,
+        margin: const EdgeInsets.all(16.0),
+        child: const Card(
+          elevation: 8,
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+    
     final showBack = provider.showingBack;
     
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.9,
-      height: MediaQuery.of(context).size.height * 0.5,
-      margin: const EdgeInsets.all(16.0),
-      child: Card(
-        elevation: 8,
-        child: Container(
-          padding: const EdgeInsets.all(24.0),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: showBack
-                  ? [
-                      Theme.of(context).colorScheme.secondaryContainer,
-                      Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
-                    ]
-                  : [
-                      Theme.of(context).colorScheme.primaryContainer,
-                      Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
-                    ],
+    return AnimatedBuilder(
+      animation: Listenable.merge([_scaleAnimation, _rotationAnimation]),
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _isDragging ? _scaleAnimation.value : 1.0,
+          child: Transform.rotate(
+            angle: _isDragging ? _rotationAnimation.value : 0.0,
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              height: MediaQuery.of(context).size.height * 0.5,
+              margin: const EdgeInsets.all(16.0),
+              child: Stack(
+                children: [
+                  Card(
+                    elevation: _isDragging ? 12 : 8, // Increase elevation during drag
+                    child: Container(
+                      padding: const EdgeInsets.all(24.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: showBack
+                              ? [
+                                  Theme.of(context).colorScheme.secondaryContainer,
+                                  Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
+                                ]
+                              : [
+                                  Theme.of(context).colorScheme.primaryContainer,
+                                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
+                                ],
+                        ),
+                      ),
+                      child: _flipAnimation.value < 0.5
+                          ? _buildCardFront(context, card)
+                          : Transform(
+                              alignment: Alignment.center,
+                              transform: Matrix4.identity()..rotateY(3.14159),
+                              child: _buildCardBack(context, card),
+                            ),
+                    ),
+                  ),
+                  // Color overlay for swipe feedback
+                  if (_isDragging)
+                    AnimatedBuilder(
+                      animation: _colorAnimation,
+                      builder: (context, child) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: _colorAnimation.value,
+                          ),
+                          child: Center(
+                            child: AnimatedScale(
+                              scale: _currentDragPercent.abs() > 0.3 ? 1.2 : 1.0,
+                              duration: const Duration(milliseconds: 100),
+                              child: Icon(
+                                _currentDragPercent > 0 ? Icons.check_circle : Icons.cancel,
+                                size: 60 + (20 * _currentDragPercent.abs()), // Scale icon with swipe
+                                color: (_currentDragPercent > 0 ? Colors.green : Colors.red)
+                                    .withValues(alpha: 0.7 + (0.3 * _currentDragPercent.abs())),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
             ),
           ),
-          child: _flipAnimation.value < 0.5
-              ? _buildCardFront(context, card)
-              : Transform(
-                  alignment: Alignment.center,
-                  transform: Matrix4.identity()..rotateY(3.14159),
-                  child: _buildCardBack(context, card),
-                ),
-        ),
-      ),
+        );
+      },
     );
   }
 

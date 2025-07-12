@@ -219,6 +219,75 @@ class DebugService {
     ];
   }
 
+  /// Create cards that are due for review (for testing the review button)
+  static List<CardModel> createDueForReviewCards() {
+    final now = DateTime.now();
+    final pastDate = now.subtract(const Duration(hours: 1)); // Make them due
+    
+    return [
+      CardModel.create(
+        frontText: 'Apfel',
+        backText: 'Apple',
+        language: 'de',
+        category: 'Vocabulary - Food & Drink',
+        germanArticle: 'der',
+        tags: ['food', 'fruit'],
+      ).copyWith(
+        nextReview: pastDate, // Make it due for review
+        reviewCount: 3,
+        correctCount: 2,
+      ),
+      CardModel.create(
+        frontText: 'Brot',
+        backText: 'Bread',
+        language: 'de',
+        category: 'Vocabulary - Food & Drink',
+        germanArticle: 'das',
+        tags: ['food', 'basic'],
+      ).copyWith(
+        nextReview: pastDate, // Make it due for review
+        reviewCount: 2,
+        correctCount: 1,
+      ),
+      CardModel.create(
+        frontText: 'Milch',
+        backText: 'Milk',
+        language: 'de',
+        category: 'Vocabulary - Food & Drink',
+        germanArticle: 'die',
+        tags: ['food', 'drinks'],
+      ).copyWith(
+        nextReview: pastDate, // Make it due for review
+        reviewCount: 1,
+        correctCount: 0,
+      ),
+      CardModel.create(
+        frontText: 'Tür',
+        backText: 'Door',
+        language: 'de',
+        category: 'Vocabulary - Buildings',
+        germanArticle: 'die',
+        tags: ['buildings', 'basic'],
+      ).copyWith(
+        nextReview: pastDate, // Make it due for review
+        reviewCount: 0,
+        correctCount: 0,
+      ),
+      CardModel.create(
+        frontText: 'Fenster',
+        backText: 'Window',
+        language: 'de',
+        category: 'Vocabulary - Buildings',
+        germanArticle: 'das',
+        tags: ['buildings', 'basic'],
+      ).copyWith(
+        nextReview: pastDate, // Make it due for review
+        reviewCount: 4,
+        correctCount: 2,
+      ),
+    ];
+  }
+
   /// Create a mixed language test set to demonstrate language filtering
   static List<CardModel> createMixedLanguageTestSet() {
     return [
@@ -239,6 +308,7 @@ class DebugService {
       'French Vocabulary (5 cards)': createFrenchVocabularyCards,
       'Mixed Languages (9 cards)': createMixedLanguageTestSet,
       'Review Test Cards (4 cards)': createReviewTestCards,
+      'Due for Review Cards (5 cards)': createDueForReviewCards,
     };
   }
 }

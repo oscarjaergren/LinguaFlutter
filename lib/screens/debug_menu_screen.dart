@@ -109,6 +109,21 @@ class DebugMenuScreen extends StatelessWidget {
                       ),
                     );
                   }).toList(),
+                  
+                  // Special button for creating due cards
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => _createDueForReviewCards(context),
+                      icon: const Icon(Icons.schedule),
+                      label: const Text('Create Cards Due for Review'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -240,6 +255,41 @@ class DebugMenuScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Created $setName (${cards.length} cards)'),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'VIEW',
+              textColor: Colors.white,
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error creating cards: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _createDueForReviewCards(BuildContext context) async {
+    try {
+      final cardProvider = context.read<CardProvider>();
+      final cards = DebugService.createDueForReviewCards();
+      
+      // Add all cards
+      for (final card in cards) {
+        await cardProvider.addCard(card);
+      }
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Created ${cards.length} cards due for review'),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'VIEW',

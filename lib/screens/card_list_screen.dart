@@ -66,8 +66,10 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
           Consumer<CardProvider>(
             builder: (context, provider, child) {
               if (provider.reviewCards.isNotEmpty) {
-                return TextButton.icon(
+                return IconButton(
                   onPressed: () {
+                    // Start review session with due cards
+                    provider.startReviewSession(cards: provider.reviewCards);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -75,8 +77,11 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
                       ),
                     );
                   },
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text('Review (${provider.reviewCards.length})'),
+                  icon: Badge(
+                    label: Text('${provider.reviewCards.length}'),
+                    child: const Icon(Icons.play_arrow),
+                  ),
+                  tooltip: 'Start Review',
                 );
               }
               return const SizedBox.shrink();
@@ -313,6 +318,40 @@ class _CardListScreenState extends State<CardListScreen> with TickerProviderStat
                   ],
                 ),
               );
+            },
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Start Review Button
+          Consumer<CardProvider>(
+            builder: (context, provider, child) {
+              if (provider.reviewCards.isNotEmpty) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      // Start review session with due cards
+                      provider.startReviewSession(cards: provider.reviewCards);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CardReviewScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.play_arrow),
+                    label: Text('Start Review Session (${provider.reviewCards.length} cards)'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
             },
           ),
           
