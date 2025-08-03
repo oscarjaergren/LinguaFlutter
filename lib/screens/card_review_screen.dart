@@ -17,39 +17,57 @@ class CardReviewScreen extends StatefulWidget {
 
 class _CardReviewScreenState extends State<CardReviewScreen>
     with TickerProviderStateMixin {
-  late AnimationController _flipController;
   late AnimationController _slideController;
   late AnimationController _colorController;
-  late Animation<double> _flipAnimation;
+  late AnimationController _pageController;
+  late AnimationController _bindingController;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<Color?> _colorAnimation;
   late Animation<double> _rotationAnimation;
+  late Animation<double> _pageFlipAnimation;
+  late Animation<double> _bindingAnimation;
+  late Animation<double> _shadowAnimation;
+  late Animation<double> _perspectiveAnimation;
   
   bool _isDragging = false;
   double _dragStartX = 0.0;
   double _currentDragPercent = 0.0;
+  bool _isFlippingPage = false;
   
   @override
   void initState() {
     super.initState();
     
-    // Animation for card flipping
-    _flipController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+    // Animation for page turning (book-like)
+    _pageController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _flipAnimation = Tween<double>(
+    _pageFlipAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _flipController,
-      curve: Curves.easeInOut,
+      parent: _pageController,
+      curve: Curves.easeInOutQuart,
+    ));
+    
+    // Animation for book binding effect
+    _bindingController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _bindingAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _bindingController,
+      curve: Curves.easeOut,
     ));
     
     // Animation for card sliding
     _slideController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     _slideAnimation = Tween<Offset>(
@@ -57,7 +75,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _slideController,
-      curve: Curves.easeOut,
+      curve: Curves.easeOutCubic,
     ));
     
     // Animation for color feedback during swipe
@@ -69,7 +87,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     // Scale animation for feedback
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 0.95,
+      end: 0.98,
     ).animate(CurvedAnimation(
       parent: _colorController,
       curve: Curves.easeInOut,
@@ -78,35 +96,63 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     // Color animation for swipe feedback
     _colorAnimation = ColorTween(
       begin: Colors.transparent,
-      end: Colors.green.withValues(alpha: 0.3),
+      end: Colors.green.withValues(alpha: 0.2),
     ).animate(_colorController);
     
     // Rotation animation for swipe feedback
     _rotationAnimation = Tween<double>(
       begin: 0.0,
-      end: 0.15, // 15 degrees tilt
+      end: 0.08, // Subtle tilt for book-like feel
     ).animate(CurvedAnimation(
       parent: _colorController,
       curve: Curves.easeInOut,
+    ));
+    
+    // Shadow animation for depth
+    _shadowAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeInOut,
+    ));
+    
+    // Perspective animation for 3D effect
+    _perspectiveAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.002,
+    ).animate(CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeInOutCubic,
     ));
   }
 
   @override
   void dispose() {
-    _flipController.dispose();
     _slideController.dispose();
     _colorController.dispose();
+    _pageController.dispose();
+    _bindingController.dispose();
     super.dispose();
   }
 
   void _flipCard() {
     final provider = context.read<CardProvider>();
-    if (provider.currentCard == null) return;
+    if (provider.currentCard == null || _isFlippingPage) return;
+    
+    _isFlippingPage = true;
+    _bindingController.forward();
     
     if (provider.showingBack) {
-      _flipController.reverse();
+      _pageController.reverse().then((_) {
+        _isFlippingPage = false;
+        _bindingController.reverse();
+      });
     } else {
-      _flipController.forward();
+      _pageController.forward().then((_) {
+        _isFlippingPage = false;
+        _bindingController.reverse();
+      });
     }
     
     provider.flipCard();
@@ -114,16 +160,20 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   Future<void> _answerCard(bool wasCorrect) async {
     final provider = context.read<CardProvider>();
+    if (_isFlippingPage) return;
     
-    // Animate slide out
+    _isFlippingPage = true;
+    
+    // Just slide the card away - no flipping back
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
-      end: wasCorrect ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0),
+      end: wasCorrect ? const Offset(1.2, 0.0) : const Offset(-1.2, 0.0),
     ).animate(CurvedAnimation(
       parent: _slideController,
-      curve: Curves.easeOut,
+      curve: Curves.easeInOutCubic,
     ));
     
+    // Slide the card away
     await _slideController.forward();
     
     // Answer the card
@@ -138,15 +188,12 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       });
     }
     
-    // Reset animations
-    _flipController.reset();
+    // Reset animations for the next card
+    _pageController.reset();
     _slideController.reset();
     _colorController.reset();
-    _currentDragPercent = 0.0;
-    _slideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: Offset.zero,
-    ).animate(_slideController);
+    _bindingController.reset();
+    _isFlippingPage = false;
   }
 
   void _onPanStart(DragStartDetails details) {
@@ -366,21 +413,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
                     onPanUpdate: _onPanUpdate,
                     onPanEnd: _onPanEnd,
                     onTap: _flipCard,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: AnimatedBuilder(
-                        animation: _flipAnimation,
-                        builder: (context, child) {
-                          return Transform(
-                            alignment: Alignment.center,
-                            transform: Matrix4.identity()
-                              ..setEntry(3, 2, 0.001)
-                              ..rotateY(_flipAnimation.value * 3.14159),
-                            child: _buildCard(context, provider),
-                          );
-                        },
-                      ),
-                    ),
+                    child: _buildCard(context, provider),
                   ),
                 ),
               ),
@@ -401,11 +434,11 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       // Return an empty container if no card is available
       return Container(
         width: MediaQuery.of(context).size.width * 0.9,
-        height: MediaQuery.of(context).size.height * 0.5,
+        height: MediaQuery.of(context).size.height * 0.6,
         margin: const EdgeInsets.all(16.0),
-        child: const Card(
-          elevation: 8,
-          child: Center(
+        child: _buildBookContainer(
+          context,
+          const Center(
             child: CircularProgressIndicator(),
           ),
         ),
@@ -415,7 +448,14 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     final showBack = provider.showingBack;
     
     return AnimatedBuilder(
-      animation: Listenable.merge([_scaleAnimation, _rotationAnimation]),
+      animation: Listenable.merge([
+        _scaleAnimation,
+        _rotationAnimation,
+        _pageFlipAnimation,
+        _bindingAnimation,
+        _shadowAnimation,
+        _perspectiveAnimation,
+      ]),
       builder: (context, child) {
         return Transform.scale(
           scale: _isDragging ? _scaleAnimation.value : 1.0,
@@ -423,64 +463,25 @@ class _CardReviewScreenState extends State<CardReviewScreen>
             angle: _isDragging ? _rotationAnimation.value : 0.0,
             child: Container(
               width: MediaQuery.of(context).size.width * 0.9,
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: MediaQuery.of(context).size.height * 0.6,
               margin: const EdgeInsets.all(16.0),
               child: Stack(
                 children: [
-                  Card(
-                    elevation: _isDragging ? 12 : 8, // Increase elevation during drag
-                    child: Container(
-                      padding: const EdgeInsets.all(24.0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: showBack
-                              ? [
-                                  Theme.of(context).colorScheme.secondaryContainer,
-                                  Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.7),
-                                ]
-                              : [
-                                  Theme.of(context).colorScheme.primaryContainer,
-                                  Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.7),
-                                ],
-                        ),
-                      ),
-                      child: _flipAnimation.value < 0.5
-                          ? _buildCardFront(context, card)
-                          : Transform(
-                              alignment: Alignment.center,
-                              transform: Matrix4.identity()..rotateY(3.14159),
-                              child: _buildCardBack(context, card),
-                            ),
-                    ),
-                  ),
+                  // Book spine/binding effect
+                  _buildBookSpine(context),
+                  
+                  // Stack of underlying cards (next cards visible)
+                  _buildCardStack(context, provider),
+                  
+                  // Current card on top
+                  _buildCurrentCard(context, card, showBack, provider),
+                  
+                  // Page shadow for depth
+                  _buildPageShadow(context),
+                  
                   // Color overlay for swipe feedback
                   if (_isDragging)
-                    AnimatedBuilder(
-                      animation: _colorAnimation,
-                      builder: (context, child) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: _colorAnimation.value,
-                          ),
-                          child: Center(
-                            child: AnimatedScale(
-                              scale: _currentDragPercent.abs() > 0.3 ? 1.2 : 1.0,
-                              duration: const Duration(milliseconds: 100),
-                              child: Icon(
-                                _currentDragPercent > 0 ? Icons.check_circle : Icons.cancel,
-                                size: 60 + (20 * _currentDragPercent.abs()), // Scale icon with swipe
-                                color: (_currentDragPercent > 0 ? Colors.green : Colors.red)
-                                    .withValues(alpha: 0.7 + (0.3 * _currentDragPercent.abs())),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                    _buildSwipeFeedback(context),
                 ],
               ),
             ),
@@ -488,6 +489,224 @@ class _CardReviewScreenState extends State<CardReviewScreen>
         );
       },
     );
+  }
+  
+  Widget _buildBookContainer(BuildContext context, Widget child) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 30,
+            offset: const Offset(0, 15),
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: child,
+      ),
+    );
+  }
+  
+  Widget _buildBookSpine(BuildContext context) {
+    return Positioned(
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 8 + (4 * _bindingAnimation.value),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Theme.of(context).colorScheme.outline.withValues(alpha: 0.6),
+              Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+              Colors.transparent,
+            ],
+          ),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            bottomLeft: Radius.circular(8),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildCardStack(BuildContext context, CardProvider provider) {
+    // Get the next few cards to show underneath
+    final currentIndex = provider.currentReviewIndex;
+    final reviewSession = provider.currentReviewSession;
+    
+    return Stack(
+      children: [
+        // Show up to 3 cards underneath for depth
+        for (int i = 1; i <= 3; i++)
+          if (currentIndex + i < reviewSession.length)
+            _buildStackCard(context, reviewSession[currentIndex + i], i),
+      ],
+    );
+  }
+  
+  Widget _buildStackCard(BuildContext context, CardModel card, int depth) {
+    final offset = depth * 2.0; // Slight offset for each underlying card
+    final opacity = 1.0 - (depth * 0.15); // Fade out deeper cards
+    final scale = 1.0 - (depth * 0.02); // Slightly smaller for depth
+    
+    return Positioned(
+      left: offset,
+      top: offset,
+      right: -offset,
+      bottom: -offset,
+      child: Transform.scale(
+        scale: scale,
+        child: Opacity(
+          opacity: opacity,
+          child: _buildBookContainer(
+            context,
+            Container(
+              padding: const EdgeInsets.fromLTRB(32.0, 24.0, 24.0, 24.0),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: _getPageColors(context, false), // Always show front for stack
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1 - (depth * 0.02)),
+                    blurRadius: 2,
+                    offset: Offset(0, depth.toDouble()),
+                  ),
+                ],
+              ),
+              child: _buildCardFront(context, card),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildCurrentCard(BuildContext context, CardModel card, bool showBack, CardProvider provider) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: Transform(
+        alignment: Alignment.centerLeft,
+        transform: Matrix4.identity()
+          ..setEntry(3, 2, _perspectiveAnimation.value)
+          ..rotateY(_pageFlipAnimation.value * 3.14159),
+        child: _buildBookContainer(
+          context,
+          Container(
+            padding: const EdgeInsets.fromLTRB(32.0, 24.0, 24.0, 24.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: _getPageColors(context, showBack),
+              ),
+              // Paper texture effect with enhanced shadow for top card
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 1,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: _pageFlipAnimation.value < 0.5
+                ? _buildCardFront(context, card)
+                : Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.identity()..rotateY(3.14159),
+                    child: _buildCardBack(context, card),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildPageShadow(BuildContext context) {
+    if (_shadowAnimation.value == 0) return const SizedBox.shrink();
+    
+    return Positioned(
+      left: 12 + (20 * _shadowAnimation.value),
+      top: 4,
+      bottom: 4,
+      right: 4,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              Colors.black.withValues(alpha: 0.15 * _shadowAnimation.value),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.3],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildSwipeFeedback(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _colorAnimation,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: _colorAnimation.value,
+          ),
+          child: Center(
+            child: AnimatedScale(
+              scale: _currentDragPercent.abs() > 0.3 ? 1.2 : 1.0,
+              duration: const Duration(milliseconds: 100),
+              child: Icon(
+                _currentDragPercent > 0 ? Icons.check_circle : Icons.cancel,
+                size: 50 + (15 * _currentDragPercent.abs()),
+                color: (_currentDragPercent > 0 ? Colors.green : Colors.red)
+                    .withValues(alpha: 0.6 + (0.4 * _currentDragPercent.abs())),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  List<Color> _getPageColors(BuildContext context, bool showBack) {
+    final baseColor = showBack
+        ? Theme.of(context).colorScheme.secondaryContainer
+        : Theme.of(context).colorScheme.primaryContainer;
+    
+    // Create a paper-like gradient
+    return [
+      baseColor.withValues(alpha: 0.95),
+      baseColor.withValues(alpha: 0.85),
+      baseColor.withValues(alpha: 0.9),
+    ];
   }
 
   Widget _buildCardFront(BuildContext context, CardModel card) {
