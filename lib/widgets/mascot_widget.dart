@@ -39,9 +39,9 @@ class _MascotWidgetState extends State<MascotWidget>
   void initState() {
     super.initState();
     
-    // Floating animation (continuous gentle bob)
+    // Floating animation (subtle gentle bob)
     _floatController = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 4), // Slower floating
       vsync: this,
     );
     _floatAnimation = Tween<double>(
@@ -111,6 +111,12 @@ class _MascotWidgetState extends State<MascotWidget>
     // Show speech bubble if message exists
     if (widget.message != null) {
       _bubbleController.forward();
+      // Auto-hide bubble after 8 seconds (much longer than before)
+      Future.delayed(const Duration(seconds: 8), () {
+        if (mounted) {
+          _bubbleController.reverse();
+        }
+      });
     }
   }
 
@@ -192,7 +198,7 @@ class _MascotWidgetState extends State<MascotWidget>
             animation: Listenable.merge([_floatAnimation, _bounceAnimation]),
             builder: (context, child) {
               return Transform.translate(
-                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 8),
+                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 3), // Reduced from 8 to 3px
                 child: Transform.scale(
                   scale: _bounceAnimation.value,
                   child: _buildMascot(),
@@ -230,43 +236,55 @@ class _MascotWidgetState extends State<MascotWidget>
   Widget _buildSpeechBubble() {
     return Container(
       constraints: BoxConstraints(
-        maxWidth: widget.size * 1.2, // Reduced from 2x to 1.2x
+        maxWidth: widget.size * 1.4, // Slightly wider for better readability
         minWidth: widget.size * 0.8,
       ),
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           // Bubble body
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.grey.withValues(alpha: 0.2),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
             child: Text(
               widget.message!,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
+                height: 1.3,
               ),
               textAlign: TextAlign.center,
             ),
           ),
           
-          // Bubble tail
+          // Bubble tail (centered and pointing down to mascot)
           Positioned(
-            bottom: -8,
-            left: 30,
-            child: CustomPaint(
-              size: const Size(16, 16),
-              painter: BubbleTailPainter(),
+            bottom: -12,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                width: 20,
+                height: 12,
+                child: CustomPaint(
+                  painter: _BubbleTailPainter(),
+                ),
+              ),
             ),
           ),
         ],
@@ -275,18 +293,17 @@ class _MascotWidgetState extends State<MascotWidget>
   }
 
   Widget _buildMascot() {
-    return SizedBox(
+    return Container(
       width: widget.size,
       height: widget.size,
       child: AnimatedBuilder(
         animation: _blinkAnimation,
         builder: (context, child) {
-          return CustomPaint(
-            size: Size(widget.size, widget.size),
-            painter: MascotPainter(
-              blinkAmount: _blinkAnimation.value,
-              mascotState: widget.mascotState,
-            ),
+          return Image.asset(
+            'lingualabs_mascot_manual_crop-removebg-preview.png',
+            width: widget.size,
+            height: widget.size,
+            fit: BoxFit.contain,
           );
         },
       ),
@@ -294,174 +311,8 @@ class _MascotWidgetState extends State<MascotWidget>
   }
 }
 
-/// Custom painter for the mascot character
-class MascotPainter extends CustomPainter {
-  final double blinkAmount;
-  final MascotState mascotState;
-
-  MascotPainter({
-    required this.blinkAmount,
-    required this.mascotState,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final center = Offset(size.width / 2, size.height / 2);
-    
-    // Main body (turquoise)
-    paint.color = const Color(0xFF4ECDC4);
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(center.dx, center.dy + size.height * 0.1),
-        width: size.width * 0.7,
-        height: size.height * 0.8,
-      ),
-      paint,
-    );
-    
-    // Head
-    paint.color = const Color(0xFF4ECDC4);
-    canvas.drawCircle(
-      Offset(center.dx, center.dy - size.height * 0.15),
-      size.width * 0.35,
-      paint,
-    );
-    
-    // Goggles frame
-    paint.color = const Color(0xFF2C5F5D);
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = size.width * 0.02;
-    
-    // Left goggle
-    canvas.drawCircle(
-      Offset(center.dx - size.width * 0.15, center.dy - size.height * 0.2),
-      size.width * 0.12,
-      paint,
-    );
-    
-    // Right goggle
-    canvas.drawCircle(
-      Offset(center.dx + size.width * 0.15, center.dy - size.height * 0.2),
-      size.width * 0.12,
-      paint,
-    );
-    
-    // Goggle lenses
-    paint.style = PaintingStyle.fill;
-    paint.color = const Color(0xFF87CEEB);
-    
-    canvas.drawCircle(
-      Offset(center.dx - size.width * 0.15, center.dy - size.height * 0.2),
-      size.width * 0.1,
-      paint,
-    );
-    
-    canvas.drawCircle(
-      Offset(center.dx + size.width * 0.15, center.dy - size.height * 0.2),
-      size.width * 0.1,
-      paint,
-    );
-    
-    // Eyes
-    paint.color = Colors.black;
-    final eyeHeight = size.height * 0.08 * blinkAmount;
-    
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(center.dx - size.width * 0.15, center.dy - size.height * 0.2),
-        width: size.width * 0.06,
-        height: eyeHeight,
-      ),
-      paint,
-    );
-    
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(center.dx + size.width * 0.15, center.dy - size.height * 0.2),
-        width: size.width * 0.06,
-        height: eyeHeight,
-      ),
-      paint,
-    );
-    
-    // Mouth
-    paint.color = Colors.black;
-    paint.style = PaintingStyle.stroke;
-    paint.strokeWidth = size.width * 0.015;
-    paint.strokeCap = StrokeCap.round;
-    
-    final mouthPath = Path();
-    final mouthY = center.dy - size.height * 0.05;
-    mouthPath.moveTo(center.dx - size.width * 0.08, mouthY);
-    mouthPath.quadraticBezierTo(
-      center.dx, mouthY + size.height * 0.05,
-      center.dx + size.width * 0.08, mouthY,
-    );
-    canvas.drawPath(mouthPath, paint);
-    
-    // Arms
-    paint.style = PaintingStyle.fill;
-    paint.color = const Color(0xFF4ECDC4);
-    
-    // Left arm
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(center.dx - size.width * 0.4, center.dy + size.height * 0.1),
-        width: size.width * 0.15,
-        height: size.height * 0.3,
-      ),
-      paint,
-    );
-    
-    // Right arm
-    canvas.drawOval(
-      Rect.fromCenter(
-        center: Offset(center.dx + size.width * 0.4, center.dy + size.height * 0.1),
-        width: size.width * 0.15,
-        height: size.height * 0.3,
-      ),
-      paint,
-    );
-    
-    // Tablet/Book
-    paint.color = const Color(0xFFFF8C42);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: size.width * 0.3,
-          height: size.height * 0.2,
-        ),
-        Radius.circular(size.width * 0.02),
-      ),
-      paint,
-    );
-    
-    // Tablet screen
-    paint.color = const Color(0xFF2C3E50);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: center,
-          width: size.width * 0.25,
-          height: size.height * 0.15,
-        ),
-        Radius.circular(size.width * 0.01),
-      ),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant MascotPainter oldDelegate) {
-    return oldDelegate.blinkAmount != blinkAmount ||
-           oldDelegate.mascotState != mascotState;
-  }
-}
-
-/// Custom painter for speech bubble tail
-class BubbleTailPainter extends CustomPainter {
+/// Simple bubble tail painter
+class _BubbleTailPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
