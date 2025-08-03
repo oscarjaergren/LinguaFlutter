@@ -7,6 +7,7 @@ class MascotWidget extends StatefulWidget {
   final VoidCallback? onTap;
   final MascotState mascotState;
   final double size;
+  final Widget? overlay;
 
   const MascotWidget({
     super.key,
@@ -14,6 +15,7 @@ class MascotWidget extends StatefulWidget {
     this.onTap,
     this.mascotState = MascotState.idle,
     this.size = 120,
+    this.overlay,
   });
 
   @override
@@ -185,12 +187,25 @@ class _MascotWidgetState extends State<MascotWidget>
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Speech bubble
+          // Mascot character (background)
+          AnimatedBuilder(
+            animation: Listenable.merge([_floatAnimation, _bounceAnimation]),
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 8),
+                child: Transform.scale(
+                  scale: _bounceAnimation.value,
+                  child: _buildMascot(),
+                ),
+              );
+            },
+          ),
+          // Speech bubble (middle)
           if (widget.message != null)
             Positioned(
-              bottom: widget.size * 0.8,
-              left: 0, // Keep within bounds
-              right: 0, // Constrain to widget width
+              bottom: widget.size * 1.15, // Move bubble higher above mascot
+              left: 0,
+              right: 0,
               child: AnimatedBuilder(
                 animation: Listenable.merge([_bubbleScaleAnimation, _bubbleOpacityAnimation]),
                 builder: (context, child) {
@@ -204,20 +219,9 @@ class _MascotWidgetState extends State<MascotWidget>
                 },
               ),
             ),
-          
-          // Mascot character
-          AnimatedBuilder(
-            animation: Listenable.merge([_floatAnimation, _bounceAnimation]),
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 8),
-                child: Transform.scale(
-                  scale: _bounceAnimation.value,
-                  child: _buildMascot(),
-                ),
-              );
-            },
-          ),
+          // Overlay (always on top)
+          if (widget.overlay != null)
+            Positioned.fill(child: widget.overlay!),
         ],
       ),
     );
