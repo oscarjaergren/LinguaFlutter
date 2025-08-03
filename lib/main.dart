@@ -4,6 +4,7 @@ import 'providers/icon_provider.dart';
 import 'providers/card_provider.dart';
 import 'providers/streak_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/mascot_provider.dart';
 import 'screens/card_list_screen.dart';
 
 void main() {
@@ -20,6 +21,7 @@ class LinguaFlutterApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => IconProvider()),
         ChangeNotifierProvider(create: (_) => StreakProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => MascotProvider()),
         ChangeNotifierProxyProvider<StreakProvider, CardProvider>(
           create: (_) => CardProvider(),
           update: (_, streakProvider, cardProvider) {
