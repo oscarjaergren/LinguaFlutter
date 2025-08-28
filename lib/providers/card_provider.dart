@@ -7,8 +7,11 @@ import 'language_provider.dart';
 /// Provider for managing card state and operations
 class CardProvider extends ChangeNotifier {
   final CardStorageService _storageService = CardStorageService();
+  final LanguageProvider _languageProvider;
   StreakProvider? _streakProvider;
-  LanguageProvider? _languageProvider;
+
+  CardProvider({required LanguageProvider languageProvider})
+      : _languageProvider = languageProvider;
   
   // Card collections
   List<CardModel> _allCards = [];
@@ -81,9 +84,7 @@ class CardProvider extends ChangeNotifier {
   // Available categories
   List<String> get categories {
     // Get categories for the active language only
-    final activeLanguageCards = _languageProvider != null 
-        ? _allCards.where((card) => card.language == _languageProvider!.activeLanguage).toList()
-        : _allCards;
+    final activeLanguageCards = _allCards.where((card) => card.language == _languageProvider.activeLanguage).toList();
     
     final categories = activeLanguageCards.map((card) => card.category).toSet().toList();
     categories.sort();
@@ -93,9 +94,7 @@ class CardProvider extends ChangeNotifier {
   // Available tags
   List<String> get availableTags {
     // Get tags for the active language only
-    final activeLanguageCards = _languageProvider != null 
-        ? _allCards.where((card) => card.language == _languageProvider!.activeLanguage).toList()
-        : _allCards;
+    final activeLanguageCards = _allCards.where((card) => card.language == _languageProvider.activeLanguage).toList();
     
     final tags = <String>{};
     for (final card in activeLanguageCards) {
@@ -320,12 +319,10 @@ class CardProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  /// Apply current filters to cards
   void _applyFilters() {
     _filteredCards = _allCards.where((card) {
       // Language filter - only show cards matching the active language
-      if (_languageProvider != null && card.language != _languageProvider!.activeLanguage) {
+      if (card.language != _languageProvider.activeLanguage) {
         return false;
       }
       
@@ -377,9 +374,7 @@ class CardProvider extends ChangeNotifier {
   /// Update statistics
   void _updateStats() {
     // Get cards for the active language only
-    final activeLanguageCards = _languageProvider != null 
-        ? _allCards.where((card) => card.language == _languageProvider!.activeLanguage).toList()
-        : _allCards;
+    final activeLanguageCards = _allCards.where((card) => card.language == _languageProvider.activeLanguage).toList();
     
     _stats = {
       'total': activeLanguageCards.length,
@@ -420,10 +415,7 @@ class CardProvider extends ChangeNotifier {
     _streakProvider = streakProvider;
   }
   
-  /// Set the language provider for filtering
-  void setLanguageProvider(LanguageProvider languageProvider) {
-    _languageProvider = languageProvider;
-  }
+  
   
   /// Refresh filters when language changes
   void onLanguageChanged() {

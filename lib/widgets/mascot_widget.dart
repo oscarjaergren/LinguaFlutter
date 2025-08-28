@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import '../services/animation_service.dart';
 
 /// Animated mascot widget with talking bubbles and interactions
 class MascotWidget extends StatefulWidget {
   final String? message;
-  final VoidCallback? onTap;
-  final MascotState mascotState;
   final double size;
-  final Widget? overlay;
+  final MascotState mascotState;
+  final VoidCallback? onTap;
+  final AnimationService animationService;
 
   const MascotWidget({
     super.key,
+    this.size = 80,
     this.message,
-    this.onTap,
     this.mascotState = MascotState.idle,
-    this.size = 120,
-    this.overlay,
+    this.onTap,
+    this.animationService = const ProductionAnimationService(),
   });
 
   @override
@@ -102,29 +103,36 @@ class _MascotWidgetState extends State<MascotWidget>
   }
 
   void _startAnimations() {
-    // Start continuous floating
-    _floatController.repeat(reverse: true);
+    if (!widget.animationService.animationsEnabled) {
+      return;
+    }
     
+    // Start continuous floating
+    widget.animationService.startRepeating(_floatController, reverse: true);
+
     // Random blinking
     _scheduleRandomBlink();
-    
+
     // Show speech bubble if message exists
     if (widget.message != null) {
-      _bubbleController.forward();
-      // Auto-hide bubble after 8 seconds (much longer than before)
-      Future.delayed(const Duration(seconds: 8), () {
+      widget.animationService.forward(_bubbleController);
+      widget.animationService.scheduleDelayed(const Duration(seconds: 8), () {
         if (mounted) {
-          _bubbleController.reverse();
+          widget.animationService.reverse(_bubbleController);
         }
       });
     }
   }
 
   void _scheduleRandomBlink() {
-    Future.delayed(Duration(seconds: 2 + math.Random().nextInt(4)), () {
+    if (!widget.animationService.animationsEnabled) {
+      return;
+    }
+    
+    widget.animationService.scheduleDelayed(Duration(seconds: 2 + math.Random().nextInt(4)), () {
       if (mounted) {
-        _blinkController.forward().then((_) {
-          _blinkController.reverse();
+        widget.animationService.forward(_blinkController).then((_) {
+          widget.animationService.reverse(_blinkController);
           _scheduleRandomBlink();
         });
       }
@@ -138,9 +146,9 @@ class _MascotWidgetState extends State<MascotWidget>
     // Handle message changes
     if (widget.message != oldWidget.message) {
       if (widget.message != null) {
-        _bubbleController.forward();
+        widget.animationService.forward(_bubbleController);
       } else {
-        _bubbleController.reverse();
+        widget.animationService.reverse(_bubbleController);
       }
     }
     
@@ -152,21 +160,18 @@ class _MascotWidgetState extends State<MascotWidget>
 
   void _handleStateChange() {
     switch (widget.mascotState) {
-      case MascotState.excited:
-        _bounceController.forward().then((_) {
-          _bounceController.reverse();
-        });
-        break;
       case MascotState.celebrating:
-        _bounceController.repeat(reverse: true);
-        Future.delayed(const Duration(seconds: 2), () {
+        if (!widget.animationService.animationsEnabled) {
+          return;
+        }
+        
+        widget.animationService.startRepeating(_bounceController, reverse: true);
+        widget.animationService.scheduleDelayed(const Duration(seconds: 2), () {
           if (mounted) {
-            _bounceController.stop();
-            _bounceController.reset();
+            widget.animationService.stopAndReset(_bounceController);
           }
         });
         break;
-      case MascotState.idle:
       default:
         break;
     }
@@ -185,8 +190,8 @@ class _MascotWidgetState extends State<MascotWidget>
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        _bounceController.forward().then((_) {
-          _bounceController.reverse();
+        widget.animationService.forward(_bounceController).then((_) {
+          widget.animationService.reverse(_bounceController);
         });
         widget.onTap?.call();
       },
@@ -197,12 +202,14 @@ class _MascotWidgetState extends State<MascotWidget>
           AnimatedBuilder(
             animation: Listenable.merge([_floatAnimation, _bounceAnimation]),
             builder: (context, child) {
+              final mascot = Transform.scale(
+                scale: _bounceAnimation.value,
+                child: _buildMascot(),
+              );
+
               return Transform.translate(
-                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 3), // Reduced from 8 to 3px
-                child: Transform.scale(
-                  scale: _bounceAnimation.value,
-                  child: _buildMascot(),
-                ),
+                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 3),
+                child: mascot,
               );
             },
           ),
@@ -225,9 +232,6 @@ class _MascotWidgetState extends State<MascotWidget>
                 },
               ),
             ),
-          // Overlay (always on top)
-          if (widget.overlay != null)
-            Positioned.fill(child: widget.overlay!),
         ],
       ),
     );

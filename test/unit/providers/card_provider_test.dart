@@ -1,13 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/providers/card_provider.dart';
 import 'package:lingua_flutter/models/card_model.dart';
+import 'package:lingua_flutter/providers/language_provider.dart';
 
 void main() {
   group('CardProvider', () {
     late CardProvider provider;
 
     setUp(() {
-      provider = CardProvider();
+      provider = CardProvider(languageProvider: LanguageProvider());
     });
 
     tearDown(() {

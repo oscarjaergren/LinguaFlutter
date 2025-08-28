@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lingua_flutter/providers/language_provider.dart';
 import 'package:lingua_flutter/models/card_model.dart';
 import 'package:lingua_flutter/providers/card_provider.dart';
 import 'package:lingua_flutter/screens/card_review_screen.dart';
@@ -7,15 +8,14 @@ import 'package:provider/provider.dart';
 
 void main() {
   // Create a reusable function to pump the widget with necessary providers
-  Future<void> pumpCardReviewScreen(WidgetTester tester, CardProvider cardProvider) async {
+  Future<void> pumpCardReviewScreen(
+    WidgetTester tester,
+    CardProvider cardProvider,
+  ) async {
     await tester.pumpWidget(
       MultiProvider(
-        providers: [
-          ChangeNotifierProvider.value(value: cardProvider),
-        ],
-        child: const MaterialApp(
-          home: CardReviewScreen(),
-        ),
+        providers: [ChangeNotifierProvider.value(value: cardProvider)],
+        child: const MaterialApp(home: CardReviewScreen()),
       ),
     );
   }
@@ -28,10 +28,13 @@ void main() {
     category: 'Greetings',
   );
 
-  testWidgets('tapping a card flips it to show the back', (WidgetTester tester) async {
+  testWidgets('tapping a card flips it to show the back', (
+    WidgetTester tester,
+  ) async {
     // 1. Setup
-    final cardProvider = CardProvider();
-    
+    final languageProvider = LanguageProvider();
+    final cardProvider = CardProvider(languageProvider: languageProvider);
+
     // Manually initialize the provider with test data
     cardProvider.startReviewSession(cards: [testCard]);
 
@@ -48,8 +51,8 @@ void main() {
     // Find the main GestureDetector for the card and tap it
     // Find the specific GestureDetector that wraps the card content.
     final cardGestureDetector = find.ancestor(
-      of: find.text('Hello'), 
-      matching: find.byType(GestureDetector)
+      of: find.text('Hello'),
+      matching: find.byType(GestureDetector),
     );
     expect(cardGestureDetector, findsOneWidget);
     await tester.tap(cardGestureDetector);

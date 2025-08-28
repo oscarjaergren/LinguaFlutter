@@ -7,6 +7,9 @@ class MascotProvider extends ChangeNotifier {
   String? _currentMessage;
   bool _isVisible = true;
   bool _hasInitializedForSession = false;
+  bool animationsEnabled;
+
+  MascotProvider({this.animationsEnabled = true});
 
   // Getters
   MascotState get currentState => _currentState;
@@ -63,9 +66,11 @@ class MascotProvider extends ChangeNotifier {
       notifyListeners();
       
       // Auto-hide message after 4 seconds
-      Future.delayed(const Duration(seconds: 4), () {
-        hideMessage();
-      });
+      if (animationsEnabled) {
+        Future.delayed(const Duration(seconds: 4), () {
+          hideMessage();
+        });
+      }
     }
   }
 
@@ -76,9 +81,11 @@ class MascotProvider extends ChangeNotifier {
     notifyListeners();
     
     // Auto-hide message after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
-      hideMessage();
-    });
+    if (animationsEnabled) {
+      Future.delayed(const Duration(seconds: 4), () {
+        hideMessage();
+      });
+    }
   }
 
   /// Hide the current message
@@ -106,16 +113,18 @@ class MascotProvider extends ChangeNotifier {
     _currentMessage = customMessage ?? _getRandomMessage('celebration');
     notifyListeners();
     
-    // Return to idle after celebration
-    Future.delayed(const Duration(seconds: 3), () {
-      _currentState = MascotState.idle;
-      notifyListeners();
-    });
-    
-    // Hide message after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      hideMessage();
-    });
+    if (animationsEnabled) {
+      // Return to idle after celebration
+      Future.delayed(const Duration(seconds: 3), () {
+        _currentState = MascotState.idle;
+        notifyListeners();
+      });
+      
+      // Hide message after 5 seconds
+      Future.delayed(const Duration(seconds: 5), () {
+        hideMessage();
+      });
+    }
   }
 
   /// Show excitement
@@ -124,16 +133,18 @@ class MascotProvider extends ChangeNotifier {
     _currentMessage = customMessage ?? _getRandomMessage('encouragement');
     notifyListeners();
     
-    // Return to idle after excitement
-    Future.delayed(const Duration(seconds: 2), () {
-      _currentState = MascotState.idle;
-      notifyListeners();
-    });
-    
-    // Hide message after 4 seconds
-    Future.delayed(const Duration(seconds: 4), () {
-      hideMessage();
-    });
+    if (animationsEnabled) {
+      // Return to idle after excitement
+      Future.delayed(const Duration(seconds: 2), () {
+        _currentState = MascotState.idle;
+        notifyListeners();
+      });
+      
+      // Hide message after 4 seconds
+      Future.delayed(const Duration(seconds: 4), () {
+        hideMessage();
+      });
+    }
   }
 
   /// React to user actions

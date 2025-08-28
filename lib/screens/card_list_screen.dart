@@ -8,7 +8,7 @@ import '../providers/streak_provider.dart';
 import '../providers/mascot_provider.dart';
 import '../widgets/iconify_icon.dart';
 import '../widgets/streak_status_widget.dart';
-import '../widgets/mascot_widget.dart';
+import 'package:lingua_flutter/widgets/mascot_widget.dart';
 import 'simple_card_creation_screen.dart';
 import 'card_review_screen.dart';
 import 'debug_menu_screen.dart';
@@ -30,18 +30,6 @@ class _CardListScreenState extends State<CardListScreen> {
     // Reset mascot session when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MascotProvider>().resetSession();
-    });
-
-    // Initialize providers
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final cardProvider = context.read<CardProvider>();
-      final languageProvider = context.read<LanguageProvider>();
-
-      // Set up provider references
-      cardProvider.setLanguageProvider(languageProvider);
-
-      cardProvider.initialize();
-      context.read<StreakProvider>().loadStreak();
     });
   }
 
@@ -287,14 +275,17 @@ class _CardListScreenState extends State<CardListScreen> {
             builder: (context, cardProvider, streakProvider, mascotProvider, child) {
               // Show contextual messages based on app state
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mascotProvider.currentMessage == null) {
-                  mascotProvider.showContextualMessage(
-                    totalCards: cardProvider.allCards.length,
-                    dueCards: cardProvider.reviewCards.length,
-                    currentStreak: streakProvider.currentStreak,
-                    hasStudiedToday: streakProvider.cardsReviewedToday > 0,
-                  );
-                }
+                // Show contextual message after a delay
+                Future.delayed(const Duration(milliseconds: 500), () {
+                  if (mounted) {
+                    context.read<MascotProvider>().showContextualMessage(
+                          totalCards: cardProvider.allCards.length,
+                          dueCards: cardProvider.reviewCards.length,
+                          currentStreak: streakProvider.currentStreak,
+                          hasStudiedToday: streakProvider.cardsReviewedToday > 0,
+                        );
+                  }
+                });
               });
 
               return Container(
@@ -500,43 +491,45 @@ class _CardListView extends StatelessWidget {
 
         if (cards.isEmpty) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _getEmptyIcon(),
-                  size: 64,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _getEmptyMessage(),
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _getEmptySubtitle(),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                if (type == CardListType.all)
-                  FilledButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SimpleCardCreationScreen(),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create First Card'),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    _getEmptyIcon(),
+                    size: 64,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                   ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    _getEmptyMessage(),
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _getEmptySubtitle(),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  if (type == CardListType.all)
+                    FilledButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const SimpleCardCreationScreen(),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create First Card'),
+                    ),
+                ],
+              ),
             ),
           );
         }
