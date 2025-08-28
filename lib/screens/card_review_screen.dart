@@ -33,7 +33,6 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   bool _isDragging = false;
   double _dragStartX = 0.0;
   double _currentDragPercent = 0.0;
-  bool _isFlippingPage = false;
   
   @override
   void initState() {
@@ -138,32 +137,31 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _flipCard() {
     final provider = context.read<CardProvider>();
-    if (provider.currentCard == null || _isFlippingPage) return;
-    
-    _isFlippingPage = true;
+    // Use the animation controller's status to prevent multiple flips
+    if (provider.currentCard == null || _pageController.isAnimating) return;
+
     _bindingController.forward();
-    
+
     if (provider.showingBack) {
-      _pageController.reverse().then((_) {
-        _isFlippingPage = false;
+      _pageController.reverse().whenComplete(() {
         _bindingController.reverse();
       });
     } else {
-      _pageController.forward().then((_) {
-        _isFlippingPage = false;
+      _pageController.forward().whenComplete(() {
         _bindingController.reverse();
       });
     }
-    
+
     provider.flipCard();
   }
 
   Future<void> _answerCard(bool wasCorrect) async {
     final provider = context.read<CardProvider>();
-    if (_isFlippingPage) return;
-    
-    _isFlippingPage = true;
-    
+    // Wait for any ongoing page flip to complete before answering
+    if (_pageController.isAnimating) {
+      await _pageController.forward();
+    }
+
     // Just slide the card away - no flipping back
     _slideAnimation = Tween<Offset>(
       begin: Offset.zero,
@@ -172,13 +170,13 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       parent: _slideController,
       curve: Curves.easeInOutCubic,
     ));
-    
+
     // Slide the card away
     await _slideController.forward();
-    
+
     // Answer the card
     await provider.answerCard(wasCorrect);
-    
+
     // Check for milestone celebrations when session ends
     if (!provider.isReviewMode && mounted) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -187,13 +185,12 @@ class _CardReviewScreenState extends State<CardReviewScreen>
         }
       });
     }
-    
+
     // Reset animations for the next card
     _pageController.reset();
     _slideController.reset();
     _colorController.reset();
     _bindingController.reset();
-    _isFlippingPage = false;
   }
 
   void _onPanStart(DragStartDetails details) {
