@@ -10,14 +10,8 @@ The previous `card_review_screen.dart` implementation had complex animation conf
 
 ## 3. Industry Standards Analysis
 
-### Anki Patterns:
-- **Answer Buttons**: 2-4 difficulty buttons (Again, Hard, Good, Easy) with time intervals
-- **Gesture Support**: Configurable swipe gestures for quick answering
-- **Show Answer**: Separate step to reveal answer before grading
-- **Progress Indicators**: Clear count of new/learning/review cards
-
 ### DuoCards Patterns:
-- **Binary Classification**: Simple "Know/Don't Know" swipe system
+- **Binary Classification**: Simple "Pass/Fail" swipe system
 - **Visual Feedback**: Immediate color-coded feedback (green/red)
 - **Smooth Animations**: Clean card transitions without complex 3D effects
 - **Touch-First Design**: Optimized for mobile interaction
@@ -27,10 +21,9 @@ The previous `card_review_screen.dart` implementation had complex animation conf
 1.  **Session Start**: Display card count and progress. Show first card's question side.
 2.  **Question Phase**: User reads the question/prompt on the card front.
 3.  **Reveal Answer**: Tap anywhere on card OR tap "Show Answer" button to reveal the back.
-4.  **Answer Phase**: User evaluates their knowledge using one of these methods:
-    *   **Swipe Right**: "I knew this" (Easy/Good) - green feedback
-    *   **Swipe Left**: "I didn't know this" (Again/Hard) - red feedback  
-    *   **Button Tap**: More granular difficulty selection (Again, Hard, Good, Easy)
+4.  **Answer Phase**: User evaluates their knowledge using swipe gestures:
+    *   **Swipe Right**: "Pass" - green feedback
+    *   **Swipe Left**: "Fail" - red feedback
 5.  **Transition**: Card animates away, next card appears with smooth transition.
 6.  **Session End**: Show completion summary with statistics.
 
@@ -63,14 +56,12 @@ The previous `card_review_screen.dart` implementation had complex animation conf
 ## 6. Interactions
 
 -   **Tap**: Tapping anywhere on the current card reveals the answer
--   **Swipe Left**: Mark as "Don't Know" - card moves left with red feedback
--   **Swipe Right**: Mark as "Know" - card moves right with green feedback
--   **Button Interface**: Optional difficulty buttons (Again, Hard, Good, Easy) for precise grading
+-   **Swipe Left**: Mark as "Fail" - card moves left with red feedback
+-   **Swipe Right**: Mark as "Pass" - card moves right with green feedback
 -   **Keyboard Shortcuts** (Desktop/Web):
     -   `Space`: Reveal answer or advance to next card
-    -   `1-4`: Select difficulty (Again, Hard, Good, Easy)
-    -   `ArrowLeft`: Don't Know
-    -   `ArrowRight`: Know
+    -   `ArrowLeft`: Fail
+    -   `ArrowRight`: Pass
 
 ## 7. State Management
 
@@ -93,7 +84,6 @@ The previous `card_review_screen.dart` implementation had complex animation conf
 2. **ReviewCard**: Individual card widget with flip animation
 3. **SwipeDetector**: Custom gesture recognizer for swipe actions
 4. **ProgressIndicator**: Shows session progress and card counts
-5. **AnswerButtons**: Optional precise difficulty selection
 
 ### Performance Considerations:
 -   Use `RepaintBoundary` for card widgets to optimize repaints

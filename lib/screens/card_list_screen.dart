@@ -10,7 +10,7 @@ import '../widgets/iconify_icon.dart';
 import '../widgets/streak_status_widget.dart';
 import 'package:lingua_flutter/widgets/mascot_widget.dart';
 import 'simple_card_creation_screen.dart';
-import 'card_review_screen.dart';
+import '../features/card_review/card_review.dart';
 import 'debug_menu_screen.dart';
 
 /// Screen for displaying and managing the list of cards
