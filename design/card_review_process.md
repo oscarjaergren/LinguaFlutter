@@ -2,48 +2,101 @@
 
 ## 1. Goal
 
-To transform the card review screen from a simple card-swiping interface into an immersive, book-like experience. The user should feel like they are flipping through pages of a study book rather than just interacting with digital cards.
+To create a modern, efficient card review screen that combines the best practices from industry-leading spaced repetition apps (Anki, DuoCards) with an immersive book-like experience. The interface should prioritize learning effectiveness while maintaining visual appeal.
 
 ## 2. Current State & Issues
 
-The `card_review_screen.dart` file contains multiple `AnimationControllers` intended to create a page-turning effect, including animations for page flips, bookbinding, and shadows. However, the user has reported that the flipping mechanism is not working correctly. The complexity of the existing animations might be leading to conflicts or unexpected behavior, preventing a smooth user experience.
+The previous `card_review_screen.dart` implementation had complex animation conflicts and non-functional flipping mechanisms. Based on user feedback, we're starting fresh with a proven approach.
 
-## 3. Proposed User Flow
+## 3. Industry Standards Analysis
 
-1.  **Session Start**: The user initiates a review session. The cards are presented as a stack of pages in a book, with the top card visible.
-2.  **Viewing a Card (Front)**: The user sees the front of the top card (e.g., a word in German). The UI should resemble an open page of a book.
-3.  **Flipping the Page**: The user can **tap** the card. This action triggers a 3D page-turning animation, revealing the back of the card (the answer, e.g., the English translation).
-4.  **Answering a Card**: After viewing the answer, the user **swipes** the card:
-    *   **Swipe Right (Correct)**: The current page (card) gracefully slides or flips away to the right, revealing the next card in the stack. This action is accompanied by positive haptic and visual feedback (e.g., a green glow).
-    *   **Swipe Left (Incorrect)**: The current page slides or flips away to the left, accompanied by negative feedback (e.g., a red glow).
-5.  **Session End**: When all cards are reviewed, a summary or completion screen is displayed.
+### Anki Patterns:
+- **Answer Buttons**: 2-4 difficulty buttons (Again, Hard, Good, Easy) with time intervals
+- **Gesture Support**: Configurable swipe gestures for quick answering
+- **Show Answer**: Separate step to reveal answer before grading
+- **Progress Indicators**: Clear count of new/learning/review cards
 
-## 4. Animation and Visuals
+### DuoCards Patterns:
+- **Binary Classification**: Simple "Know/Don't Know" swipe system
+- **Visual Feedback**: Immediate color-coded feedback (green/red)
+- **Smooth Animations**: Clean card transitions without complex 3D effects
+- **Touch-First Design**: Optimized for mobile interaction
 
--   __Page Flip Animation__: A `Transform` widget with a `rotateY` transformation should be used to create a realistic 3D page flip effect on tap. The animation should be controlled by an `AnimationController` and feel fluid.
--   __Book Structure__: The card stack should be visually represented as a book. This includes:
-    -   A subtle book spine on the left.
-    -   Visible edges of the underlying pages (next cards in the queue) to create a sense of depth.
--   __Shadows and Lighting__: Dynamic shadows should be cast by the turning page to enhance the 3D effect. The shadow should move and change intensity as the page flips.
--   __Swipe Feedback__: Swiping should provide immediate visual feedback. A colored overlay (green for correct, red for incorrect) should appear and intensify as the user drags their finger.
--   __Haptic Feedback__: Use `HapticFeedback` to provide tactile confirmation for key actions:
-    -   `lightImpact` when tapping to flip a card.
-    -   `mediumImpact` when a swipe action is successfully completed.
+## 4. Proposed User Flow
 
-## 5. Interactions
+1.  **Session Start**: Display card count and progress. Show first card's question side.
+2.  **Question Phase**: User reads the question/prompt on the card front.
+3.  **Reveal Answer**: Tap anywhere on card OR tap "Show Answer" button to reveal the back.
+4.  **Answer Phase**: User evaluates their knowledge using one of these methods:
+    *   **Swipe Right**: "I knew this" (Easy/Good) - green feedback
+    *   **Swipe Left**: "I didn't know this" (Again/Hard) - red feedback  
+    *   **Button Tap**: More granular difficulty selection (Again, Hard, Good, Easy)
+5.  **Transition**: Card animates away, next card appears with smooth transition.
+6.  **Session End**: Show completion summary with statistics.
 
--   **Tap**: Tapping anywhere on the current card flips it to show the answer.
--   **Pan/Swipe**: Dragging the card left or right and releasing it will register an answer (incorrect/correct).
--   **Keyboard Shortcuts** (for Desktop/Web):
-    -   `Space` or `ArrowUp`/`ArrowDown`: Flip the card.
-    -   `ArrowLeft`: Answer as incorrect.
-    -   `ArrowRight`: Answer as correct.
+## 5. Animation and Visual Design
 
-## 6. State Management (`CardProvider`)
+### Core Principles:
+- **Performance First**: Smooth 60fps animations using efficient transforms
+- **Subtle Book Aesthetic**: Book-like elements without overwhelming complexity
+- **Immediate Feedback**: Clear visual responses to user actions
 
-The `CardProvider` will continue to manage the review session's state. Its responsibilities include:
+### Visual Elements:
+-   **Card Flip Animation**: Simple `AnimatedSwitcher` or `Transform` with `rotateY` for question/answer reveal
+-   **Book-like Styling**: 
+    -   Subtle paper texture background
+    -   Soft drop shadows to simulate page depth
+    -   Rounded corners mimicking book pages
+    -   Optional book spine visual on the left edge
+-   **Swipe Feedback**: 
+    -   Real-time color overlay (green/red) during drag gesture
+    -   Opacity increases with drag distance
+    -   Smooth card translation following finger movement
+-   **Transition Animations**:
+    -   Cards slide out in swipe direction
+    -   Next card scales up from behind with slight delay
+    -   Fade transitions for answer reveal
+-   **Haptic Feedback**: 
+    -   `HapticFeedback.lightImpact()` on card tap
+    -   `HapticFeedback.mediumImpact()` on successful swipe completion
 
--   Managing the queue of cards for the current review session (`currentReviewSession`).
--   Tracking the `currentCard` and its flipped state (`showingBack`).
--   Processing user answers (`answerCard`) and updating card statistics.
--   Resetting the state for the next card in the queue.
+## 6. Interactions
+
+-   **Tap**: Tapping anywhere on the current card reveals the answer
+-   **Swipe Left**: Mark as "Don't Know" - card moves left with red feedback
+-   **Swipe Right**: Mark as "Know" - card moves right with green feedback
+-   **Button Interface**: Optional difficulty buttons (Again, Hard, Good, Easy) for precise grading
+-   **Keyboard Shortcuts** (Desktop/Web):
+    -   `Space`: Reveal answer or advance to next card
+    -   `1-4`: Select difficulty (Again, Hard, Good, Easy)
+    -   `ArrowLeft`: Don't Know
+    -   `ArrowRight`: Know
+
+## 7. State Management
+
+### CardProvider Responsibilities:
+-   **Session Management**: Handle review queue and current card state
+-   **Answer Processing**: Update card statistics based on user responses
+-   **Progress Tracking**: Monitor cards remaining, session completion
+-   **State Transitions**: Manage question/answer flip state
+
+### Card States:
+-   `showingQuestion`: Initial state showing card front
+-   `showingAnswer`: After tap, showing card back
+-   `answering`: During swipe gesture with visual feedback
+-   `transitioning`: Card leaving, next card appearing
+
+## 8. Technical Implementation
+
+### Key Components:
+1. **CardReviewScreen**: Main screen widget with gesture handling
+2. **ReviewCard**: Individual card widget with flip animation
+3. **SwipeDetector**: Custom gesture recognizer for swipe actions
+4. **ProgressIndicator**: Shows session progress and card counts
+5. **AnswerButtons**: Optional precise difficulty selection
+
+### Performance Considerations:
+-   Use `RepaintBoundary` for card widgets to optimize repaints
+-   Implement card preloading for smooth transitions
+-   Dispose animation controllers properly to prevent memory leaks
+-   Use `const` constructors where possible
