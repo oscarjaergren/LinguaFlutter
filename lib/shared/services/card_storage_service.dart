@@ -61,11 +61,11 @@ class CardStorageService {
     }
   }
 
-  /// Delete a card by ID
+  /// Delete a specific card by ID
   Future<void> deleteCard(String cardId) async {
     final cards = await loadCards();
-    cards.removeWhere((card) => card.id == cardId);
-    await saveCards(cards);
+    final updatedCards = cards.where((card) => card.id != cardId).toList();
+    await saveCards(updatedCards);
   }
 
   /// Clear all cards from storage

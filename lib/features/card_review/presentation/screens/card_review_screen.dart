@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../card_management/domain/card_provider.dart';
-import '../../../../shared/services/animation_service.dart';
+import '../../../../shared/shared.dart';
+import '../../../../models/card_model.dart';
 import '../widgets/card_area.dart';
 import '../widgets/review_progress_indicator.dart';
 import '../widgets/review_completion_screen.dart';
@@ -161,7 +161,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     
     if (cardProvider.reviewCards.isNotEmpty) {
       // Process the answer
-      cardProvider.answerCard(isCorrect);
+      cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
       
       // Reset state for next card
       if (mounted) {

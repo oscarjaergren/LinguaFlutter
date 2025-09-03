@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../../models/card_model.dart';
-import '../../../../providers/card_provider.dart';
-import '../../../../services/animation_service.dart';
+import '../../../../shared/shared.dart';
 import 'review_card.dart';
 
 /// Interactive card area with drag gestures and animations

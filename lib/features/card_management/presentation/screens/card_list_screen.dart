@@ -1,17 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../debug/presentation/screens/debug_menu_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/card_model.dart';
-import '../../domain/card_provider.dart';
+import '../../../../shared/shared.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../../streak/domain/streak_provider.dart';
 import '../../../mascot/domain/mascot_provider.dart';
-import '../../../../shared/widgets/iconify_icon.dart';
 import '../../../../widgets/streak_status_widget.dart';
 import '../../../mascot/presentation/widgets/mascot_widget.dart';
 import 'simple_card_creation_screen.dart';
 import '../../../card_review/card_review.dart';
-import '../../../../screens/debug_menu_screen.dart';
 
 /// Screen for displaying and managing the list of cards
 class CardListScreen extends StatefulWidget {

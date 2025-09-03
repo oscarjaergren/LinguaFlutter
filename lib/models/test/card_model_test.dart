@@ -31,7 +31,6 @@ void main() {
     });
 
     test('should create card with all fields', () {
-      final now = DateTime.now();
       final icon = IconModel(
         id: 'mdi:home',
         name: 'Home',
@@ -41,7 +40,8 @@ void main() {
         svgUrl: 'https://api.iconify.design/mdi:home.svg',
       );
 
-      final card = CardModel.create(
+      final card = CardModel(
+        id: 'test-id',
         frontText: 'das Haus',
         backText: 'the house',
         language: 'de',
@@ -51,6 +51,8 @@ void main() {
         germanArticle: 'das',
         isFavorite: true,
         difficulty: 2,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       );
 
       expect(card.frontText, 'das Haus');
@@ -156,7 +158,7 @@ void main() {
         category: 'Test',
       );
 
-      final updatedCard = card.processAnswer(CardAnswer.partial);
+      final updatedCard = card.processAnswer(CardAnswer.skip);
 
       expect(updatedCard.reviewCount, card.reviewCount + 1);
       expect(updatedCard.correctCount, card.correctCount);

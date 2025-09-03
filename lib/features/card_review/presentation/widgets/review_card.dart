@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/card_model.dart';
-import '../../../../providers/card_provider.dart';
+import '../../../../shared/shared.dart';
 
 /// Individual flashcard widget with flip animation and visual feedback
 class ReviewCard extends StatelessWidget {

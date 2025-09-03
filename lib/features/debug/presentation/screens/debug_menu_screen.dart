@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:lingua_flutter/features/card_management/domain/card_provider.dart';
+import '../../../../shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/card_model.dart';
 import '../../../debug/data/debug_service.dart';

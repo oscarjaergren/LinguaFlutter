@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../providers/card_provider.dart';
+import 'package:lingua_flutter/shared/domain/card_provider.dart';
 
 /// Completion screen shown when review session is finished
 class ReviewCompletionScreen extends StatelessWidget {

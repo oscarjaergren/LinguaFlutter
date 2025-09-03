@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../providers/card_provider.dart';
+import 'package:lingua_flutter/shared/shared.dart';
 
 /// Progress indicator for card review session
 class ReviewProgressIndicator extends StatelessWidget {

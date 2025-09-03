@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lingua_flutter/shared/domain/card_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/icon_search/icon_search.dart';
@@ -18,9 +19,6 @@ void main() async {
   final streakProvider = StreakProvider();
   final cardProvider = CardProvider(languageProvider: languageProvider);
   final themeProvider = ThemeProvider(prefs: prefs);
-
-  // Set up dependencies between providers
-  cardProvider.setStreakProvider(streakProvider);
 
   // Initialize providers that need async setup
   await cardProvider.initialize();

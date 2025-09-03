@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:lingua_flutter/models/icon_model.dart';
 import 'package:provider/provider.dart';
 import '../../../../models/card_model.dart';
-import '../../../../models/icon_model.dart';
-import '../../domain/card_provider.dart';
-import '../../../language/domain/language_provider.dart';
-import '../../../../shared/widgets/iconify_icon.dart';
 import '../../../icon_search/icon_search.dart';
+import '../../../../shared/shared.dart';
+import '../../../language/domain/language_provider.dart';
 
 /// Simple screen for creating and editing language learning cards
 class SimpleCardCreationScreen extends StatefulWidget {
