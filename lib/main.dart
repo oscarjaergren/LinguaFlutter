@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'providers/icon_provider.dart';
-import 'providers/card_provider.dart';
-import 'providers/streak_provider.dart';
-import 'providers/language_provider.dart';
-import 'providers/mascot_provider.dart';
-import 'package:lingua_flutter/providers/theme_provider.dart';
-import 'screens/card_list_screen.dart';
+import 'features/icon_search/icon_search.dart';
+import 'features/card_management/card_management.dart';
+import 'features/streak/streak.dart';
+import 'features/language/language.dart';
+import 'features/mascot/mascot.dart';
+import 'features/theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

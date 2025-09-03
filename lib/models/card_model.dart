@@ -199,8 +199,50 @@ class CardModel {
   @override
   int get hashCode => id.hashCode;
 
+  // Convenience getters for backward compatibility
+  String get front => frontText;
+  String get back => backText;
+  bool get isDue => isDueForReview;
+
+  /// Process a card answer and return updated card with spaced repetition logic
+  CardModel processAnswer(CardAnswer answer) {
+    final wasCorrect = answer == CardAnswer.correct;
+    DateTime? nextReviewDate;
+    
+    if (wasCorrect) {
+      // Spaced repetition: increase interval based on difficulty and success
+      final baseInterval = switch (difficulty) {
+        1 => 1, // 1 day
+        2 => 3, // 3 days  
+        3 => 7, // 1 week
+        4 => 14, // 2 weeks
+        5 => 30, // 1 month
+        _ => 1,
+      };
+      
+      final multiplier = (correctCount / (reviewCount + 1)) + 1;
+      final intervalDays = (baseInterval * multiplier).round();
+      nextReviewDate = DateTime.now().add(Duration(days: intervalDays));
+    } else {
+      // If incorrect, review again tomorrow
+      nextReviewDate = DateTime.now().add(const Duration(days: 1));
+    }
+    
+    return copyWithReview(
+      wasCorrect: wasCorrect,
+      nextReviewDate: nextReviewDate,
+    );
+  }
+
   @override
   String toString() {
     return 'CardModel(id: $id, frontText: $frontText, backText: $backText, category: $category)';
   }
+}
+
+/// Enum for card review answers
+enum CardAnswer {
+  correct,
+  incorrect,
+  skip,
 }

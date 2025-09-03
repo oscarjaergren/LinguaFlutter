@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../providers/card_provider.dart';
-import '../../../../services/animation_service.dart';
+import '../../../card_management/domain/card_provider.dart';
+import '../../../../shared/services/animation_service.dart';
 import '../widgets/card_area.dart';
 import '../widgets/review_progress_indicator.dart';
 import '../widgets/review_completion_screen.dart';

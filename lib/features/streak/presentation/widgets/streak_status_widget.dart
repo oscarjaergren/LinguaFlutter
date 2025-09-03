@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:lingua_flutter/features/streak/domain/streak_provider.dart';
-import 'package:lingua_flutter/features/streak/presentation/screens/streak_detail_screen.dart';
 import 'package:provider/provider.dart';
+import '../../domain/streak_provider.dart';
+import '../screens/streak_detail_screen.dart';
 
 /// Widget to display streak status and statistics
 class StreakStatusWidget extends StatelessWidget {
