@@ -3,11 +3,11 @@ import 'package:lingua_flutter/shared/domain/card_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/icon_search/icon_search.dart';
-import 'features/card_management/card_management.dart';
 import 'features/streak/streak.dart';
 import 'features/language/language.dart';
 import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
+import 'shared/navigation/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,12 +46,12 @@ class LinguaFlutterApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        return MaterialApp(
+        return MaterialApp.router(
           title: 'LinguaFlutter',
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.themeMode,
-          home: const CardListScreen(),
+          routerConfig: AppRouter.router,
         );
       },
     );

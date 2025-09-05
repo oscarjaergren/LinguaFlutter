@@ -56,3 +56,4 @@ app.*.map.json
 windows/flutter/generated_*
 macos/Flutter/Generated*
 linux/flutter/generated_*
+pubspec.lock

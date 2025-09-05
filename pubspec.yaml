@@ -50,6 +50,9 @@ dependencies:
   # Local storage
   shared_preferences: ^2.2.2
   path_provider: ^2.1.1
+  
+  # Navigation
+  go_router: ^14.2.7
 
 dev_dependencies:
   flutter_test:
