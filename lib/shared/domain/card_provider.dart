@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'models/card_model.dart';
-import '../services/card_storage_service.dart';
-import '../../features/language/domain/language_provider.dart';
+import '../../features/language/language.dart';
+import '../../features/card_management/card_management.dart';
 
 /// Shared provider for managing cards across all features
 class CardProvider extends ChangeNotifier {
-  final CardStorageService _storageService = CardStorageService();
+  final CardManagementRepository _repository;
   final LanguageProvider languageProvider;
 
   // Core card data
@@ -33,7 +33,10 @@ class CardProvider extends ChangeNotifier {
   String? _errorMessage;
   Map<String, dynamic> _stats = {};
 
-  CardProvider({required this.languageProvider}) {
+  CardProvider({
+    required this.languageProvider,
+    CardManagementRepository? repository,
+  }) : _repository = repository ?? LocalCardManagementRepository() {
     _initialize();
   }
 
@@ -89,7 +92,7 @@ class CardProvider extends ChangeNotifier {
   Future<void> loadCards() async {
     _setLoading(true);
     try {
-      _allCards = await _storageService.loadCards();
+      _allCards = await _repository.getAllCards();
       _applyFilters();
       _updateReviewCards();
       _calculateStats();
@@ -103,7 +106,7 @@ class CardProvider extends ChangeNotifier {
 
   Future<void> saveCard(CardModel card) async {
     try {
-      await _storageService.saveCard(card);
+      await _repository.saveCard(card);
       await loadCards(); // Reload to get updated data
     } catch (e) {
       _setError('Failed to save card: $e');
@@ -120,7 +123,7 @@ class CardProvider extends ChangeNotifier {
 
   Future<void> deleteCard(String cardId) async {
     try {
-      await _storageService.deleteCard(cardId);
+      await _repository.deleteCard(cardId);
       await loadCards();
     } catch (e) {
       _setError('Failed to delete card: $e');
@@ -231,7 +234,7 @@ class CardProvider extends ChangeNotifier {
 
   Future<void> clearAllCards() async {
     try {
-      await _storageService.clearAllCards();
+      await _repository.clearAllCards();
       await loadCards();
     } catch (e) {
       _setError('Failed to clear cards: $e');
