@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../models/streak_model.dart';
+import '../domain/models/streak_model.dart';
 
 /// Service for managing streak data persistence
 class StreakService {

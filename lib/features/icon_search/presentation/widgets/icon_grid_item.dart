@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../models/icon_model.dart';
 import '../../../../shared/shared.dart';
 
 /// Grid item widget for displaying an icon in the icon search results

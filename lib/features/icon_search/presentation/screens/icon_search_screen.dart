@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lingua_flutter/features/icon_search/domain/icon_provider.dart';
 import 'package:lingua_flutter/features/icon_search/presentation/widgets/icon_grid_item.dart';
+import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
 import 'package:lingua_flutter/shared/widgets/iconify_icon.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import '../../../../models/icon_model.dart';
 
 /// Screen for searching and selecting icons
 class IconSearchScreen extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lingua_flutter/models/icon_model.dart';
+import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
 
 void main() {
   group('IconModel', () {

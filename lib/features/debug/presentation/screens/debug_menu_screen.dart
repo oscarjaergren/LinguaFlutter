@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../../../shared/shared.dart';
 import 'package:provider/provider.dart';
-import '../../../../models/card_model.dart';
 import '../../../debug/data/debug_service.dart';
 
 /// Debug menu for development and testing

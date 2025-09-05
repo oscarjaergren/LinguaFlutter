@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../../models/icon_model.dart';
+import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
 import '../../../utils/constants.dart';
 
 class IconifyService {

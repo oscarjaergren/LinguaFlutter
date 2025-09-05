@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/card_model.dart';
+import '../domain/models/card_model.dart';
 
 /// Service for storing and retrieving cards from local storage
 class CardStorageService {

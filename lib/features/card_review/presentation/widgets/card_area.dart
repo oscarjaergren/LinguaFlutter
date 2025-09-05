@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../models/card_model.dart';
 import '../../../../shared/shared.dart';
 import 'review_card.dart';
 

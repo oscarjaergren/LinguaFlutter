@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../../models/streak_model.dart';
+import 'models/streak_model.dart';
 import '../data/streak_service.dart';
 
 /// Provider for managing streak state and operations

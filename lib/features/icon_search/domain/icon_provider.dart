@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../../models/icon_model.dart';
+import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
 import '../data/iconify_service.dart';
 
 /// Provider for managing icon search state and selected icons

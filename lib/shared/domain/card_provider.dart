@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../../models/card_model.dart';
+import 'models/card_model.dart';
 import '../services/card_storage_service.dart';
 import '../../features/language/domain/language_provider.dart';
 

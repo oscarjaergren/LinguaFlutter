@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lingua_flutter/models/streak_model.dart';
+import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
 
 void main() {
   group('StreakModel', () {

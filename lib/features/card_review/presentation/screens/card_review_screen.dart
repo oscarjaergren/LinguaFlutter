@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/shared.dart';
-import '../../../../models/card_model.dart';
 import '../widgets/card_area.dart';
 import '../widgets/review_progress_indicator.dart';
 import '../widgets/review_completion_screen.dart';

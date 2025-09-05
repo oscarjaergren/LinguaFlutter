@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import '../../../shared/shared.dart';
-import 'package:lingua_flutter/models/card_model.dart';
 import 'package:lingua_flutter/features/language/domain/language_provider.dart';
 
 void main() {

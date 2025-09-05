@@ -1,4 +1,4 @@
-import '../../../models/card_model.dart';
+import '../../../shared/domain/models/card_model.dart';
 
 /// Service for debug functionality and test data generation
 class DebugService {

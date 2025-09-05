@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../models/icon_model.dart';
+import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
 
 /// Widget to display Iconify icons with proper styling and error handling
 class IconifyIcon extends StatelessWidget {
