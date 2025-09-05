@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/card_management/presentation/screens/card_list_screen_refactored.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+import '../../features/card_management/presentation/screens/card_list_screen.dart';
 import '../../features/card_management/presentation/screens/simple_card_creation_screen.dart';
 import '../../features/card_review/presentation/screens/card_review_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
+import '../services/logger_service.dart';
 
 /// Application routes configuration using go_router
 class AppRouter {
@@ -12,6 +14,7 @@ class AppRouter {
   static const String cardEdit = '/card-edit';
   static const String cardReview = '/card-review';
   static const String debug = '/debug';
+  static const String logs = '/logs';
 
   static final GoRouter router = GoRouter(
     initialLocation: cardList,
@@ -52,6 +55,15 @@ class AppRouter {
         path: debug,
         name: 'debug',
         builder: (context, state) => const DebugMenuScreen(),
+      ),
+      
+      // Logs Screen (Talker UI)
+      GoRoute(
+        path: logs,
+        name: 'logs',
+        builder: (context, state) => TalkerScreen(
+          talker: LoggerService.instance,
+        ),
       ),
     ],
     
@@ -103,6 +115,9 @@ extension AppRouterExtension on BuildContext {
   /// Navigate to debug menu
   void goToDebug() => go(AppRouter.debug);
   
+  /// Navigate to logs screen
+  void goToLogs() => go(AppRouter.logs);
+  
   /// Push card creation screen
   void pushCardCreation() => push(AppRouter.cardCreation);
   
@@ -114,4 +129,7 @@ extension AppRouterExtension on BuildContext {
   
   /// Push debug menu
   void pushDebug() => push(AppRouter.debug);
+  
+  /// Push logs screen
+  void pushLogs() => push(AppRouter.logs);
 }

@@ -16,7 +16,7 @@ class CardReviewViewModel extends ChangeNotifier {
   DateTime? _sessionStartTime;
   int _sessionCardsReviewed = 0;
   int _sessionCorrectAnswers = 0;
-  List<String> _sessionCardIds = [];
+  // List<String> _sessionCardIds = []; // Unused field
 
   // Current card state
   CardModel? _currentCard;
@@ -78,7 +78,7 @@ class CardReviewViewModel extends ChangeNotifier {
   // Streak and mascot getters
   int get currentStreak => _streakProvider.currentStreak;
   bool get streakActive => _streakProvider.isStreakActive;
-  String get mascotMessage => _mascotProvider.currentMessage;
+  String get mascotMessage => _mascotProvider.currentMessage ?? '';
   bool get mascotVisible => _mascotProvider.isVisible;
 
   // Session management
@@ -105,13 +105,13 @@ class CardReviewViewModel extends ChangeNotifier {
       }
 
       // Initialize session
-      await _cardProvider.startReviewSession(cardsToReview);
+      _cardProvider.startReviewSession(cards: cardsToReview);
       
       _sessionActive = true;
       _sessionStartTime = DateTime.now();
       _sessionCardsReviewed = 0;
       _sessionCorrectAnswers = 0;
-      _sessionCardIds = cardsToReview.map((card) => card.id).toList();
+      // _sessionCardIds = cardsToReview.map((card) => card.id).toList(); // Unused
       _currentCardIndex = 0;
       _showingBack = false;
       
@@ -119,7 +119,7 @@ class CardReviewViewModel extends ChangeNotifier {
       _currentCard = cardsToReview.isNotEmpty ? cardsToReview[0] : null;
       
       // Initialize mascot for session
-      _mascotProvider.startReviewSession();
+      _mascotProvider.reactToAction(MascotAction.sessionCompleted);
       
       _setLoading(false);
       _clearError();
@@ -139,7 +139,7 @@ class CardReviewViewModel extends ChangeNotifier {
     
     if (_showingBack) {
       // Card flipped to back - trigger mascot encouragement
-      _mascotProvider.onCardFlipped();
+      _mascotProvider.reactToAction(MascotAction.cardCompleted);
     }
     
     notifyListeners();
@@ -163,8 +163,8 @@ class CardReviewViewModel extends ChangeNotifier {
     _setLoading(true);
 
     try {
-      // Update card statistics
-      await _cardProvider.recordCardReview(_currentCard!.id, isCorrect);
+      // Update card statistics - use existing method
+      _cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
       
       // Update session statistics
       _sessionCardsReviewed++;
@@ -172,18 +172,14 @@ class CardReviewViewModel extends ChangeNotifier {
         _sessionCorrectAnswers++;
       }
 
-      // Update streak
-      if (isCorrect) {
-        await _streakProvider.recordCorrectAnswer();
-      } else {
-        await _streakProvider.recordIncorrectAnswer();
-      }
+      // Update streak with review session
+      await _streakProvider.updateStreakWithReview(cardsReviewed: 1);
 
       // Trigger mascot response
       if (isCorrect) {
-        _mascotProvider.onCorrectAnswer();
+        _mascotProvider.reactToAction(MascotAction.cardCompleted);
       } else {
-        _mascotProvider.onIncorrectAnswer();
+        _mascotProvider.reactToAction(MascotAction.struggling);
       }
 
       // Move to next card or end session
@@ -214,10 +210,10 @@ class CardReviewViewModel extends ChangeNotifier {
     _sessionActive = false;
     _currentCard = null;
     
-    // Calculate session duration
-    final sessionDuration = _sessionStartTime != null 
-        ? DateTime.now().difference(_sessionStartTime!)
-        : Duration.zero;
+    // Calculate session duration (unused but kept for future use)
+    // final sessionDuration = _sessionStartTime != null 
+    //     ? DateTime.now().difference(_sessionStartTime!)
+    //     : Duration.zero;
 
     // Show confetti for good performance
     if (_sessionCorrectAnswers / _sessionCardsReviewed >= 0.8) {
@@ -225,13 +221,10 @@ class CardReviewViewModel extends ChangeNotifier {
     }
 
     // Update mascot for session end
-    _mascotProvider.onSessionCompleted(
-      cardsReviewed: _sessionCardsReviewed,
-      correctAnswers: _sessionCorrectAnswers,
-    );
+    _mascotProvider.reactToAction(MascotAction.sessionCompleted);
 
     // End the provider's review session
-    await _cardProvider.endReviewSession();
+    _cardProvider.endReviewSession();
     
     notifyListeners();
   }

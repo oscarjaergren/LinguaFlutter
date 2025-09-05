@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../view_models/card_list_view_model.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/navigation/app_router.dart';
+import '../view_models/card_list_view_model.dart';
 import 'card_item_widget.dart';
 import 'search_bar_widget.dart';
 
@@ -138,7 +139,7 @@ class CardListView extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: viewModel.canStartReview
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -160,13 +161,13 @@ class CardListView extends StatelessWidget {
           Icon(
             hasFilters ? Icons.filter_list_off : Icons.library_books_outlined,
             size: 64,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
             hasFilters ? 'No cards match your filters' : 'No cards yet',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 8),
@@ -175,7 +176,7 @@ class CardListView extends StatelessWidget {
                 ? 'Try adjusting your search or filters'
                 : 'Create your first card to get started',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
             ),
             textAlign: TextAlign.center,
           ),
@@ -227,13 +228,8 @@ class CardListView extends StatelessWidget {
   }
 
   void _onCardEdit(BuildContext context, CardModel card) {
-    // Navigate to edit screen
-    // This will be updated when we implement navigation
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => SimpleCardCreationScreen(cardToEdit: card),
-      ),
-    );
+    // Navigate to edit screen using go_router
+    context.pushCardEdit(card.id);
   }
 
   void _onCardDelete(BuildContext context, CardListViewModel viewModel, CardModel card) {

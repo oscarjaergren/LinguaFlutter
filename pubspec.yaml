@@ -53,6 +53,11 @@ dependencies:
   
   # Navigation
   go_router: ^14.2.7
+  
+  # Logging and error handling
+  talker_flutter: ^5.0.0
+  talker_dio_logger: ^5.0.0
+  talker_http_logger: ^5.0.0
 
 dev_dependencies:
   flutter_test:

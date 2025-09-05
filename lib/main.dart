@@ -8,9 +8,14 @@ import 'features/language/language.dart';
 import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
 import 'shared/navigation/app_router.dart';
+import 'shared/services/logger_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize logging first
+  LoggerService.initialize();
+  LoggerService.info('🚀 LinguaFlutter app starting...');
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -23,6 +28,8 @@ void main() async {
   // Initialize providers that need async setup
   await cardProvider.initialize();
   await streakProvider.loadStreak();
+  
+  LoggerService.info('✅ All providers initialized successfully');
 
   runApp(
     MultiProvider(

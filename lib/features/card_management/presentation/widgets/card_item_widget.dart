@@ -40,7 +40,7 @@ class CardItemWidget extends StatelessWidget {
                   // Icon if available
                   if (card.icon != null) ...[
                     IconDisplayWidget(
-                      icon: card.icon!,
+                      iconPath: card.icon!.svgUrl,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -77,7 +77,7 @@ class CardItemWidget extends StatelessWidget {
                         Text(
                           card.backText,
                           style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -197,27 +197,27 @@ class CardItemWidget extends StatelessWidget {
     
     switch (difficulty) {
       case 1:
-        backgroundColor = Colors.green.withOpacity(0.2);
+        backgroundColor = Colors.green.withValues(alpha: 0.2);
         textColor = Colors.green.shade700;
         break;
       case 2:
-        backgroundColor = Colors.lightGreen.withOpacity(0.2);
+        backgroundColor = Colors.lightGreen.withValues(alpha: 0.2);
         textColor = Colors.lightGreen.shade700;
         break;
       case 3:
-        backgroundColor = Colors.orange.withOpacity(0.2);
+        backgroundColor = Colors.orange.withValues(alpha: 0.2);
         textColor = Colors.orange.shade700;
         break;
       case 4:
-        backgroundColor = Colors.deepOrange.withOpacity(0.2);
+        backgroundColor = Colors.deepOrange.withValues(alpha: 0.2);
         textColor = Colors.deepOrange.shade700;
         break;
       case 5:
-        backgroundColor = Colors.red.withOpacity(0.2);
+        backgroundColor = Colors.red.withValues(alpha: 0.2);
         textColor = Colors.red.shade700;
         break;
       default:
-        backgroundColor = colorScheme.surfaceVariant;
+        backgroundColor = colorScheme.surfaceContainerHighest;
         textColor = colorScheme.onSurfaceVariant;
     }
 
@@ -260,7 +260,7 @@ class CardItemWidget extends StatelessWidget {
     
     final statusColor = isDue 
         ? theme.colorScheme.error
-        : theme.colorScheme.onSurface.withOpacity(0.6);
+        : theme.colorScheme.onSurface.withValues(alpha: 0.6);
 
     return Row(
       children: [
@@ -281,13 +281,13 @@ class CardItemWidget extends StatelessWidget {
           Icon(
             Icons.replay,
             size: 16,
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 4),
           Text(
             '${card.reviewCount} reviews',
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
