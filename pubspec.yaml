@@ -39,7 +39,7 @@ dependencies:
   http: ^1.1.0
   
   # SVG rendering support
-  flutter_svg: ^2.0.9
+  flutter_svg: ^2.2.1
   
   # State management
   provider: ^6.1.1
