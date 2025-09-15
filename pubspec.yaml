@@ -64,7 +64,7 @@ dev_dependencies:
   
   # Code generation for JSON serialization
   build_runner: ^2.4.7
-  json_serializable: ^6.7.1
+  json_serializable: ^6.11.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
