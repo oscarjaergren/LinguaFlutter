@@ -5,19 +5,19 @@ import '../../../../shared/shared.dart';
 import '../../../language/domain/language_provider.dart';
 
 /// Simple screen for creating and editing language learning cards
-class SimpleCardCreationScreen extends StatefulWidget {
+class CreationCreationScreen extends StatefulWidget {
   final CardModel? cardToEdit;
   
-  const SimpleCardCreationScreen({
+  const CreationCreationScreen({
     super.key,
     this.cardToEdit,
   });
 
   @override
-  State<SimpleCardCreationScreen> createState() => _SimpleCardCreationScreenState();
+  State<CreationCreationScreen> createState() => _CreationCreationScreenState();
 }
 
-class _SimpleCardCreationScreenState extends State<SimpleCardCreationScreen> {
+class _CreationCreationScreenState extends State<CreationCreationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _frontTextController = TextEditingController();
   final _backTextController = TextEditingController();

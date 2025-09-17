@@ -10,8 +10,8 @@ import '../view_models/card_list_view_model.dart';
 import '../widgets/card_list_view.dart';
 
 /// Screen for displaying and managing the list of cards
-class CardListScreen extends StatelessWidget {
-  const CardListScreen({super.key});
+class CardsScreen extends StatelessWidget {
+  const CardsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

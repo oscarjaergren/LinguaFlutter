@@ -6,4 +6,4 @@ export 'data/services/card_management_service.dart';
 
 // Presentation Layer
 export 'presentation/screens/card_list_screen.dart';
-export 'presentation/screens/simple_card_creation_screen.dart';
+export 'presentation/screens/card_creation_screen.dart';

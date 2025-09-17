@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/card_management/presentation/screens/card_list_screen.dart';
-import '../../features/card_management/presentation/screens/simple_card_creation_screen.dart';
+import '../../features/card_management/presentation/screens/card_creation_screen.dart';
 import '../../features/card_review/presentation/screens/card_review_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
 import '../services/logger_service.dart';
 
 /// Application routes configuration using go_router
 class AppRouter {
-  static const String cardList = '/';
+  static const String dashboard = '/';
+  static const String cards = '/cards';
   static const String cardCreation = '/card-creation';
   static const String cardEdit = '/card-edit';
   static const String cardReview = '/card-review';
@@ -17,20 +19,27 @@ class AppRouter {
   static const String logs = '/logs';
 
   static final GoRouter router = GoRouter(
-    initialLocation: cardList,
+    initialLocation: dashboard,
     routes: [
-      // Card List Screen (Home)
+      // Dashboard Screen (Home)
       GoRoute(
-        path: cardList,
-        name: 'card-list',
-        builder: (context, state) => const CardListScreen(),
+        path: dashboard,
+        name: 'dashboard',
+        builder: (context, state) => const DashboardScreen(),
+      ),
+      
+      // Cards Screen
+      GoRoute(
+        path: cards,
+        name: 'cards',
+        builder: (context, state) => const CardsScreen(),
       ),
       
       // Card Creation Screen
       GoRoute(
         path: cardCreation,
         name: 'card-creation',
-        builder: (context, state) => const SimpleCardCreationScreen(),
+        builder: (context, state) => const SimpleCardCreationScreen.CreationCreationScreen(),
       ),
       
       // Card Edit Screen
@@ -39,7 +48,7 @@ class AppRouter {
         name: 'card-edit',
         builder: (context, state) {
           // TODO: Pass cardId to load existing card for editing
-          return const SimpleCardCreationScreen();
+          return const SimpleCardCreationScreen.CreationCreationScreen();
         },
       ),
       
@@ -88,7 +97,7 @@ class AppRouter {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go(cardList),
+              onPressed: () => context.go(dashboard),
               child: const Text('Go Home'),
             ),
           ],
@@ -100,8 +109,11 @@ class AppRouter {
 
 /// Extension methods for type-safe navigation
 extension AppRouterExtension on BuildContext {
-  /// Navigate to card list screen
-  void goToCardList() => go(AppRouter.cardList);
+  /// Navigate to dashboard screen
+  void goToDashboard() => go(AppRouter.dashboard);
+  
+  /// Navigate to cards screen
+  void goToCards() => go(AppRouter.cards);
   
   /// Navigate to card creation screen
   void goToCardCreation() => go(AppRouter.cardCreation);
@@ -132,4 +144,7 @@ extension AppRouterExtension on BuildContext {
   
   /// Push logs screen
   void pushLogs() => push(AppRouter.logs);
+  
+  /// Push cards screen
+  void pushCards() => push(AppRouter.cards);
 }
