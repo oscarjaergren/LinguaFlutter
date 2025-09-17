@@ -81,7 +81,7 @@ class DashboardScreen extends StatelessWidget {
                   height: 200,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(
