@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/card_management/presentation/screens/card_list_screen.dart';
 import '../../features/card_management/presentation/screens/card_creation_screen.dart';
 import '../../features/card_review/presentation/screens/card_review_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
+import '../domain/card_provider.dart';
 import '../services/logger_service.dart';
 
 /// Application routes configuration using go_router
@@ -39,16 +41,21 @@ class AppRouter {
       GoRoute(
         path: cardCreation,
         name: 'card-creation',
-        builder: (context, state) => const SimpleCardCreationScreen.CreationCreationScreen(),
+        builder: (context, state) => const CreationCreationScreen(),
       ),
       
       // Card Edit Screen
       GoRoute(
-        path: cardEdit,
+        path: '$cardEdit/:cardId',
         name: 'card-edit',
         builder: (context, state) {
-          // TODO: Pass cardId to load existing card for editing
-          return const SimpleCardCreationScreen.CreationCreationScreen();
+          final cardId = state.pathParameters['cardId']!;
+          final cardProvider = context.read<CardProvider>();
+          final card = cardProvider.allCards.firstWhere(
+            (c) => c.id == cardId,
+            orElse: () => throw Exception('Card not found'),
+          );
+          return CreationCreationScreen(cardToEdit: card);
         },
       ),
       
@@ -119,7 +126,7 @@ extension AppRouterExtension on BuildContext {
   void goToCardCreation() => go(AppRouter.cardCreation);
   
   /// Navigate to card edit screen
-  void goToCardEdit(String cardId) => go('${AppRouter.cardEdit}?cardId=$cardId');
+  void goToCardEdit(String cardId) => go('${AppRouter.cardEdit}/$cardId');
   
   /// Navigate to card review screen
   void goToCardReview() => go(AppRouter.cardReview);
@@ -134,7 +141,7 @@ extension AppRouterExtension on BuildContext {
   void pushCardCreation() => push(AppRouter.cardCreation);
   
   /// Push card edit screen
-  void pushCardEdit(String cardId) => push('${AppRouter.cardEdit}?cardId=$cardId');
+  void pushCardEdit(String cardId) => push('${AppRouter.cardEdit}/$cardId');
   
   /// Push card review screen
   void pushCardReview() => push(AppRouter.cardReview);

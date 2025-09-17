@@ -142,9 +142,14 @@ class DashboardScreen extends StatelessWidget {
     if (cardProvider.reviewCards.isNotEmpty) {
       context.pushCardReview();
     } else {
+      // Remove any currently showing SnackBars
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      // Show new SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('No cards available for review'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
         ),
       );
     }
