@@ -35,7 +35,7 @@ class DebugMenuScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Pre-set card collections
+          // Create test cards
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -43,45 +43,68 @@ class DebugMenuScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Create Pre-set Card Collections',
+                    'Create Test Cards',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add pre-made card sets for testing different languages and scenarios.',
+                    'Create cards in the currently selected language for testing.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ...DebugService.getDebugCardSets().entries.map((entry) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () => _createCardSet(context, entry.key, entry.value),
-                          icon: const Icon(Icons.add_circle_outline),
-                          label: Text(entry.key),
-                          style: OutlinedButton.styleFrom(
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
                   
-                  // Special button for creating due cards
+                  // Quick sets
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _createCards(context, 10),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('Create 10 Cards'),
+                      style: OutlinedButton.styleFrom(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   SizedBox(
                     width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _createCards(context, 20),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('Create 20 Cards'),
+                      style: OutlinedButton.styleFrom(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _createCards(context, 30),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('Create 30 Cards'),
+                      style: OutlinedButton.styleFrom(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  
+                  // Special button for creating due cards
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _createDueForReviewCards(context),
+                      onPressed: () => _createDueCards(context, 5),
                       icon: const Icon(Icons.schedule),
-                      label: const Text('Create Cards Due for Review'),
+                      label: const Text('Create 5 Cards Due for Review'),
                       style: FilledButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -201,28 +224,25 @@ class DebugMenuScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _createCardSet(
-    BuildContext context,
-    String setName,
-    List<CardModel> Function() createCards,
-  ) async {
+  Future<void> _createCards(BuildContext context, int count) async {
     try {
       final cardProvider = context.read<CardProvider>();
       final languageProvider = context.read<LanguageProvider>();
-      final cards = createCards();
+      
+      // Get active language or default to 'en'
+      final language = languageProvider.activeLanguage.isEmpty 
+          ? 'en' 
+          : languageProvider.activeLanguage;
+      
+      final cards = DebugService.createBasicCards(language, count);
       
       // Batch add all cards
       await cardProvider.addMultipleCards(cards);
       
-      // Switch to the language of the first card for immediate visibility
-      if (cards.isNotEmpty && cards.first.language.isNotEmpty) {
-        languageProvider.setActiveLanguage(cards.first.language);
-      }
-      
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Created $setName (${cards.length} cards)\nSwitched to ${cards.first.language.toUpperCase()} language'),
+            content: Text('Created $count test cards in ${language.toUpperCase()}'),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'VIEW',
@@ -244,27 +264,28 @@ class DebugMenuScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _createDueForReviewCards(BuildContext context) async {
+  Future<void> _createDueCards(BuildContext context, int count) async {
     try {
       final cardProvider = context.read<CardProvider>();
       final languageProvider = context.read<LanguageProvider>();
-      final cards = DebugService.createDueForReviewCards();
+      
+      // Get active language or default to 'en'
+      final language = languageProvider.activeLanguage.isEmpty 
+          ? 'en' 
+          : languageProvider.activeLanguage;
+      
+      final cards = DebugService.createDueForReviewCards(language, count);
       
       // Batch add all cards
       await cardProvider.addMultipleCards(cards);
       
-      // Switch to the language of the first card for immediate visibility
-      if (cards.isNotEmpty && cards.first.language.isNotEmpty) {
-        languageProvider.setActiveLanguage(cards.first.language);
-      }
-      
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Created ${cards.length} cards due for review\nSwitched to ${cards.first.language.toUpperCase()} language'),
+            content: Text('Created $count cards due for review in ${language.toUpperCase()}'),
             backgroundColor: Colors.green,
             action: SnackBarAction(
-              label: 'VIEW',
+              label: 'REVIEW',
               textColor: Colors.white,
               onPressed: () => Navigator.pop(context),
             ),

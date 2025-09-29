@@ -117,6 +117,18 @@ class CardProvider extends ChangeNotifier {
     await saveCard(card);
   }
 
+  Future<void> addMultipleCards(List<CardModel> cards) async {
+    try {
+      for (final card in cards) {
+        await _repository.saveCard(card);
+      }
+      await loadCards(); // Reload once after all cards are added
+    } catch (e) {
+      _setError('Failed to add cards: $e');
+      rethrow;
+    }
+  }
+
   Future<void> updateCard(CardModel card) async {
     await saveCard(card);
   }
