@@ -9,6 +9,7 @@ class CardArea extends StatelessWidget {
   final CardProvider cardProvider;
   final AnimationService animationService;
   final double swipeOffset;
+  final double swipeVerticalOffset;
   final bool isDragging;
   final Color feedbackColor;
   final Animation<double> flipAnimation;
@@ -26,6 +27,7 @@ class CardArea extends StatelessWidget {
     required this.cardProvider,
     required this.animationService,
     required this.swipeOffset,
+    this.swipeVerticalOffset = 0.0,
     required this.isDragging,
     required this.feedbackColor,
     required this.flipAnimation,
@@ -58,7 +60,7 @@ class CardArea extends StatelessWidget {
           ]),
           builder: (context, child) {
             return Transform.translate(
-              offset: Offset(swipeOffset, 0) + slideAnimation.value * 300,
+              offset: Offset(swipeOffset, swipeVerticalOffset) + slideAnimation.value * 300,
               child: Transform.scale(
                 scale: isDragging ? 1.05 : scaleAnimation.value,
                 child: AnimatedBuilder(

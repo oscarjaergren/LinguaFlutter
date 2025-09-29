@@ -29,6 +29,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   late Animation<double> _scaleAnimation;
 
   double _swipeOffset = 0.0;
+  double _swipeVerticalOffset = 0.0;
   bool _isDragging = false;
   bool _showAnswer = false;
   Color? _feedbackColor;
@@ -46,17 +47,17 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _initializeAnimations() {
     _flipController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     
     _swipeController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     
     _transitionController = AnimationController(
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
@@ -170,6 +171,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       if (mounted) {
         setState(() {
           _swipeOffset = 0.0;
+          _swipeVerticalOffset = 0.0;
           _feedbackColor = null;
           _showAnswer = false;
         });
@@ -197,9 +199,9 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     // Animate the swipe - use screen width + extra to ensure card goes completely off
     final screenWidth = MediaQuery.of(context).size.width;
     final targetOffset = isCorrect ? (screenWidth + 200) : -(screenWidth + 200);
-    final duration = const Duration(milliseconds: 400);
+    final duration = const Duration(milliseconds: 600);
     
-    // Animate swipe offset
+    // Animate swipe offset with arc motion
     final startTime = DateTime.now();
     while (DateTime.now().difference(startTime) < duration) {
       if (!mounted) return;
@@ -208,8 +210,14 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       final progress = (elapsed / duration.inMilliseconds).clamp(0.0, 1.0);
       final easedProgress = Curves.easeInBack.transform(progress);
       
+      // Create parabolic arc that goes UP (negative Y)
+      // This creates an arc that peaks at progress = 0.5
+      final arcHeight = 150.0; // Maximum height of the arc
+      final verticalOffset = 4 * progress * (progress - 1) * arcHeight;
+      
       setState(() {
         _swipeOffset = targetOffset * easedProgress;
+        _swipeVerticalOffset = verticalOffset;
       });
       
       await Future.delayed(const Duration(milliseconds: 16));
@@ -219,6 +227,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     if (mounted) {
       setState(() {
         _swipeOffset = targetOffset;
+        _swipeVerticalOffset = 0.0;
       });
       
       await Future.delayed(const Duration(milliseconds: 100));
@@ -299,6 +308,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
                   cardProvider: cardProvider,
                   animationService: widget.animationService,
                   swipeOffset: _swipeOffset,
+                  swipeVerticalOffset: _swipeVerticalOffset,
                   isDragging: _isDragging,
                   feedbackColor: _feedbackColor ?? Colors.transparent,
                   flipAnimation: _flipAnimation,
