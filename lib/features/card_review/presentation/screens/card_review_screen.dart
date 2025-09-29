@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/shared.dart';
 import '../widgets/card_area.dart';
@@ -31,6 +32,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   bool _isDragging = false;
   bool _showAnswer = false;
   Color? _feedbackColor;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     _initializeAnimations();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startReviewSession();
+      _focusNode.requestFocus();
     });
   }
 
@@ -48,7 +51,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     );
     
     _swipeController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     
@@ -70,7 +73,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _swipeController,
-      curve: Curves.easeOut,
+      curve: Curves.easeInBack,
     ));
 
     _scaleAnimation = Tween<double>(
@@ -97,6 +100,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     _flipController.dispose();
     _swipeController.dispose();
     _transitionController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -178,19 +182,95 @@ class _CardReviewScreenState extends State<CardReviewScreen>
     }
   }
 
+  void _handleKeyboardSwipe(bool isCorrect) async {
+    final cardProvider = Provider.of<CardProvider>(context, listen: false);
+    if (!_showAnswer || cardProvider.reviewCards.isEmpty) return;
+
+    // Trigger haptic feedback
+    HapticFeedback.mediumImpact();
+
+    // Set feedback color and animate
+    setState(() {
+      _feedbackColor = isCorrect ? Colors.green : Colors.red;
+    });
+
+    // Animate the swipe - use screen width + extra to ensure card goes completely off
+    final screenWidth = MediaQuery.of(context).size.width;
+    final targetOffset = isCorrect ? (screenWidth + 200) : -(screenWidth + 200);
+    final duration = const Duration(milliseconds: 400);
+    
+    // Animate swipe offset
+    final startTime = DateTime.now();
+    while (DateTime.now().difference(startTime) < duration) {
+      if (!mounted) return;
+      
+      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+      final progress = (elapsed / duration.inMilliseconds).clamp(0.0, 1.0);
+      final easedProgress = Curves.easeInBack.transform(progress);
+      
+      setState(() {
+        _swipeOffset = targetOffset * easedProgress;
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 16));
+    }
+
+    // Complete the swipe
+    if (mounted) {
+      setState(() {
+        _swipeOffset = targetOffset;
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 100));
+      _answerCard(isCorrect);
+    }
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent) {
+      final cardProvider = Provider.of<CardProvider>(context, listen: false);
+      
+      // Allow flipping the card with Space or Enter
+      if (event.logicalKey == LogicalKeyboardKey.space ||
+          event.logicalKey == LogicalKeyboardKey.enter) {
+        if (!_showAnswer) {
+          _flipCard();
+          return KeyEventResult.handled;
+        }
+      }
+      
+      // Allow swiping only when answer is shown
+      if (_showAnswer && cardProvider.reviewCards.isNotEmpty) {
+        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          _handleKeyboardSwipe(false);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          _handleKeyboardSwipe(true);
+          return KeyEventResult.handled;
+        }
+      }
+    }
+    
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+    return Focus(
+      focusNode: _focusNode,
+      onKeyEvent: _handleKeyEvent,
+      autofocus: true,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF1A1A2E),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
-      ),
-      body: Consumer<CardProvider>(
+        body: Consumer<CardProvider>(
         builder: (context, cardProvider, child) {
           if (cardProvider.reviewCards.isEmpty) {
             return ReviewCompletionScreen(
@@ -239,7 +319,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   child: const Text(
-                    'Swipe left to fail • Swipe right to pass',
+                    'Swipe or use ← → arrow keys • Left to fail • Right to pass',
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 16,
@@ -252,6 +332,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
             ],
           );
         },
+      ),
       ),
     );
   }
