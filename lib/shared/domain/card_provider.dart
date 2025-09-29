@@ -228,7 +228,14 @@ class CardProvider extends ChangeNotifier {
       final updatedCard = currentCard!.processAnswer(answer);
       await updateCard(updatedCard);
       _sessionCardsReviewed++;
-      nextCard();
+      
+      // Move to next card or end session
+      if (_currentReviewIndex < _currentReviewSession.length - 1) {
+        nextCard();
+      } else {
+        // Last card answered - end the session
+        endReviewSession();
+      }
     }
   }
 
