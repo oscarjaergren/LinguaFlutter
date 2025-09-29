@@ -88,7 +88,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _startReviewSession() {
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (cardProvider.reviewCards.isEmpty) {
+    if (!cardProvider.isReviewMode) {
       cardProvider.startReviewSession();
     }
     setState(() {
@@ -116,7 +116,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _onPanStart(DragStartDetails details) {
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.reviewCards.isEmpty) return;
+    if (!_showAnswer || cardProvider.currentCard == null) return;
     
     setState(() {
       _isDragging = true;
@@ -125,7 +125,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _onPanUpdate(DragUpdateDetails details) {
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.reviewCards.isEmpty) return;
+    if (!_showAnswer || cardProvider.currentCard == null) return;
     
     setState(() {
       _swipeOffset += details.delta.dx;
@@ -141,7 +141,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _onPanEnd(DragEndDetails details) {
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.reviewCards.isEmpty) return;
+    if (!_showAnswer || cardProvider.currentCard == null) return;
     
     setState(() {
       _isDragging = false;
@@ -163,9 +163,9 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   void _answerCard(bool isCorrect) async {
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
     
-    if (cardProvider.reviewCards.isNotEmpty) {
+    if (cardProvider.currentCard != null) {
       // Process the answer
-      cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
+      await cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
       
       // Reset state for next card
       if (mounted) {
@@ -186,7 +186,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   void _handleKeyboardSwipe(bool isCorrect) async {
     final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.reviewCards.isEmpty) return;
+    if (!_showAnswer || cardProvider.currentCard == null) return;
 
     // Trigger haptic feedback
     HapticFeedback.mediumImpact();
@@ -249,7 +249,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       }
       
       // Allow swiping only when answer is shown
-      if (_showAnswer && cardProvider.reviewCards.isNotEmpty) {
+      if (_showAnswer && cardProvider.currentCard != null) {
         if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           _handleKeyboardSwipe(false);
           return KeyEventResult.handled;
@@ -281,7 +281,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
         ),
         body: Consumer<CardProvider>(
         builder: (context, cardProvider, child) {
-          if (cardProvider.reviewCards.isEmpty) {
+          if (cardProvider.currentCard == null) {
             return ReviewCompletionScreen(
               cardProvider: cardProvider,
               onRestart: () {
@@ -294,7 +294,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
             );
           }
 
-          final currentCard = cardProvider.reviewCards.first;
+          final currentCard = cardProvider.currentCard!;
 
           return Column(
             children: [

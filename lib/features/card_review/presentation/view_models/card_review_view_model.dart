@@ -164,7 +164,7 @@ class CardReviewViewModel extends ChangeNotifier {
 
     try {
       // Update card statistics - use existing method
-      _cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
+      await _cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
       
       // Update session statistics
       _sessionCardsReviewed++;

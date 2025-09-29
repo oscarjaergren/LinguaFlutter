@@ -223,10 +223,10 @@ class CardProvider extends ChangeNotifier {
     }
   }
 
-  void answerCard(CardAnswer answer) {
+  Future<void> answerCard(CardAnswer answer) async {
     if (currentCard != null) {
       final updatedCard = currentCard!.processAnswer(answer);
-      updateCard(updatedCard);
+      await updateCard(updatedCard);
       _sessionCardsReviewed++;
       nextCard();
     }
