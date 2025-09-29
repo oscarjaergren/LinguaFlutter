@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/shared.dart';
 import 'package:provider/provider.dart';
 import '../../../debug/data/debug_service.dart';
+import '../../../language/language.dart';
 
 /// Debug menu for development and testing
 class DebugMenuScreen extends StatelessWidget {
@@ -34,42 +35,6 @@ class DebugMenuScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Warning banner
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            margin: const EdgeInsets.only(bottom: 24.0),
-            decoration: BoxDecoration(
-              color: Colors.orange.shade100,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.shade300),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.warning, color: Colors.orange.shade700),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Debug Mode Only',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange.shade700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'This menu is for development and testing purposes.',
-                        style: TextStyle(color: Colors.orange.shade600),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Pre-set card collections
           Card(
             child: Padding(
@@ -243,17 +208,21 @@ class DebugMenuScreen extends StatelessWidget {
   ) async {
     try {
       final cardProvider = context.read<CardProvider>();
+      final languageProvider = context.read<LanguageProvider>();
       final cards = createCards();
       
-      // Add all cards
-      for (final card in cards) {
-        await cardProvider.addCard(card);
+      // Batch add all cards
+      await cardProvider.addMultipleCards(cards);
+      
+      // Switch to the language of the first card for immediate visibility
+      if (cards.isNotEmpty && cards.first.language.isNotEmpty) {
+        languageProvider.setActiveLanguage(cards.first.language);
       }
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Created $setName (${cards.length} cards)'),
+            content: Text('Created $setName (${cards.length} cards)\nSwitched to ${cards.first.language.toUpperCase()} language'),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'VIEW',
@@ -278,17 +247,21 @@ class DebugMenuScreen extends StatelessWidget {
   Future<void> _createDueForReviewCards(BuildContext context) async {
     try {
       final cardProvider = context.read<CardProvider>();
+      final languageProvider = context.read<LanguageProvider>();
       final cards = DebugService.createDueForReviewCards();
       
-      // Add all cards
-      for (final card in cards) {
-        await cardProvider.addCard(card);
+      // Batch add all cards
+      await cardProvider.addMultipleCards(cards);
+      
+      // Switch to the language of the first card for immediate visibility
+      if (cards.isNotEmpty && cards.first.language.isNotEmpty) {
+        languageProvider.setActiveLanguage(cards.first.language);
       }
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Created ${cards.length} cards due for review'),
+            content: Text('Created ${cards.length} cards due for review\nSwitched to ${cards.first.language.toUpperCase()} language'),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'VIEW',
