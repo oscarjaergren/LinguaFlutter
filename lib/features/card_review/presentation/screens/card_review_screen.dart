@@ -285,10 +285,9 @@ class _CardReviewScreenState extends State<CardReviewScreen>
             return ReviewCompletionScreen(
               cardProvider: cardProvider,
               onRestart: () {
-                cardProvider.startReviewSession();
-                setState(() {
-                  _showAnswer = false;
-                });
+                // Navigate to cards screen to add more cards
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/cards');
               },
               onClose: () => Navigator.of(context).pop(),
             );

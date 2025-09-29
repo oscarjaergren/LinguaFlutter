@@ -25,11 +25,11 @@ class ReviewCompletionScreen extends StatelessWidget {
         margin: const EdgeInsets.all(20),
         padding: const EdgeInsets.all(32),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF2D2D44),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 8),
             ),
@@ -41,7 +41,7 @@ class ReviewCompletionScreen extends StatelessWidget {
             const Icon(
               Icons.celebration,
               size: 64,
-              color: Colors.green,
+              color: Color(0xFF4CAF50),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -49,7 +49,7 @@ class ReviewCompletionScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 16),
@@ -57,7 +57,7 @@ class ReviewCompletionScreen extends StatelessWidget {
               'You reviewed ${cardProvider.sessionCardsReviewed} cards',
               style: const TextStyle(
                 fontSize: 18,
-                color: Colors.grey,
+                color: Colors.white70,
               ),
             ),
             if (sessionDuration.inSeconds > 0) ...[
@@ -66,7 +66,7 @@ class ReviewCompletionScreen extends StatelessWidget {
                 'Time: ${_formatDuration(sessionDuration)}',
                 style: const TextStyle(
                   fontSize: 16,
-                  color: Colors.grey,
+                  color: Colors.white60,
                 ),
               ),
             ],
@@ -78,13 +78,17 @@ class ReviewCompletionScreen extends StatelessWidget {
                     onPressed: onRestart,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Colors.white38),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: const Text(
-                      'Review Again',
-                      style: TextStyle(fontSize: 16),
+                      'Add Cards',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
                     ),
                   ),
                 ),
@@ -93,7 +97,7 @@ class ReviewCompletionScreen extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: onClose,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: const Color(0xFF4CAF50),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
