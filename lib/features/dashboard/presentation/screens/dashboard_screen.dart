@@ -9,15 +9,8 @@ import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
 
 /// Main dashboard/landing screen showing overview and navigation
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
-
-  @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends State<DashboardScreen> {
-  bool _isSnackBarShowing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -149,28 +142,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (cardProvider.reviewCards.isNotEmpty) {
       context.pushCardReview();
     } else {
-      // Only show snackbar if there isn't one already showing
-      if (!_isSnackBarShowing) {
-        _isSnackBarShowing = true;
-        final scaffoldMessenger = ScaffoldMessenger.of(context);
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: const Text('No cards available for review'),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-            onVisible: () {
-              // Reset the flag when snackbar is dismissed
-              Future.delayed(const Duration(seconds: 2), () {
-                if (mounted) {
-                  setState(() {
-                    _isSnackBarShowing = false;
-                  });
-                }
-              });
-            },
-          ),
-        );
-      }
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      scaffoldMessenger.removeCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('No cards available for review'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
     }
   }
 }
