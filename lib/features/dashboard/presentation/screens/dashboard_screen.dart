@@ -43,7 +43,7 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: StatsCardWidget(
                         title: 'To learn',
-                        count: cardProvider.allCards.where((c) => !c.isArchived && c.isDue).length,
+                        count: cardProvider.filteredCards.where((c) => !c.isArchived && c.isDue).length,
                         color: Colors.green,
                         icon: Icons.school,
                       ),
@@ -52,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: StatsCardWidget(
                         title: 'Known',
-                        count: cardProvider.allCards.where((c) => !c.isArchived && !c.isDue).length,
+                        count: cardProvider.filteredCards.where((c) => !c.isArchived && !c.isDue).length,
                         color: Colors.blue,
                         icon: Icons.lightbulb,
                       ),
@@ -125,7 +125,7 @@ class DashboardScreen extends StatelessWidget {
                   child: ListTile(
                     leading: const Icon(Icons.library_books),
                     title: const Text('Cards'),
-                    subtitle: Text('${cardProvider.allCards.length} cards'),
+                    subtitle: Text('${cardProvider.filteredCards.length} cards'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.pushCards(),
                   ),

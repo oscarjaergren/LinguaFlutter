@@ -264,6 +264,7 @@ class CardProvider extends ChangeNotifier {
   void onLanguageChanged() {
     _applyFilters();
     _updateReviewCards();
+    _calculateStats();
     notifyListeners();
   }
 
@@ -328,11 +329,17 @@ class CardProvider extends ChangeNotifier {
   }
 
   void _calculateStats() {
+    // Filter cards by active language for stats
+    final languageFilteredCards = _allCards.where((card) {
+      return languageProvider.activeLanguage.isEmpty || 
+             card.language == languageProvider.activeLanguage;
+    }).toList();
+
     _stats = {
-      'totalCards': _allCards.length,
+      'totalCards': languageFilteredCards.length,
       'dueCards': _reviewCards.length,
-      'favoriteCards': _allCards.where((c) => c.isFavorite).length,
-      'archivedCards': _allCards.where((c) => c.isArchived).length,
+      'favoriteCards': languageFilteredCards.where((c) => c.isFavorite).length,
+      'archivedCards': languageFilteredCards.where((c) => c.isArchived).length,
     };
   }
 
