@@ -95,12 +95,12 @@ class DashboardScreen extends StatelessWidget {
                 
                 const SizedBox(height: 32),
                 
-                // Start button
+                // Exercise Practice button (new system)
                 SizedBox(
                   width: double.infinity,
                   height: 56,
-                  child: ElevatedButton(
-                    onPressed: () => _startReview(context, cardProvider),
+                  child: ElevatedButton.icon(
+                    onPressed: () => _startExerciseSession(context, cardProvider),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -108,11 +108,36 @@ class DashboardScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(28),
                       ),
                     ),
-                    child: const Text(
-                      'START',
+                    icon: const Icon(Icons.fitness_center),
+                    label: const Text(
+                      'START PRACTICE',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Quick Review button (old system)
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _startReview(context, cardProvider),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    icon: const Icon(Icons.flash_on, size: 20),
+                    label: const Text(
+                      'Quick Review',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
@@ -142,15 +167,27 @@ class DashboardScreen extends StatelessWidget {
     if (cardProvider.reviewCards.isNotEmpty) {
       context.pushCardReview();
     } else {
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
-      scaffoldMessenger.removeCurrentSnackBar();
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(
-          content: Text('No cards available for review'),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      _showNoCardsMessage(context);
     }
+  }
+
+  void _startExerciseSession(BuildContext context, CardProvider cardProvider) {
+    if (cardProvider.reviewCards.isNotEmpty) {
+      context.pushExerciseSession();
+    } else {
+      _showNoCardsMessage(context);
+    }
+  }
+
+  void _showNoCardsMessage(BuildContext context) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.removeCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
+      const SnackBar(
+        content: Text('No cards available for review'),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 }

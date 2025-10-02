@@ -6,3 +6,5 @@ export 'widgets/iconify_icon.dart';
 export 'domain/card_provider.dart';
 export 'domain/models/card_model.dart';
 export 'domain/models/icon_model.dart';
+export 'domain/models/exercise_type.dart';
+export 'domain/models/exercise_score.dart';

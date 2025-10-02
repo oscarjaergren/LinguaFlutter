@@ -7,6 +7,7 @@ import 'features/streak/streak.dart';
 import 'features/language/language.dart';
 import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
+import 'features/card_review/card_review.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
 
@@ -40,6 +41,13 @@ void main() async {
         ChangeNotifierProvider.value(value: themeProvider),
         ChangeNotifierProvider(create: (_) => MascotProvider()),
         ChangeNotifierProvider(create: (_) => IconProvider()),
+        ChangeNotifierProxyProvider<CardProvider, ExerciseSessionProvider>(
+          create: (context) => ExerciseSessionProvider(
+            cardProvider: context.read<CardProvider>(),
+          ),
+          update: (context, cardProvider, previous) =>
+              previous ?? ExerciseSessionProvider(cardProvider: cardProvider),
+        ),
       ],
       child: const LinguaFlutterApp(),
     ),
