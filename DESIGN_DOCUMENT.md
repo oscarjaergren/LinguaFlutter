@@ -10,6 +10,7 @@
 7. [Development Guidelines](#development-guidelines)
 8. [Testing Strategy](#testing-strategy)
 9. [Performance Considerations](#performance-considerations)
+10. [Exercise System](#exercise-system)
 
 ## Project Overview
 
@@ -315,6 +316,145 @@ lib/features/card_management/
 - Use pagination for large card sets
 - Cache frequently accessed data
 - Optimize database queries
+
+## Exercise System
+
+### Overview
+
+The exercise system allows cards to be practiced in multiple ways, each testing different language skills. Each exercise type maintains independent scoring to track mastery across different practice modes.
+
+### Exercise Types
+
+#### Implemented Exercises
+
+1. **Reading Recognition** (`ExerciseType.readingRecognition`)
+   - View the word and recall its meaning
+   - Tests: Recognition, visual memory
+   - Benefits from having an icon
+   - Icon: `mdi:book-open-page-variant`
+
+2. **Writing Translation** (`ExerciseType.writingTranslation`)
+   - Type the correct translation of the word
+   - Tests: Spelling, active recall, writing skills
+   - Icon: `mdi:pencil`
+
+3. **Multiple Choice (Text)** (`ExerciseType.multipleChoiceText`)
+   - Select the correct translation from text options
+   - Tests: Recognition, comprehension
+   - Icon: `mdi:format-list-checks`
+
+4. **Multiple Choice (Icon)** (`ExerciseType.multipleChoiceIcon`)
+   - Select the correct icon that represents the word
+   - Tests: Visual association, meaning comprehension
+   - Requires the card to have an icon
+   - Icon: `mdi:image-multiple`
+
+5. **Reverse Translation** (`ExerciseType.reverseTranslation`)
+   - Translate from native language to target language
+   - Tests: Active production, harder recall
+   - Icon: `mdi:swap-horizontal`
+
+#### Future Exercise Types
+
+1. **Listening Recognition** (`ExerciseType.listeningRecognition`)
+   - Listen to audio and identify the correct word
+   - Tests: Listening comprehension, pronunciation recognition
+   - Requires audio integration
+   - Icon: `mdi:ear-hearing`
+
+2. **Speaking Pronunciation** (`ExerciseType.speakingPronunciation`)
+   - Speak the word and receive pronunciation feedback
+   - Tests: Speaking skills, pronunciation accuracy
+   - Requires speech recognition
+   - Icon: `mdi:microphone`
+
+3. **Sentence Fill** (`ExerciseType.sentenceFill`)
+   - Fill in the blank in a sentence with the correct word
+   - Tests: Context usage, grammar
+   - Requires sentence examples
+   - Icon: `mdi:text-box`
+
+### Exercise Scoring
+
+#### ExerciseScore Model
+
+Each `ExerciseScore` tracks:
+- **correctCount**: Number of successful attempts (+1 per success)
+- **incorrectCount**: Number of failed attempts (+1 per failure)
+- **lastPracticed**: Timestamp of last practice
+- **nextReview**: Scheduled review date (spaced repetition)
+- **successRate**: Percentage of correct answers
+- **masteryLevel**: 'New', 'Learning', 'Good', 'Mastered', or 'Difficult'
+- **netScore**: `correctCount - incorrectCount`
+
+#### Spaced Repetition
+
+Each exercise type uses independent spaced repetition:
+- **Correct answer**: Review interval increases based on success rate
+- **Incorrect answer**: Review again tomorrow
+- Formula: `intervalDays = baseDays * (1 + multiplier * 2)`
+
+#### CardModel Integration
+
+The `CardModel` now includes:
+```dart
+final Map<ExerciseType, ExerciseScore> exerciseScores;
+```
+
+New methods:
+- `getExerciseScore(ExerciseType)`: Get score for specific exercise
+- `overallMasteryLevel`: Aggregate mastery across all exercises
+- `isExerciseDue(ExerciseType)`: Check if exercise needs review
+- `dueExerciseTypes`: List of exercises due for review
+- `copyWithExerciseResult()`: Update card with exercise result
+
+### Exercise Selection Strategy
+
+When starting a practice session:
+1. Filter cards by due date
+2. For each card, get `dueExerciseTypes`
+3. Select exercise types that:
+   - Are implemented
+   - Are due for review
+   - Have requirements met (e.g., icon for icon-based exercises)
+4. Prioritize exercises with lower mastery levels
+
+### Usage Example
+
+```dart
+// Recording an exercise result
+final card = CardModel.create(...);
+final updatedCard = card.copyWithExerciseResult(
+  exerciseType: ExerciseType.writingTranslation,
+  wasCorrect: true,
+);
+
+// Checking due exercises
+final dueExercises = card.dueExerciseTypes;
+if (card.isExerciseDue(ExerciseType.readingRecognition)) {
+  // Practice this exercise
+}
+
+// Getting specific exercise performance
+final score = card.getExerciseScore(ExerciseType.multipleChoiceText);
+print('Success rate: ${score?.successRate}%');
+```
+
+### Implementation Roadmap
+
+#### Phase 1: Core Exercises (Current)
+- ✅ Reading Recognition
+- ✅ Writing Translation
+- ✅ Multiple Choice (Text)
+- ✅ Multiple Choice (Icon)
+- ✅ Reverse Translation
+
+#### Phase 2: Audio Integration
+- ⏳ Listening Recognition (requires audio files/TTS)
+- ⏳ Speaking Pronunciation (requires speech recognition)
+
+#### Phase 3: Advanced Exercises
+- ⏳ Sentence Fill (requires example sentences)
 
 ## Future Considerations
 

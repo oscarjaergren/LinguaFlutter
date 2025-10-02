@@ -1,5 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'icon_model.dart';
+import 'exercise_type.dart';
+import 'exercise_score.dart';
 
 part 'card_model.g.dart';
 
@@ -56,6 +58,10 @@ class CardModel {
   
   /// Whether this card is archived
   final bool isArchived;
+  
+  /// Exercise-specific scores for different practice types
+  /// Maps ExerciseType to ExerciseScore tracking performance
+  final Map<ExerciseType, ExerciseScore> exerciseScores;
 
   const CardModel({
     required this.id,
@@ -75,6 +81,7 @@ class CardModel {
     required this.updatedAt,
     this.isFavorite = false,
     this.isArchived = false,
+    this.exerciseScores = const {},
   });
 
   /// Create a new card with generated ID and timestamps
@@ -91,6 +98,14 @@ class CardModel {
     final now = DateTime.now();
     final id = 'card_${now.millisecondsSinceEpoch}';
     
+    // Initialize exercise scores for all implemented exercise types
+    final exerciseScores = <ExerciseType, ExerciseScore>{};
+    for (final type in ExerciseType.values) {
+      if (type.isImplemented) {
+        exerciseScores[type] = ExerciseScore.initial(type);
+      }
+    }
+    
     return CardModel(
       id: id,
       frontText: frontText,
@@ -103,6 +118,7 @@ class CardModel {
       germanArticle: germanArticle,
       createdAt: now,
       updatedAt: now,
+      exerciseScores: exerciseScores,
     );
   }
 
@@ -128,6 +144,45 @@ class CardModel {
     if (rate >= 50) return 'Learning';
     return 'Difficult';
   }
+  
+  /// Get the score for a specific exercise type
+  ExerciseScore? getExerciseScore(ExerciseType type) {
+    return exerciseScores[type];
+  }
+  
+  /// Get overall mastery across all exercise types
+  String get overallMasteryLevel {
+    if (exerciseScores.isEmpty) return masteryLevel;
+    
+    final totalAttempts = exerciseScores.values
+        .fold<int>(0, (sum, score) => sum + score.totalAttempts);
+    
+    if (totalAttempts < 5) return 'New';
+    
+    final totalCorrect = exerciseScores.values
+        .fold<int>(0, (sum, score) => sum + score.correctCount);
+    
+    final overallRate = (totalCorrect / totalAttempts) * 100;
+    
+    if (overallRate >= 90) return 'Mastered';
+    if (overallRate >= 70) return 'Good';
+    if (overallRate >= 50) return 'Learning';
+    return 'Difficult';
+  }
+  
+  /// Check if a specific exercise type is due for review
+  bool isExerciseDue(ExerciseType type) {
+    final score = exerciseScores[type];
+    return score?.isDueForReview ?? true;
+  }
+  
+  /// Get list of exercise types that are due for review
+  List<ExerciseType> get dueExerciseTypes {
+    return exerciseScores.entries
+        .where((entry) => entry.value.isDueForReview)
+        .map((entry) => entry.key)
+        .toList();
+  }
 
   /// Create a copy of this card with updated review data
   CardModel copyWithReview({
@@ -139,6 +194,31 @@ class CardModel {
       correctCount: wasCorrect ? correctCount + 1 : correctCount,
       lastReviewed: DateTime.now(),
       nextReview: nextReviewDate,
+      updatedAt: DateTime.now(),
+    );
+  }
+  
+  /// Create a copy with updated exercise score for a specific type
+  CardModel copyWithExerciseResult({
+    required ExerciseType exerciseType,
+    required bool wasCorrect,
+  }) {
+    final currentScore = exerciseScores[exerciseType] ?? 
+        ExerciseScore.initial(exerciseType);
+    
+    final updatedScore = wasCorrect 
+        ? currentScore.recordCorrect() 
+        : currentScore.recordIncorrect();
+    
+    final newScores = Map<ExerciseType, ExerciseScore>.from(exerciseScores);
+    newScores[exerciseType] = updatedScore;
+    
+    // Also update legacy fields for backward compatibility
+    return copyWith(
+      exerciseScores: newScores,
+      reviewCount: reviewCount + 1,
+      correctCount: wasCorrect ? correctCount + 1 : correctCount,
+      lastReviewed: DateTime.now(),
       updatedAt: DateTime.now(),
     );
   }
@@ -162,6 +242,7 @@ class CardModel {
     DateTime? updatedAt,
     bool? isFavorite,
     bool? isArchived,
+    Map<ExerciseType, ExerciseScore>? exerciseScores,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -181,6 +262,7 @@ class CardModel {
       updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
+      exerciseScores: exerciseScores ?? this.exerciseScores,
     );
   }
 
