@@ -55,14 +55,28 @@ class ReadingRecognitionWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 32),
                       ],
-                      // Front text (word to learn)
-                      Text(
-                        card.frontText,
-                        style: const TextStyle(
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
+                      // Front text (word to learn) with speaker button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              card.frontText,
+                              style: const TextStyle(
+                                fontSize: 42,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          SpeakerButton(
+                            text: card.frontText,
+                            languageCode: card.language,
+                            size: 32,
+                          ),
+                        ],
                       ),
                       if (card.germanArticle != null) ...[
                         const SizedBox(height: 8),

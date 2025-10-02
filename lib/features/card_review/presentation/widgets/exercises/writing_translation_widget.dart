@@ -111,14 +111,28 @@ class _WritingTranslationWidgetState extends State<WritingTranslationWidget> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    // Front text
-                    Text(
-                      card.frontText,
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
+                    // Front text with speaker button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            card.frontText,
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        SpeakerButton(
+                          text: card.frontText,
+                          languageCode: card.language,
+                          size: 28,
+                        ),
+                      ],
                     ),
                     if (card.germanArticle != null) ...[
                       const SizedBox(height: 8),
