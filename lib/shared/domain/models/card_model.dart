@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:uuid/uuid.dart';
 import 'icon_model.dart';
 import 'exercise_type.dart';
 import 'exercise_score.dart';
@@ -96,7 +97,8 @@ class CardModel {
     String? germanArticle,
   }) {
     final now = DateTime.now();
-    final id = 'card_${now.millisecondsSinceEpoch}';
+    // Use UUID v4 for proper unique IDs instead of timestamp-based IDs
+    final id = const Uuid().v4();
     
     // Initialize exercise scores for all implemented exercise types
     final exerciseScores = <ExerciseType, ExerciseScore>{};

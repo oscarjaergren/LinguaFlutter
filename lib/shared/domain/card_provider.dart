@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'models/card_model.dart';
 import '../../features/language/language.dart';
 import '../../features/card_management/card_management.dart';
+import '../services/card_storage_service.dart';
 
 /// Shared provider for managing cards across all features
 class CardProvider extends ChangeNotifier {
@@ -119,11 +120,39 @@ class CardProvider extends ChangeNotifier {
 
   Future<void> addMultipleCards(List<CardModel> cards) async {
     try {
-      for (final card in cards) {
-        await _repository.saveCard(card);
+      print('DEBUG: Adding ${cards.length} cards via batch operation');
+      
+      // Load existing cards once
+      final existingCards = await _repository.getAllCards();
+      print('DEBUG: Found ${existingCards.length} existing cards');
+      
+      // Create a map of existing cards by ID for efficient lookup
+      final existingCardsMap = {
+        for (var card in existingCards) card.id: card
+      };
+      
+      // Merge new cards with existing, replacing duplicates
+      for (final newCard in cards) {
+        existingCardsMap[newCard.id] = newCard;
       }
-      await loadCards(); // Reload once after all cards are added
-    } catch (e) {
+      
+      // Save all cards at once using the storage service directly
+      final allCards = existingCardsMap.values.toList();
+      print('DEBUG: Saving total of ${allCards.length} cards');
+      
+      // Access storage service directly for batch operation
+      final storageService = CardStorageService();
+      await storageService.saveCards(allCards);
+      
+      print('DEBUG: Successfully saved cards, reloading...');
+      
+      // Reload once after all cards are added
+      await loadCards();
+      
+      print('DEBUG: Reload complete, now have ${_allCards.length} cards in provider');
+    } catch (e, stackTrace) {
+      print('DEBUG ERROR in addMultipleCards: $e');
+      print('DEBUG STACK: $stackTrace');
       _setError('Failed to add cards: $e');
       rethrow;
     }

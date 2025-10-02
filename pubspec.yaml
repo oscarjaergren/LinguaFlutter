@@ -61,6 +61,9 @@ dependencies:
   
   # Text-to-speech for pronunciation
   flutter_tts: ^4.0.2
+  
+  # UUID generation for unique IDs
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

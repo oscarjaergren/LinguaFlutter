@@ -148,13 +148,13 @@ class DebugMenuScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Load all German words
+                  // Load all German words - Available Now
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _loadGermanWords(context, null),
+                      onPressed: () => _loadGermanWords(context, null, makeAvailableNow: true),
                       icon: const Icon(Icons.library_books),
-                      label: const Text('Load All German Words (50+)'),
+                      label: const Text('Load All German Words (Available Now)'),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -164,13 +164,13 @@ class DebugMenuScreen extends StatelessWidget {
                   
                   const SizedBox(height: 8),
                   
-                  // Load 10 German words
+                  // Load 10 German words - Available Now
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _loadGermanWords(context, 10),
+                      onPressed: () => _loadGermanWords(context, 10, makeAvailableNow: true),
                       icon: const Icon(Icons.book),
-                      label: const Text('Load 10 German Words'),
+                      label: const Text('Load 10 Words (Available Now)'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.blue.shade700),
                         foregroundColor: Colors.blue.shade700,
@@ -182,16 +182,52 @@ class DebugMenuScreen extends StatelessWidget {
                   
                   const SizedBox(height: 8),
                   
-                  // Load 25 German words
+                  // Load 25 German words - Available Now
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _loadGermanWords(context, 25),
+                      onPressed: () => _loadGermanWords(context, 25, makeAvailableNow: true),
                       icon: const Icon(Icons.book),
-                      label: const Text('Load 25 German Words'),
+                      label: const Text('Load 25 Words (Available Now)'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.blue.shade700),
                         foregroundColor: Colors.blue.shade700,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  
+                  Text(
+                    '⏰ Scheduled Review Times',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Load with original spaced repetition schedule.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  
+                  // Load with scheduled times
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _loadGermanWords(context, 10, makeAvailableNow: false),
+                      icon: const Icon(Icons.schedule),
+                      label: const Text('Load 10 Words (Scheduled)'),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.orange.shade700),
+                        foregroundColor: Colors.orange.shade700,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
@@ -390,15 +426,19 @@ class DebugMenuScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _loadGermanWords(BuildContext context, int? limit) async {
+  Future<void> _loadGermanWords(
+    BuildContext context, 
+    int? limit, {
+    bool makeAvailableNow = true,
+  }) async {
     try {
       // Show loading indicator
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Row(
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
@@ -406,11 +446,11 @@ class DebugMenuScreen extends StatelessWidget {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
-                SizedBox(width: 16),
-                Text('Loading German vocabulary...'),
+                const SizedBox(width: 16),
+                Text('Loading German vocabulary${limit != null ? ' ($limit cards)' : ''}...'),
               ],
             ),
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 3),
           ),
         );
       }
@@ -422,18 +462,29 @@ class DebugMenuScreen extends StatelessWidget {
       languageProvider.setActiveLanguage('de');
       
       // Load German words from JSON
-      final cards = await DebugService.loadGermanWordsFromJson(limit: limit);
+      print('DEBUG: Calling loadGermanWordsFromJson with limit=$limit, makeAvailableNow=$makeAvailableNow');
+      final cards = await DebugService.loadGermanWordsFromJson(
+        limit: limit,
+        makeAvailableNow: makeAvailableNow,
+      );
+      
+      print('DEBUG: Received ${cards.length} cards from service');
       
       // Batch add all cards
       await cardProvider.addMultipleCards(cards);
+      
+      final availabilityText = makeAvailableNow 
+          ? 'available now for review' 
+          : 'scheduled for future review';
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Loaded ${cards.length} German vocabulary cards with scheduled reviews!',
+              '✅ Loaded ${cards.length} German vocabulary cards ($availabilityText)!',
             ),
             backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
             action: SnackBarAction(
               label: 'VIEW',
               textColor: Colors.white,
@@ -442,7 +493,9 @@ class DebugMenuScreen extends StatelessWidget {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('DEBUG ERROR in _loadGermanWords: $e');
+      print('DEBUG STACK: $stackTrace');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

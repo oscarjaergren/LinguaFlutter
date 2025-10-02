@@ -68,12 +68,17 @@ class DebugService {
   }
 
   /// Load German vocabulary cards from JSON file
-  static Future<List<CardModel>> loadGermanWordsFromJson({int? limit}) async {
+  static Future<List<CardModel>> loadGermanWordsFromJson({
+    int? limit,
+    bool makeAvailableNow = false,
+  }) async {
     try {
       // Load JSON file from assets
       final String jsonString = await rootBundle.loadString('assets/data/german_words.json');
       final Map<String, dynamic> jsonData = json.decode(jsonString) as Map<String, dynamic>;
       final List<dynamic> words = jsonData['words'] as List<dynamic>;
+      
+      print('DEBUG: Loaded ${words.length} words from JSON');
       
       // Convert to CardModel objects
       final List<CardModel> cards = [];
@@ -81,8 +86,10 @@ class DebugService {
           ? words.sublist(0, limit) 
           : words;
       
-      for (final wordData in wordsToProcess) {
-        final word = wordData as Map<String, dynamic>;
+      print('DEBUG: Processing ${wordsToProcess.length} words');
+      
+      for (var i = 0; i < wordsToProcess.length; i++) {
+        final word = wordsToProcess[i] as Map<String, dynamic>;
         
         // Build example sentences text
         final List<dynamic> examplesList = word['examples'] as List<dynamic>? ?? [];
@@ -96,11 +103,17 @@ class DebugService {
             : '';
         
         // Calculate next review date based on hours
-        final double hoursUntilReview = (word['nextReviewHours'] as num?)?.toDouble() ?? 24.0;
-        final DateTime nextReview = DateTime.now().add(Duration(
-          hours: hoursUntilReview.floor(),
-          minutes: ((hoursUntilReview % 1) * 60).floor(),
-        ));
+        final DateTime nextReview;
+        if (makeAvailableNow) {
+          // Make all cards available immediately for learning
+          nextReview = DateTime.now().subtract(const Duration(hours: 1));
+        } else {
+          final double hoursUntilReview = (word['nextReviewHours'] as num?)?.toDouble() ?? 24.0;
+          nextReview = DateTime.now().add(Duration(
+            hours: hoursUntilReview.floor(),
+            minutes: ((hoursUntilReview % 1) * 60).floor(),
+          ));
+        }
         
         // Create the card
         final card = CardModel.create(
@@ -114,11 +127,17 @@ class DebugService {
         );
         
         cards.add(card);
+        
+        if ((i + 1) % 10 == 0) {
+          print('DEBUG: Processed ${i + 1} cards');
+        }
       }
       
+      print('DEBUG: Successfully created ${cards.length} card objects');
       return cards;
-    } catch (e) {
-      // Return empty list if there's an error
+    } catch (e, stackTrace) {
+      print('DEBUG ERROR: Failed to load German words: $e');
+      print('DEBUG STACK: $stackTrace');
       throw Exception('Failed to load German words from JSON: $e');
     }
   }
