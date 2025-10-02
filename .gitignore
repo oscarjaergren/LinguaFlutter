@@ -62,3 +62,7 @@ windows/flutter/generated_*
 macos/Flutter/Generated*
 linux/flutter/generated_*
 pubspec.lock
+
+# API Keys and credentials (keep secure!)
+assets/google_tts_api_key.txt
+assets/*_credentials.json

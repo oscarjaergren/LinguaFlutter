@@ -302,6 +302,85 @@ class DebugMenuScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // TTS Provider Selector
+          Card(
+            color: Colors.purple.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.volume_up, color: Colors.purple.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Text-to-Speech Provider',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Consumer<CardProvider>(
+                    builder: (context, cardProvider, child) {
+                      final ttsService = GoogleCloudTtsService();
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Current: ${ttsService.isGoogleTtsEnabled ? "Google Cloud Neural2 ⭐⭐⭐⭐⭐" : "Native Platform TTS ⭐⭐"}',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: ttsService.isGoogleTtsEnabled ? Colors.green : Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Test different TTS engines:',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _testTts(context, useGoogle: false),
+                                  icon: const Icon(Icons.volume_up_outlined),
+                                  label: const Text('Test Native'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.orange,
+                                    side: const BorderSide(color: Colors.orange),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _testTts(context, useGoogle: true),
+                                  icon: const Icon(Icons.volume_up),
+                                  label: const Text('Test Google'),
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.green,
+                                    side: const BorderSide(color: Colors.green),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // App info
           Card(
             child: Padding(
@@ -614,5 +693,53 @@ class DebugMenuScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _testTts(BuildContext context, {required bool useGoogle}) async {
+    final testPhrase = 'Guten Tag! Das ist ein Test.';
+    
+    try {
+      if (useGoogle) {
+        print('🧪 [TTS TEST] Testing Google Cloud TTS...');
+        final googleTts = GoogleCloudTtsService();
+        await googleTts.initialize();
+        await googleTts.speak(testPhrase, 'de');
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎙️ Playing Google Cloud Neural2 voice'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        print('🧪 [TTS TEST] Testing Native TTS...');
+        final nativeTts = NativeTtsService();
+        await nativeTts.initialize();
+        await nativeTts.speak(testPhrase, 'de');
+        
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🔊 Playing Native platform TTS'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ [TTS TEST] Error: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

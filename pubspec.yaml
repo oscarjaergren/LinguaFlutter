@@ -64,6 +64,9 @@ dependencies:
   
   # UUID generation for unique IDs
   uuid: ^4.5.1
+  
+  # Audio playback for TTS
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -95,6 +98,7 @@ flutter:
   assets:
     - lingualabs_mascot_manual_crop-removebg-preview.png
     - assets/data/german_words.json
+    - assets/google_tts_api_key.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

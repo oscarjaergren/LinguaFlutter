@@ -118,14 +118,28 @@ class ReviewCard extends StatelessWidget {
             color: Colors.blue,
           ),
           const SizedBox(height: 24),
-          Text(
-            card.frontText,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-            textAlign: TextAlign.center,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  card.frontText,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 12),
+              SpeakerButton(
+                text: card.frontText,
+                languageCode: card.language,
+                size: 32,
+                color: Colors.blue,
+              ),
+            ],
           ),
           const SizedBox(height: 32),
           Container(

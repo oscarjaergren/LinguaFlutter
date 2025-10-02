@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../services/tts_service.dart';
+import '../services/google_cloud_tts_service.dart';
 
 /// A button that speaks text when pressed using text-to-speech
+/// Uses Google Cloud TTS Neural2 voices if configured, falls back to native TTS
 class SpeakerButton extends StatefulWidget {
   final String text;
   final String languageCode;
@@ -24,7 +25,7 @@ class SpeakerButton extends StatefulWidget {
 
 class _SpeakerButtonState extends State<SpeakerButton>
     with SingleTickerProviderStateMixin {
-  final TtsService _ttsService = TtsService();
+  final GoogleCloudTtsService _ttsService = GoogleCloudTtsService();
   bool _isSpeaking = false;
   late AnimationController _animationController;
 

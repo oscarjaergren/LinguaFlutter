@@ -1,10 +1,10 @@
 import 'package:flutter_tts/flutter_tts.dart';
 
-/// Service for text-to-speech functionality with language support
-class TtsService {
-  static final TtsService _instance = TtsService._internal();
-  factory TtsService() => _instance;
-  TtsService._internal();
+/// Service for native platform text-to-speech functionality
+class NativeTtsService {
+  static final NativeTtsService _instance = NativeTtsService._internal();
+  factory NativeTtsService() => _instance;
+  NativeTtsService._internal();
 
   final FlutterTts _flutterTts = FlutterTts();
   bool _isInitialized = false;
