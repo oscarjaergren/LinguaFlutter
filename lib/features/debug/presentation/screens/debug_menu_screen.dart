@@ -347,9 +347,9 @@ class DebugMenuScreen extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () => _testTts(context, useGoogle: false),
+                                  onPressed: () => _testTts(context, TtsProviderType.native),
                                   icon: const Icon(Icons.volume_up_outlined),
-                                  label: const Text('Test Native'),
+                                  label: const Text('Native'),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: Colors.orange,
                                     side: const BorderSide(color: Colors.orange),
@@ -359,9 +359,9 @@ class DebugMenuScreen extends StatelessWidget {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: OutlinedButton.icon(
-                                  onPressed: () => _testTts(context, useGoogle: true),
+                                  onPressed: () => _testTts(context, TtsProviderType.google),
                                   icon: const Icon(Icons.volume_up),
-                                  label: const Text('Test Google'),
+                                  label: const Text('Google'),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: Colors.green,
                                     side: const BorderSide(color: Colors.green),
@@ -369,6 +369,19 @@ class DebugMenuScreen extends StatelessWidget {
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _testTts(context, TtsProviderType.elevenLabs),
+                              icon: const Icon(Icons.auto_awesome),
+                              label: const Text('ElevenLabs (Ultra-Realistic)'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.purple,
+                                side: const BorderSide(color: Colors.purple),
+                              ),
+                            ),
                           ),
                         ],
                       );
@@ -695,40 +708,61 @@ class DebugMenuScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _testTts(BuildContext context, {required bool useGoogle}) async {
+  Future<void> _testTts(BuildContext context, TtsProviderType provider) async {
     final testPhrase = 'Guten Tag! Das ist ein Test.';
     
     try {
-      if (useGoogle) {
-        print('🧪 [TTS TEST] Testing Google Cloud TTS...');
-        final googleTts = GoogleCloudTtsService();
-        await googleTts.initialize();
-        await googleTts.speak(testPhrase, 'de');
-        
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🎙️ Playing Google Cloud Neural2 voice'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        print('🧪 [TTS TEST] Testing Native TTS...');
-        final nativeTts = NativeTtsService();
-        await nativeTts.initialize();
-        await nativeTts.speak(testPhrase, 'de');
-        
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('🔊 Playing Native platform TTS'),
-              backgroundColor: Colors.orange,
-              duration: Duration(seconds: 2),
-            ),
-          );
-        }
+      switch (provider) {
+        case TtsProviderType.native:
+          print('🧪 [TTS TEST] Testing Native TTS...');
+          final nativeTts = NativeTtsService();
+          await nativeTts.initialize();
+          await nativeTts.speak(testPhrase, 'de');
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🔊 Playing Native platform TTS'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          break;
+          
+        case TtsProviderType.google:
+          print('🧪 [TTS TEST] Testing Google Cloud TTS...');
+          final googleTts = GoogleCloudTtsService();
+          await googleTts.initialize();
+          await googleTts.speak(testPhrase, 'de');
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🎙️ Playing Google Cloud Neural2 voice'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          break;
+          
+        case TtsProviderType.elevenLabs:
+          print('🧪 [TTS TEST] Testing ElevenLabs TTS...');
+          final elevenLabsTts = ElevenLabsTtsService();
+          await elevenLabsTts.initialize();
+          await elevenLabsTts.speak(testPhrase, 'de');
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✨ Playing ElevenLabs ultra-realistic voice'),
+                backgroundColor: Colors.purple,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          break;
       }
     } catch (e) {
       print('❌ [TTS TEST] Error: $e');
@@ -742,4 +776,10 @@ class DebugMenuScreen extends StatelessWidget {
       }
     }
   }
+}
+
+enum TtsProviderType {
+  native,
+  google,
+  elevenLabs,
 }

@@ -99,6 +99,7 @@ flutter:
     - lingualabs_mascot_manual_crop-removebg-preview.png
     - assets/data/german_words.json
     - assets/google_tts_api_key.txt
+    - assets/elevenlabs_api_key.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
