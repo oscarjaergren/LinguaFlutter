@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/services.dart';
 import '../../../shared/domain/models/card_model.dart';
 
 /// Service for debug functionality and test data generation
@@ -63,6 +65,62 @@ class DebugService {
       nextReview: yesterday,
       lastReviewed: yesterday,
     )).toList();
+  }
+
+  /// Load German vocabulary cards from JSON file
+  static Future<List<CardModel>> loadGermanWordsFromJson({int? limit}) async {
+    try {
+      // Load JSON file from assets
+      final String jsonString = await rootBundle.loadString('assets/data/german_words.json');
+      final Map<String, dynamic> jsonData = json.decode(jsonString) as Map<String, dynamic>;
+      final List<dynamic> words = jsonData['words'] as List<dynamic>;
+      
+      // Convert to CardModel objects
+      final List<CardModel> cards = [];
+      final wordsToProcess = limit != null && limit < words.length 
+          ? words.sublist(0, limit) 
+          : words;
+      
+      for (final wordData in wordsToProcess) {
+        final word = wordData as Map<String, dynamic>;
+        
+        // Build example sentences text
+        final List<dynamic> examplesList = word['examples'] as List<dynamic>? ?? [];
+        final String examplesText = examplesList.isNotEmpty
+            ? '\n\nExamples:\n${examplesList.map((e) => '• $e').join('\n')}'
+            : '';
+        
+        // Build plural information if available
+        final String pluralInfo = word.containsKey('plural') && word['plural'] != null
+            ? '\nPlural: ${word['plural']}'
+            : '';
+        
+        // Calculate next review date based on hours
+        final double hoursUntilReview = (word['nextReviewHours'] as num?)?.toDouble() ?? 24.0;
+        final DateTime nextReview = DateTime.now().add(Duration(
+          hours: hoursUntilReview.floor(),
+          minutes: ((hoursUntilReview % 1) * 60).floor(),
+        ));
+        
+        // Create the card
+        final card = CardModel.create(
+          frontText: word['german'] as String,
+          backText: '${word['english']}$pluralInfo$examplesText',
+          language: 'de', // German language code
+          category: word['category'] as String? ?? 'vocabulary',
+          tags: ['german', 'vocabulary', word['category'] as String? ?? 'general'],
+        ).copyWith(
+          nextReview: nextReview,
+        );
+        
+        cards.add(card);
+      }
+      
+      return cards;
+    } catch (e) {
+      // Return empty list if there's an error
+      throw Exception('Failed to load German words from JSON: $e');
+    }
   }
 
 }

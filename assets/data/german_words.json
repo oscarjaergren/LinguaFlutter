@@ -1,0 +1,503 @@
+{
+  "words": [
+    {
+      "german": "beendet sein",
+      "english": "to be finished",
+      "examples": [
+        "Wenn wir dort ankommen, wird die Veranstaltung beendet sein."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 0.35
+    },
+    {
+      "german": "die Revision",
+      "english": "the revision, the review, the appeal",
+      "examples": [
+        "Die Revision des Gesetzes wurde gestern abgeschlossen.",
+        "Nach der Prüfung fand eine Revision der Ergebnisse statt.",
+        "Der Anwalt legte Revision gegen das Urteil ein."
+      ],
+      "plural": "die Revisionen",
+      "category": "nouns",
+      "nextReviewHours": 2
+    },
+    {
+      "german": "der Zweck",
+      "english": "purpose/aim",
+      "examples": [
+        "Der Zweck dieser Übung ist es, die Grammatik zu verbessern."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 2
+    },
+    {
+      "german": "schleifen",
+      "english": "to polish, to sharpen, to drag",
+      "examples": [
+        "Wir müssen den Text noch einmal schleifen, bevor wir ihn veröffentlichen.",
+        "Er schleift seine Werkzeuge regelmäßig.",
+        "Ich muss meine Messer schleifen.",
+        "Er schleift die Kette über den Boden.",
+        "Die Zeit schleift sich dahin."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 5
+    },
+    {
+      "german": "ersatzhaft",
+      "english": "substitutive",
+      "examples": [],
+      "category": "adjectives",
+      "nextReviewHours": 6
+    },
+    {
+      "german": "abkommen",
+      "english": "(dat.) to deviate, to get off topic (von) / to agree",
+      "examples": [
+        "Ich möchte nicht vom Thema abkommen, lass uns beim Punkt bleiben.",
+        "Lass uns abkommen, wie wir das Problem lösen können.",
+        "Die Verhandlungen sind erfolgreich abkommen.",
+        "Er kam vom Thema ab und sprach über etwas anderes."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 11
+    },
+    {
+      "german": "die Verletzung",
+      "english": "the injury",
+      "examples": [
+        "Sie hat sich bei einem Sturz eine Verletzung zugezogen.",
+        "Die Verletzung muss sofort behandelt werden.",
+        "Nach dem Spiel hatte er eine Verletzung am Fuß."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 20
+    },
+    {
+      "german": "die Sehnsucht",
+      "english": "the longing",
+      "examples": [
+        "Die Sehnsucht nach Freiheit ist in vielen Liedern zu spüren."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "Ausdauer",
+      "english": "endurance",
+      "examples": [
+        "Um einen Marathon zu laufen, braucht man viel Ausdauer."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "Der Bauernkrieg",
+      "english": "The Peasants' War",
+      "examples": [],
+      "category": "nouns",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "schandfleck",
+      "english": "eyesore",
+      "examples": [],
+      "category": "nouns",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "der Fortschritt",
+      "english": "the progress",
+      "examples": [],
+      "plural": "-e",
+      "category": "nouns",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "vorbeifahren",
+      "english": "drive by",
+      "examples": [
+        "Wir sind am alten Schloss vorbeigefahren und haben Fotos gemacht."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "die Brieftasche",
+      "english": "the wallet",
+      "examples": [
+        "Er hat seine Brieftasche verloren und kann jetzt nicht bezahlen.",
+        "In meiner Brieftasche sind viele wichtige Karten.",
+        "Ich habe meine Brieftasche im Auto vergessen."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 24
+    },
+    {
+      "german": "die Erkenntnis",
+      "english": "insight, realization, understanding, knowledge gained",
+      "examples": [
+        "Nach vielen Experimenten kam die Wissenschaftlerin zu einer neuen Erkenntnis über das Verhalten der Moleküle."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "entschädigen",
+      "english": "to compensate, to indemnify",
+      "examples": [
+        "Nach dem Unfall musste die Firma die Betroffenen entschädigen.",
+        "Der Arbeitgeber entschädigte die Mitarbeiter für die Überstunden.",
+        "Die Versicherung wird dich für den Schaden am Auto entschädigen."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "erfinden",
+      "english": "invent",
+      "examples": [
+        "Er hat das Telefon erfinden."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "vorbeugen",
+      "english": "to prevent, to take precautions, to take preventative measures",
+      "examples": [
+        "Die Regierung will gegen die Ausbreitung des Virus vorbeugen.",
+        "Um einer Erkältung vorzubeugen, trinke ich viel Tee.",
+        "Ich beuge vor und mache regelmäßig Sport."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "das Kunstwerk",
+      "english": "the artwork",
+      "examples": [
+        "Das Kunstwerk wurde von einem talentierten Künstler geschaffen.",
+        "Viele Menschen bewundern das neue Kunstwerk des berühmten Malers.",
+        "Das Kunstwerk hängt in der Galerie."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "zugezogen",
+      "english": "pulled closed, moved to (past of zuziehen)",
+      "examples": [
+        "Die Vorhänge sind zugezogen, damit es im Raum dunkel bleibt.",
+        "Er ist vor einem Jahr in die Stadt zugezogen.",
+        "Die Fenster wurden zugezogen, um die Kälte draußen zu halten."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "abgeben",
+      "english": "to submit, to hand over",
+      "examples": [
+        "Er hat seine Schlüssel im Büro abgegeben.",
+        "Kannst du mir bitte das Buch abgeben?",
+        "Ich muss das Formular bis Freitag abgeben."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "die Rücksichtnahme",
+      "english": "the consideration, thoughtfulness, respect for others",
+      "examples": [
+        "Rücksichtnahme im Straßenverkehr kann Unfälle verhindern."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "der hausmeister",
+      "english": "the janitor",
+      "examples": [
+        "Der Hausmeister repariert die defekte Heizung im Klassenzimmer."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 48
+    },
+    {
+      "german": "die Fehlfunktion",
+      "english": "the malfunction",
+      "examples": [
+        "Die Fehlfunktion des Computers hat zu einem Datenverlust geführt.",
+        "Wegen einer Fehlfunktion musste der Zug angehalten werden.",
+        "Die Fehlfunktion der Maschine verursachte einen Produktionsstopp."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "verdrehen",
+      "english": "to twist, to turn, to distort something",
+      "examples": [
+        "Sie hat ihre Haare verdreht.",
+        "Er hat die Wahrheit verdreht.",
+        "Ich habe meinen Knöchel verdreht.",
+        "Sie verdreht den Stoff, um ihn zu trocknen.",
+        "Die Medien haben die Ereignisse verdreht."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "hinterhältig",
+      "english": "deceitful, sneaky, treacherous",
+      "examples": [
+        "Sein hinterhältiges Verhalten hat das Vertrauen seiner Kollegen zerstört.",
+        "Die hinterhältige Art, wie sie über andere spricht, macht sie bei vielen unbeliebt.",
+        "Er hat einen hinterhältigen Plan geschmiedet, um seinen Freund auszutricksen."
+      ],
+      "category": "adjectives",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "sichtbar",
+      "english": "visible, apparent",
+      "examples": [
+        "Die Narbe auf ihrem Arm ist sichtbar.",
+        "Die Auswirkungen des Klimawandels sind sichtbar.",
+        "Die Sterne sind in der Nacht sichtbar."
+      ],
+      "category": "adjectives",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "Die Fantasy",
+      "english": "The Fantasy",
+      "examples": [],
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "die Kosten",
+      "english": "the costs",
+      "examples": [],
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "zustimmen",
+      "english": "to agree, to consent",
+      "examples": [
+        "Kannst du mir zustimmen, dass das eine gute Idee ist?",
+        "Die Mehrheit der Leute hat dem Vorschlag zugestimmt.",
+        "Ich stimme dir zu."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "munter",
+      "english": "cheerful/lively/alert",
+      "examples": [
+        "Die Kinder waren munter und spielten den ganzen Nachmittag im Park."
+      ],
+      "category": "adjectives",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "bock",
+      "english": "goat / desire (informal)",
+      "examples": [
+        "Ich habe Bock auf Eis."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "die Lücke",
+      "english": "the gap, the space",
+      "examples": [
+        "Die Lücke zwischen den beiden Stühlen ist zu klein, um einen Tisch zu stellen.",
+        "Ich habe eine Lücke in meinem Wissen über die Geschichte.",
+        "In der Wand gibt es eine Lücke, durch die kalte Luft zieht."
+      ],
+      "plural": "die Lücken",
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "dorthin",
+      "english": "to there, to that place",
+      "examples": [
+        "Kannst du mir sagen, wie ich dorthin komme?",
+        "Wir fahren dorthin, um das Konzert zu sehen.",
+        "Ich gehe dorthin, wo die Sonne scheint."
+      ],
+      "category": "adverbs",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "auswendig",
+      "english": "by heart",
+      "examples": [
+        "Kannst du die Telefonnummer auswendig sagen?"
+      ],
+      "category": "adverbs",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "neu starten",
+      "english": "restart, reboot",
+      "examples": [
+        "Manchmal ist es gut, im Leben neu zu starten und neue Wege zu gehen.",
+        "Nach dem Fehler haben wir beschlossen, das Projekt neu zu starten.",
+        "Ich muss meinen Computer neu starten, damit die Updates installiert werden."
+      ],
+      "category": "verbs",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "ziehe durch die sich ständig wandelnde Steppe und zwinge der Welt deinen Willen auf!",
+      "english": "wander through the ever-changing steppe and impose your will on the world!",
+      "examples": [],
+      "category": "phrases",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "die Orchidee",
+      "english": "the orchid",
+      "examples": [
+        "In meinem Garten wachsen viele verschiedene Orchideen.",
+        "Ich habe eine schöne Orchidee als Geschenk bekommen.",
+        "Die Orchidee blüht das ganze Jahr über."
+      ],
+      "plural": "die Orchideen",
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "Netzausbau",
+      "english": "Grid expansion",
+      "examples": [],
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "das Nadelholz",
+      "english": "Softwood",
+      "examples": [
+        "Dieses Regal besteht aus Nadelholz"
+      ],
+      "category": "nouns",
+      "nextReviewHours": 72
+    },
+    {
+      "german": "der Anker",
+      "english": "the anchor",
+      "examples": [
+        "Der Kapitän ließ den Anker fallen, um das Schiff zu stoppen."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "die Überarbeitung",
+      "english": "the revision/editing",
+      "examples": [
+        "Wir sollten die Überarbeitung des Berichts bis nächste Woche abschließen.",
+        "Die Überarbeitung des Projekts hat viel Zeit in Anspruch genommen.",
+        "Nach der ersten Version meiner Arbeit brauche ich eine gründliche Überarbeitung."
+      ],
+      "plural": "die Überarbeitungen",
+      "category": "nouns",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "gen Horizont zu reiten",
+      "english": "riding towards the horizon",
+      "examples": [],
+      "category": "phrases",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "denen",
+      "english": "them",
+      "examples": [
+        "Er zog sich verbittert auf seinen Bauernhof zurück und schrieb seine Lebenserinnerungen auf, in denen er sich selbst viel lobte."
+      ],
+      "category": "pronouns",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "primär",
+      "english": "primary, main",
+      "examples": [
+        "Die primäre Quelle für diese Informationen ist ein Fachbuch.",
+        "Wir müssen uns auf die primären Ziele des Projekts konzentrieren.",
+        "Die primäre Aufgabe der Schule ist es, Wissen zu vermitteln."
+      ],
+      "category": "adjectives",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "das Betriebssystem",
+      "english": "The operating system",
+      "examples": [],
+      "category": "nouns",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "unbefriedigend",
+      "english": "unsatisfactory",
+      "examples": [
+        "Die Ergebnisse der Umfrage waren unbefriedigend und zeigen Verbesserungsbedarf.",
+        "Das Essen im Restaurant war unbefriedigend und hat nicht geschmeckt.",
+        "Die Note in Mathe war unbefriedigend."
+      ],
+      "category": "adjectives",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "der Paprika",
+      "english": "the bell pepper, the paprika (spice)",
+      "examples": [
+        "Wir grillen Paprika zusammen mit anderen Gemüse.",
+        "Der Paprika gibt dem Gericht eine schöne Farbe.",
+        "Ich kaufe einen roten Paprika für den Salat."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "bis zu dem Zeitpunkt",
+      "english": "(formal) by the time",
+      "examples": [
+        "Bis zu dem Zeitpunkt, an dem der Zug ankommt, können wir einen Kaffee trinken.",
+        "Sie arbeitete hart, bis zu dem Zeitpunkt, an dem sie die Beförderung erhielt.",
+        "Bis zu dem Zeitpunkt, an dem der Film beginnt, haben wir noch Zeit für Popcorn."
+      ],
+      "category": "phrases",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "neugier",
+      "english": "curiosity",
+      "examples": [
+        "Die Neugier der Kinder ist unermüdlich, wenn sie neue Dinge entdecken."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 96
+    },
+    {
+      "german": "die Galerie",
+      "english": "the gallery",
+      "examples": [
+        "In der Galerie findet regelmäßig ein Kunstmarkt statt.",
+        "Die Galerie hat viele beeindruckende Gemälde von berühmten Künstlern.",
+        "Ich gehe heute in die Galerie, um die neue Ausstellung zu sehen."
+      ],
+      "category": "nouns",
+      "nextReviewHours": 120
+    }
+  ]
+}

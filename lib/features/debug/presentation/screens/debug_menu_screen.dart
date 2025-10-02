@@ -118,6 +118,92 @@ class DebugMenuScreen extends StatelessWidget {
 
           const SizedBox(height: 16),
 
+          // German vocabulary from JSON
+          Card(
+            color: Colors.blue.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.translate, color: Colors.blue.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'German Vocabulary (JSON)',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Load real German vocabulary cards from JSON file with proper scheduling.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Load all German words
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => _loadGermanWords(context, null),
+                      icon: const Icon(Icons.library_books),
+                      label: const Text('Load All German Words (50+)'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.blue.shade700,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Load 10 German words
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _loadGermanWords(context, 10),
+                      icon: const Icon(Icons.book),
+                      label: const Text('Load 10 German Words'),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.blue.shade700),
+                        foregroundColor: Colors.blue.shade700,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Load 25 German words
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _loadGermanWords(context, 25),
+                      icon: const Icon(Icons.book),
+                      label: const Text('Load 25 German Words'),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.blue.shade700),
+                        foregroundColor: Colors.blue.shade700,
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Data management
           Card(
             child: Padding(
@@ -298,6 +384,71 @@ class DebugMenuScreen extends StatelessWidget {
           SnackBar(
             content: Text('Error creating cards: $e'),
             backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loadGermanWords(BuildContext context, int? limit) async {
+    try {
+      // Show loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Text('Loading German vocabulary...'),
+              ],
+            ),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      final cardProvider = context.read<CardProvider>();
+      final languageProvider = context.read<LanguageProvider>();
+      
+      // Set active language to German
+      languageProvider.setActiveLanguage('de');
+      
+      // Load German words from JSON
+      final cards = await DebugService.loadGermanWordsFromJson(limit: limit);
+      
+      // Batch add all cards
+      await cardProvider.addMultipleCards(cards);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Loaded ${cards.length} German vocabulary cards with scheduled reviews!',
+            ),
+            backgroundColor: Colors.green,
+            action: SnackBarAction(
+              label: 'VIEW',
+              textColor: Colors.white,
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading German words: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
