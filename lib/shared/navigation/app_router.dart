@@ -3,12 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
-import '../../features/card_management/presentation/screens/card_list_screen.dart';
-import '../../features/card_management/presentation/screens/card_creation_screen.dart';
+import '../../features/card_management/card_management.dart';
 import '../../features/card_review/presentation/screens/card_review_screen.dart';
 import '../../features/card_review/presentation/screens/exercise_session_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
-import '../domain/card_provider.dart';
 import '../services/logger_service.dart';
 
 /// Application routes configuration using go_router
@@ -52,8 +50,8 @@ class AppRouter {
         name: 'card-edit',
         builder: (context, state) {
           final cardId = state.pathParameters['cardId']!;
-          final cardProvider = context.read<CardProvider>();
-          final card = cardProvider.allCards.firstWhere(
+          final cardManagement = context.read<CardManagementProvider>();
+          final card = cardManagement.allCards.firstWhere(
             (c) => c.id == cardId,
             orElse: () => throw Exception('Card not found'),
           );

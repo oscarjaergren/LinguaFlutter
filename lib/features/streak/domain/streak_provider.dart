@@ -142,7 +142,7 @@ class StreakProvider extends ChangeNotifier {
     // Session reset functionality if needed
   }
 
-  /// Record a card review (for integration with CardProvider)
+  /// Record a card review (for integration with CardManagementProvider)
   Future<void> recordCardReview() async {
     await updateStreakWithReview(cardsReviewed: 1);
   }

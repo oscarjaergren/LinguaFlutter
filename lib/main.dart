@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lingua_flutter/shared/domain/card_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'features/icon_search/icon_search.dart';
@@ -8,6 +7,8 @@ import 'features/language/language.dart';
 import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
 import 'features/card_review/card_review.dart';
+import 'features/card_management/card_management.dart';
+import 'features/duplicate_detection/duplicate_detection.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
 
@@ -20,14 +21,19 @@ void main() async {
 
   final prefs = await SharedPreferences.getInstance();
 
-  // Create providers
+  // Create core providers
   final languageProvider = LanguageProvider();
   final streakProvider = StreakProvider();
-  final cardProvider = CardProvider(languageProvider: languageProvider);
   final themeProvider = ThemeProvider(prefs: prefs);
+  
+  // Create feature-specific providers (VSA architecture)
+  final cardManagementProvider = CardManagementProvider(
+    languageProvider: languageProvider,
+  );
+  final duplicateDetectionProvider = DuplicateDetectionProvider();
 
   // Initialize providers that need async setup
-  await cardProvider.initialize();
+  await cardManagementProvider.initialize();
   await streakProvider.loadStreak();
   
   LoggerService.info('✅ All providers initialized successfully');
@@ -35,18 +41,33 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        // Core providers
         ChangeNotifierProvider.value(value: languageProvider),
-        ChangeNotifierProvider.value(value: cardProvider),
         ChangeNotifierProvider.value(value: streakProvider),
         ChangeNotifierProvider.value(value: themeProvider),
+        
+        // Feature-specific providers (VSA)
+        ChangeNotifierProvider.value(value: cardManagementProvider),
+        ChangeNotifierProvider.value(value: duplicateDetectionProvider),
+        
+        // UI providers
         ChangeNotifierProvider(create: (_) => MascotProvider()),
         ChangeNotifierProvider(create: (_) => IconProvider()),
-        ChangeNotifierProxyProvider<CardProvider, ExerciseSessionProvider>(
-          create: (context) => ExerciseSessionProvider(
-            cardProvider: context.read<CardProvider>(),
+        
+        // Session providers
+        ChangeNotifierProxyProvider<CardManagementProvider, ReviewSessionProvider>(
+          create: (context) => ReviewSessionProvider(
+            cardManagement: context.read<CardManagementProvider>(),
           ),
-          update: (context, cardProvider, previous) =>
-              previous ?? ExerciseSessionProvider(cardProvider: cardProvider),
+          update: (context, cardManagement, previous) =>
+              previous ?? ReviewSessionProvider(cardManagement: cardManagement),
+        ),
+        ChangeNotifierProxyProvider<CardManagementProvider, ExerciseSessionProvider>(
+          create: (context) => ExerciseSessionProvider(
+            cardManagement: context.read<CardManagementProvider>(),
+          ),
+          update: (context, cardManagement, previous) =>
+              previous ?? ExerciseSessionProvider(cardManagement: cardManagement),
         ),
       ],
       child: const LinguaFlutterApp(),
