@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
-import '../../../card_management/domain/providers/card_management_provider.dart';
+
+/// Function type for persisting card updates
+typedef UpdateCardCallback = Future<void> Function(CardModel card);
 
 /// Provider for managing card review session state
 class ReviewSessionProvider extends ChangeNotifier {
-  final CardManagementProvider _cardManagement;
+  final UpdateCardCallback _updateCard;
   
   // Session state
   List<CardModel> _sessionCards = [];
@@ -15,8 +17,8 @@ class ReviewSessionProvider extends ChangeNotifier {
   int _correctAnswers = 0;
   bool _isSessionActive = false;
 
-  ReviewSessionProvider({required CardManagementProvider cardManagement})
-      : _cardManagement = cardManagement;
+  ReviewSessionProvider({required UpdateCardCallback updateCard})
+      : _updateCard = updateCard;
 
   // Getters
   List<CardModel> get sessionCards => _sessionCards;
@@ -99,7 +101,7 @@ class ReviewSessionProvider extends ChangeNotifier {
     if (currentCard != null) {
       // Update card with spaced repetition result
       final updatedCard = currentCard!.processAnswer(answer);
-      await _cardManagement.updateCard(updatedCard);
+      await _updateCard(updatedCard);
       
       _cardsReviewed++;
       if (answer == CardAnswer.correct) {

@@ -57,17 +57,26 @@ void main() async {
         // Session providers
         ChangeNotifierProxyProvider<CardManagementProvider, ReviewSessionProvider>(
           create: (context) => ReviewSessionProvider(
-            cardManagement: context.read<CardManagementProvider>(),
+            updateCard: context.read<CardManagementProvider>().updateCard,
           ),
           update: (context, cardManagement, previous) =>
-              previous ?? ReviewSessionProvider(cardManagement: cardManagement),
+              previous ?? ReviewSessionProvider(updateCard: cardManagement.updateCard),
         ),
         ChangeNotifierProxyProvider<CardManagementProvider, ExerciseSessionProvider>(
-          create: (context) => ExerciseSessionProvider(
-            cardManagement: context.read<CardManagementProvider>(),
-          ),
+          create: (context) {
+            final cm = context.read<CardManagementProvider>();
+            return ExerciseSessionProvider(
+              getReviewCards: () => cm.reviewCards,
+              getAllCards: () => cm.allCards,
+              updateCard: cm.updateCard,
+            );
+          },
           update: (context, cardManagement, previous) =>
-              previous ?? ExerciseSessionProvider(cardManagement: cardManagement),
+              previous ?? ExerciseSessionProvider(
+                getReviewCards: () => cardManagement.reviewCards,
+                getAllCards: () => cardManagement.allCards,
+                updateCard: cardManagement.updateCard,
+              ),
         ),
       ],
       child: const LinguaFlutterApp(),

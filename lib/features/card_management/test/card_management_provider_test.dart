@@ -92,16 +92,16 @@ void main() {
 
   group('ReviewSessionProvider', () {
     late ReviewSessionProvider provider;
-    late CardManagementProvider cardManagement;
 
     setUp(() {
-      cardManagement = CardManagementProvider(languageProvider: LanguageProvider());
-      provider = ReviewSessionProvider(cardManagement: cardManagement);
+      // Use a mock callback for testing - no dependency on CardManagementProvider
+      provider = ReviewSessionProvider(
+        updateCard: (card) async { /* mock - do nothing */ },
+      );
     });
 
     tearDown(() {
       provider.dispose();
-      cardManagement.dispose();
     });
 
     test('should have initial state', () {

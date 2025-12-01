@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
-import '../../../card_management/domain/providers/card_management_provider.dart';
+import 'review_session_provider.dart' show UpdateCardCallback;
+
+/// Function type for getting cards
+typedef GetCardsCallback = List<CardModel> Function();
 
 /// Model representing a card with a specific exercise type to practice
 class ExerciseItem {
@@ -27,7 +30,9 @@ class ExerciseItem {
 
 /// Provider for managing exercise practice sessions
 class ExerciseSessionProvider extends ChangeNotifier {
-  final CardManagementProvider cardManagement;
+  final GetCardsCallback _getReviewCards;
+  final GetCardsCallback _getAllCards;
+  final UpdateCardCallback _updateCard;
   
   // Session state
   List<ExerciseItem> _sessionQueue = [];
@@ -41,7 +46,13 @@ class ExerciseSessionProvider extends ChangeNotifier {
   bool _isAnswerShown = false;
   List<String>? _multipleChoiceOptions;
   
-  ExerciseSessionProvider({required this.cardManagement});
+  ExerciseSessionProvider({
+    required GetCardsCallback getReviewCards,
+    required GetCardsCallback getAllCards,
+    required UpdateCardCallback updateCard,
+  })  : _getReviewCards = getReviewCards,
+        _getAllCards = getAllCards,
+        _updateCard = updateCard;
   
   // Getters
   List<ExerciseItem> get sessionQueue => _sessionQueue;
@@ -76,7 +87,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
   
   /// Start a new exercise session with specified cards
   void startSession({List<CardModel>? cards}) {
-    final cardsToUse = cards ?? cardManagement.reviewCards;
+    final cardsToUse = cards ?? _getReviewCards();
     
     // Build exercise queue
     _sessionQueue = _buildExerciseQueue(cardsToUse);
@@ -154,7 +165,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
     if (currentCard == null) return;
     
     final correctAnswer = currentCard!.backText;
-    final allCards = cardManagement.allCards
+    final allCards = _getAllCards()
         .where((c) => c.id != currentCard!.id)
         .toList()
       ..shuffle();
@@ -188,7 +199,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
     );
     
     // Save updated card
-    await cardManagement.updateCard(updatedCard);
+    await _updateCard(updatedCard);
     
     // Update session stats
     if (isCorrect) {
