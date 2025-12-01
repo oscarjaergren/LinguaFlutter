@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/services/animation_service.dart';
+import '../../domain/providers/review_session_provider.dart';
 import 'review_card.dart';
 
 /// Interactive card area with drag gestures and animations
 class CardArea extends StatelessWidget {
   final CardModel card;
-  final CardProvider cardProvider;
+  final ReviewSessionProvider reviewSession;
   final AnimationService animationService;
   final double swipeOffset;
   final double swipeVerticalOffset;
@@ -24,7 +26,7 @@ class CardArea extends StatelessWidget {
   const CardArea({
     super.key,
     required this.card,
-    required this.cardProvider,
+    required this.reviewSession,
     required this.animationService,
     required this.swipeOffset,
     this.swipeVerticalOffset = 0.0,
@@ -45,7 +47,7 @@ class CardArea extends StatelessWidget {
     return Center(
       child: GestureDetector(
         onTap: () {
-          if (!cardProvider.showingBack) {
+          if (!reviewSession.showingBack) {
             HapticFeedback.lightImpact();
             onTap();
           }

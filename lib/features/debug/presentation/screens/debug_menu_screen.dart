@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/services/google_cloud_tts_service.dart';
+import '../../../../shared/services/tts_service.dart';
+import '../../../../shared/services/elevenlabs_tts_service.dart';
 import 'package:provider/provider.dart';
+import '../../../card_management/card_management.dart';
 import '../../../debug/data/debug_service.dart';
 import '../../../language/language.dart';
 
@@ -324,8 +327,8 @@ class DebugMenuScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Consumer<CardProvider>(
-                    builder: (context, cardProvider, child) {
+                  Consumer<CardManagementProvider>(
+                    builder: (context, cardManagement, child) {
                       final ttsService = GoogleCloudTtsService();
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -440,7 +443,7 @@ class DebugMenuScreen extends StatelessWidget {
 
   Future<void> _createCards(BuildContext context, int count) async {
     try {
-      final cardProvider = context.read<CardProvider>();
+      final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
       
       // Get active language or default to 'en'
@@ -451,7 +454,7 @@ class DebugMenuScreen extends StatelessWidget {
       final cards = DebugService.createBasicCards(language, count);
       
       // Batch add all cards
-      await cardProvider.addMultipleCards(cards);
+      await cardManagement.addMultipleCards(cards);
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -480,7 +483,7 @@ class DebugMenuScreen extends StatelessWidget {
 
   Future<void> _createDueCards(BuildContext context, int count) async {
     try {
-      final cardProvider = context.read<CardProvider>();
+      final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
       
       // Get active language or default to 'en'
@@ -491,7 +494,7 @@ class DebugMenuScreen extends StatelessWidget {
       final cards = DebugService.createDueForReviewCards(language, count);
       
       // Batch add all cards
-      await cardProvider.addMultipleCards(cards);
+      await cardManagement.addMultipleCards(cards);
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -547,7 +550,7 @@ class DebugMenuScreen extends StatelessWidget {
         );
       }
 
-      final cardProvider = context.read<CardProvider>();
+      final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
       
       // Set active language to German
@@ -563,7 +566,7 @@ class DebugMenuScreen extends StatelessWidget {
       print('DEBUG: Received ${cards.length} cards from service');
       
       // Batch add all cards
-      await cardProvider.addMultipleCards(cards);
+      await cardManagement.addMultipleCards(cards);
       
       final availabilityText = makeAvailableNow 
           ? 'available now for review' 
@@ -624,7 +627,7 @@ class DebugMenuScreen extends StatelessWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        await context.read<CardProvider>().clearAllCards();
+        await context.read<CardManagementProvider>().clearAllCards();
         
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -648,8 +651,8 @@ class DebugMenuScreen extends StatelessWidget {
   }
 
   void _showCardStatistics(BuildContext context) {
-    final cardProvider = context.read<CardProvider>();
-    final allCards = cardProvider.allCards;
+    final cardManagement = context.read<CardManagementProvider>();
+    final allCards = cardManagement.allCards;
     
     // Calculate statistics
     final totalCards = allCards.length;

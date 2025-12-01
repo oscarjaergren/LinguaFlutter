@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/services/animation_service.dart';
+import '../../../card_management/domain/providers/card_management_provider.dart';
+import '../../domain/providers/review_session_provider.dart';
 import '../widgets/card_area.dart';
 import '../widgets/review_progress_indicator.dart';
 import '../widgets/review_completion_screen.dart';
@@ -87,9 +90,10 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   void _startReviewSession() {
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!cardProvider.isReviewMode) {
-      cardProvider.startReviewSession();
+    final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
+    final cardManagement = Provider.of<CardManagementProvider>(context, listen: false);
+    if (!reviewSession.isSessionActive) {
+      reviewSession.startSession(cardManagement.reviewCards);
     }
     setState(() {
       _showAnswer = false;
@@ -115,8 +119,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   void _onPanStart(DragStartDetails details) {
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.currentCard == null) return;
+    final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
+    if (!_showAnswer || reviewSession.currentCard == null) return;
     
     setState(() {
       _isDragging = true;
@@ -124,8 +128,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.currentCard == null) return;
+    final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
+    if (!_showAnswer || reviewSession.currentCard == null) return;
     
     setState(() {
       _swipeOffset += details.delta.dx;
@@ -140,8 +144,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   void _onPanEnd(DragEndDetails details) {
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.currentCard == null) return;
+    final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
+    if (!_showAnswer || reviewSession.currentCard == null) return;
     
     setState(() {
       _isDragging = false;
@@ -161,11 +165,11 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   void _answerCard(bool isCorrect) async {
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
+    final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
     
-    if (cardProvider.currentCard != null) {
+    if (reviewSession.currentCard != null) {
       // Process the answer
-      await cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
+      await reviewSession.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
       
       // Reset state for next card
       if (mounted) {
@@ -185,8 +189,8 @@ class _CardReviewScreenState extends State<CardReviewScreen>
   }
 
   void _handleKeyboardSwipe(bool isCorrect) async {
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
-    if (!_showAnswer || cardProvider.currentCard == null) return;
+    final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
+    if (!_showAnswer || reviewSession.currentCard == null) return;
 
     // Trigger haptic feedback
     HapticFeedback.mediumImpact();
@@ -237,7 +241,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
-      final cardProvider = Provider.of<CardProvider>(context, listen: false);
+      final reviewSession = Provider.of<ReviewSessionProvider>(context, listen: false);
       
       // Allow flipping the card with Space or Enter
       if (event.logicalKey == LogicalKeyboardKey.space ||
@@ -249,7 +253,7 @@ class _CardReviewScreenState extends State<CardReviewScreen>
       }
       
       // Allow swiping only when answer is shown
-      if (_showAnswer && cardProvider.currentCard != null) {
+      if (_showAnswer && reviewSession.currentCard != null) {
         if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           _handleKeyboardSwipe(false);
           return KeyEventResult.handled;
@@ -279,11 +283,11 @@ class _CardReviewScreenState extends State<CardReviewScreen>
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
-        body: Consumer<CardProvider>(
-        builder: (context, cardProvider, child) {
-          if (cardProvider.currentCard == null) {
+        body: Consumer<ReviewSessionProvider>(
+        builder: (context, reviewSession, child) {
+          if (reviewSession.currentCard == null) {
             return ReviewCompletionScreen(
-              cardProvider: cardProvider,
+              reviewSession: reviewSession,
               onRestart: () {
                 // Navigate to cards screen to add more cards
                 Navigator.of(context).pop();
@@ -293,18 +297,18 @@ class _CardReviewScreenState extends State<CardReviewScreen>
             );
           }
 
-          final currentCard = cardProvider.currentCard!;
+          final currentCard = reviewSession.currentCard!;
 
           return Column(
             children: [
               ReviewProgressIndicator(
-                cardProvider: cardProvider,
+                reviewSession: reviewSession,
               ),
               const SizedBox(height: 20),
               Expanded(
                 child: CardArea(
                   card: currentCard,
-                  cardProvider: cardProvider,
+                  reviewSession: reviewSession,
                   animationService: widget.animationService,
                   swipeOffset: _swipeOffset,
                   swipeVerticalOffset: _swipeVerticalOffset,

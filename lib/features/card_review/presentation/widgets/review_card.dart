@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/widgets/speaker_button.dart';
+import '../../domain/providers/review_session_provider.dart';
 
 /// Individual flashcard widget with flip animation and visual feedback
 class ReviewCard extends StatelessWidget {
@@ -21,8 +23,8 @@ class ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CardProvider>(
-      builder: (context, cardProvider, child) {
+    return Consumer<ReviewSessionProvider>(
+      builder: (context, reviewSession, child) {
         return RepaintBoundary(
           child: Container(
             width: 320,
@@ -93,7 +95,7 @@ class ReviewCard extends StatelessWidget {
                       },
                     );
                   },
-                  child: cardProvider.showingBack 
+                  child: reviewSession.showingBack 
                       ? _buildCardBack() 
                       : _buildCardFront(),
                 ),

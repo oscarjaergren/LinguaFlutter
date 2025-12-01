@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../duplicate_detection/duplicate_detection.dart';
 import '../../../icon_search/presentation/widgets/icon_display_widget.dart';
 
 /// Widget for displaying individual card items in the list
@@ -9,6 +10,8 @@ class CardItemWidget extends StatelessWidget {
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final VoidCallback? onToggleFavorite;
+  final List<DuplicateMatch>? duplicates;
+  final VoidCallback? onDuplicateTap;
 
   const CardItemWidget({
     super.key,
@@ -17,7 +20,11 @@ class CardItemWidget extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.onToggleFavorite,
+    this.duplicates,
+    this.onDuplicateTap,
   });
+  
+  bool get hasDuplicates => duplicates != null && duplicates!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +33,16 @@ class CardItemWidget extends StatelessWidget {
     
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
+      // Add a subtle border for cards with duplicates
+      shape: hasDuplicates 
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(
+                color: Colors.orange.withValues(alpha: 0.6),
+                width: 2,
+              ),
+            )
+          : null,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -160,6 +177,12 @@ class CardItemWidget extends StatelessWidget {
                 ],
               ),
               
+              // Duplicate indicator
+              if (hasDuplicates) ...[  
+                const SizedBox(height: 8),
+                _buildDuplicateIndicator(context),
+              ],
+              
               // Review status
               if (card.nextReview != null) ...[
                 const SizedBox(height: 8),
@@ -245,6 +268,13 @@ class CardItemWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDuplicateIndicator(BuildContext context) {
+    return DuplicateIndicatorWidget(
+      duplicates: duplicates!,
+      onTap: onDuplicateTap,
     );
   }
 

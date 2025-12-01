@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
-import '../../../../shared/domain/card_provider.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../duplicate_detection/duplicate_detection.dart';
 import '../../../language/domain/language_provider.dart';
+import '../../domain/providers/card_management_provider.dart';
 
 /// ViewModel for the card list screen, handling UI-specific logic and state
 class CardListViewModel extends ChangeNotifier {
-  final CardProvider _cardProvider;
+  final CardManagementProvider _cardManagement;
+  final DuplicateDetectionProvider _duplicateDetection;
   final LanguageProvider _languageProvider;
 
   // UI-specific state
@@ -15,14 +17,17 @@ class CardListViewModel extends ChangeNotifier {
   List<String> _selectedTags = [];
   bool _showOnlyDue = false;
   bool _showOnlyFavorites = false;
+  bool _showOnlyDuplicates = false;
 
   CardListViewModel({
-    required CardProvider cardProvider,
+    required CardManagementProvider cardManagement,
+    required DuplicateDetectionProvider duplicateDetection,
     required LanguageProvider languageProvider,
-  })  : _cardProvider = cardProvider,
+  })  : _cardManagement = cardManagement,
+        _duplicateDetection = duplicateDetection,
         _languageProvider = languageProvider {
     // Listen to provider changes
-    _cardProvider.addListener(_onCardProviderChanged);
+    _cardManagement.addListener(_onCardManagementChanged);
     _languageProvider.addListener(_onLanguageProviderChanged);
     
     // Initialize with current provider state
@@ -31,26 +36,33 @@ class CardListViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _cardProvider.removeListener(_onCardProviderChanged);
+    _cardManagement.removeListener(_onCardManagementChanged);
     _languageProvider.removeListener(_onLanguageProviderChanged);
     super.dispose();
   }
 
   // Getters for UI state
-  bool get isLoading => _cardProvider.isLoading;
+  bool get isLoading => _cardManagement.isLoading;
   bool get isSearching => _isSearching;
   String get searchQuery => _searchQuery;
   String get selectedCategory => _selectedCategory;
   List<String> get selectedTags => List.unmodifiable(_selectedTags);
   bool get showOnlyDue => _showOnlyDue;
   bool get showOnlyFavorites => _showOnlyFavorites;
-  String? get errorMessage => _cardProvider.errorMessage;
+  bool get showOnlyDuplicates => _showOnlyDuplicates;
+  String? get errorMessage => _cardManagement.errorMessage;
+  
+  // Duplicate detection getters
+  int get duplicateCount => _duplicateDetection.duplicateCount;
+  bool cardHasDuplicates(String cardId) => _duplicateDetection.cardHasDuplicates(cardId);
+  List<DuplicateMatch> getDuplicatesForCard(String cardId) => 
+      _duplicateDetection.getDuplicatesForCard(cardId);
 
   // Getters for card data
-  List<CardModel> get displayCards => _cardProvider.filteredCards;
-  List<CardModel> get allCards => _cardProvider.allCards;
-  int get totalCards => _cardProvider.allCards.length;
-  int get filteredCardsCount => _cardProvider.filteredCards.length;
+  List<CardModel> get displayCards => _cardManagement.filteredCards;
+  List<CardModel> get allCards => _cardManagement.allCards;
+  int get totalCards => _cardManagement.allCards.length;
+  int get filteredCardsCount => _cardManagement.filteredCards.length;
 
   // Language-related getters
   String get activeLanguage => _languageProvider.activeLanguage;
@@ -62,8 +74,8 @@ class CardListViewModel extends ChangeNotifier {
   }
 
   // Statistics getters
-  Map<String, dynamic> get stats => _cardProvider.stats;
-  int get cardsToReview => _cardProvider.reviewCards.length;
+  Map<String, dynamic> get stats => _cardManagement.stats;
+  int get cardsToReview => _cardManagement.reviewCards.length;
 
   // UI Actions
   void startSearch() {
@@ -74,25 +86,25 @@ class CardListViewModel extends ChangeNotifier {
   void stopSearch() {
     _isSearching = false;
     _searchQuery = '';
-    _cardProvider.searchCards('');
+    _cardManagement.searchCards('');
     notifyListeners();
   }
 
   void updateSearchQuery(String query) {
     _searchQuery = query;
-    _cardProvider.searchCards(query);
+    _cardManagement.searchCards(query);
     notifyListeners();
   }
 
   void selectCategory(String category) {
     _selectedCategory = category;
-    _cardProvider.filterByCategory(category);
+    _cardManagement.filterByCategory(category);
     notifyListeners();
   }
 
   void clearCategoryFilter() {
     _selectedCategory = '';
-    _cardProvider.filterByCategory('');
+    _cardManagement.filterByCategory('');
     notifyListeners();
   }
 
@@ -102,25 +114,31 @@ class CardListViewModel extends ChangeNotifier {
     } else {
       _selectedTags.add(tag);
     }
-    _cardProvider.filterByTags(_selectedTags);
+    _cardManagement.filterByTags(_selectedTags);
     notifyListeners();
   }
 
   void clearTagFilters() {
     _selectedTags.clear();
-    _cardProvider.filterByTags([]);
+    _cardManagement.filterByTags([]);
     notifyListeners();
   }
 
   void toggleShowOnlyDue() {
     _showOnlyDue = !_showOnlyDue;
-    _cardProvider.toggleShowOnlyDue();
+    _cardManagement.toggleShowOnlyDue();
     notifyListeners();
   }
 
   void toggleShowOnlyFavorites() {
     _showOnlyFavorites = !_showOnlyFavorites;
-    _cardProvider.toggleShowOnlyFavorites();
+    _cardManagement.toggleShowOnlyFavorites();
+    notifyListeners();
+  }
+
+  void toggleShowOnlyDuplicates() {
+    _showOnlyDuplicates = !_showOnlyDuplicates;
+    _cardManagement.toggleShowOnlyDuplicates();
     notifyListeners();
   }
 
@@ -129,23 +147,24 @@ class CardListViewModel extends ChangeNotifier {
     _selectedTags.clear();
     _showOnlyDue = false;
     _showOnlyFavorites = false;
-    _cardProvider.clearFilters();
+    _showOnlyDuplicates = false;
+    _cardManagement.clearFilters();
     notifyListeners();
   }
 
   // Card actions
   Future<void> deleteCard(String cardId) async {
     try {
-      await _cardProvider.deleteCard(cardId);
+      await _cardManagement.deleteCard(cardId);
     } catch (e) {
-      // Error is handled by CardProvider and exposed via errorMessage
+      // Error is handled by CardManagementProvider and exposed via errorMessage
       debugPrint('Error deleting card: $e');
     }
   }
 
   Future<void> toggleCardFavorite(String cardId) async {
     try {
-      await _cardProvider.toggleFavorite(cardId);
+      await _cardManagement.toggleFavorite(cardId);
     } catch (e) {
       debugPrint('Error toggling favorite: $e');
     }
@@ -153,7 +172,7 @@ class CardListViewModel extends ChangeNotifier {
 
   Future<void> refreshCards() async {
     try {
-      await _cardProvider.loadCards();
+      await _cardManagement.loadCards();
     } catch (e) {
       debugPrint('Error refreshing cards: $e');
     }
@@ -180,7 +199,7 @@ class CardListViewModel extends ChangeNotifier {
   }
 
   // Private methods
-  void _onCardProviderChanged() {
+  void _onCardManagementChanged() {
     notifyListeners();
   }
 
@@ -190,10 +209,11 @@ class CardListViewModel extends ChangeNotifier {
 
   void _syncWithProviders() {
     // Sync any initial state if needed
-    _searchQuery = _cardProvider.searchQuery;
-    _selectedCategory = _cardProvider.selectedCategory;
-    _selectedTags = List.from(_cardProvider.selectedTags);
-    _showOnlyDue = _cardProvider.showOnlyDue;
-    _showOnlyFavorites = _cardProvider.showOnlyFavorites;
+    _searchQuery = _cardManagement.searchQuery;
+    _selectedCategory = _cardManagement.selectedCategory;
+    _selectedTags = List.from(_cardManagement.selectedTags);
+    _showOnlyDue = _cardManagement.showOnlyDue;
+    _showOnlyFavorites = _cardManagement.showOnlyFavorites;
+    _showOnlyDuplicates = _cardManagement.showOnlyDuplicates;
   }
 }

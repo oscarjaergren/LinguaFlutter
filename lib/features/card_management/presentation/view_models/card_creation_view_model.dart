@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
-import '../../../../shared/domain/card_provider.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../../icon_search/domain/icon_provider.dart';
+import '../../domain/providers/card_management_provider.dart';
 
 /// ViewModel for card creation and editing, handling form state and validation
 class CardCreationViewModel extends ChangeNotifier {
-  final CardProvider _cardProvider;
+  final CardManagementProvider _cardManagement;
   final LanguageProvider _languageProvider;
   final IconProvider _iconProvider;
 
@@ -32,11 +32,11 @@ class CardCreationViewModel extends ChangeNotifier {
   bool _categoryValid = false;
 
   CardCreationViewModel({
-    required CardProvider cardProvider,
+    required CardManagementProvider cardManagement,
     required LanguageProvider languageProvider,
     required IconProvider iconProvider,
     CardModel? cardToEdit,
-  })  : _cardProvider = cardProvider,
+  })  : _cardManagement = cardManagement,
         _languageProvider = languageProvider,
         _iconProvider = iconProvider,
         _cardToEdit = cardToEdit {
@@ -47,14 +47,14 @@ class CardCreationViewModel extends ChangeNotifier {
     }
     
     // Listen to provider changes
-    _cardProvider.addListener(_onCardProviderChanged);
+    _cardManagement.addListener(_onCardProviderChanged);
     _languageProvider.addListener(_onLanguageProviderChanged);
     _iconProvider.addListener(_onIconProviderChanged);
   }
 
   @override
   void dispose() {
-    _cardProvider.removeListener(_onCardProviderChanged);
+    _cardManagement.removeListener(_onCardProviderChanged);
     _languageProvider.removeListener(_onLanguageProviderChanged);
     _iconProvider.removeListener(_onIconProviderChanged);
     super.dispose();
@@ -90,8 +90,8 @@ class CardCreationViewModel extends ChangeNotifier {
   bool get isGermanLanguage => activeLanguage == 'de';
 
   // Available options
-  List<String> get availableCategories => _cardProvider.categories;
-  List<String> get availableTags => _cardProvider.availableTags;
+  List<String> get availableCategories => _cardManagement.categories;
+  List<String> get availableTags => _cardManagement.availableTags;
   List<String> get germanArticles => ['der', 'die', 'das'];
 
   // Form field updates
@@ -184,9 +184,9 @@ class CardCreationViewModel extends ChangeNotifier {
       final card = _buildCardModel();
       
       if (_isEditing) {
-        await _cardProvider.updateCard(card);
+        await _cardManagement.updateCard(card);
       } else {
-        await _cardProvider.saveCard(card);
+        await _cardManagement.saveCard(card);
       }
       
       _setLoading(false);
@@ -204,7 +204,7 @@ class CardCreationViewModel extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      await _cardProvider.deleteCard(_cardToEdit!.id);
+      await _cardManagement.deleteCard(_cardToEdit!.id);
       _setLoading(false);
     } catch (e) {
       _setLoading(false);

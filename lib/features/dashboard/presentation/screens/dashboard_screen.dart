@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/shared.dart';
 import '../../../../shared/navigation/app_router.dart';
+import '../../../card_management/card_management.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
 import '../widgets/stats_card_widget.dart';
@@ -31,8 +31,8 @@ class DashboardScreen extends StatelessWidget {
             ),
         ],
       ),
-      body: Consumer<CardProvider>(
-        builder: (context, cardProvider, child) {
+      body: Consumer<CardManagementProvider>(
+        builder: (context, cardManagement, child) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -43,7 +43,7 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: StatsCardWidget(
                         title: 'To learn',
-                        count: cardProvider.filteredCards.where((c) => !c.isArchived && c.isDue).length,
+                        count: cardManagement.filteredCards.where((c) => !c.isArchived && c.isDue).length,
                         color: Colors.green,
                         icon: Icons.school,
                       ),
@@ -52,7 +52,7 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: StatsCardWidget(
                         title: 'Known',
-                        count: cardProvider.filteredCards.where((c) => !c.isArchived && !c.isDue).length,
+                        count: cardManagement.filteredCards.where((c) => !c.isArchived && !c.isDue).length,
                         color: Colors.blue,
                         icon: Icons.lightbulb,
                       ),
@@ -61,7 +61,7 @@ class DashboardScreen extends StatelessWidget {
                     Expanded(
                       child: StatsCardWidget(
                         title: 'Learned',
-                        count: cardProvider.stats['totalCards'] ?? 0,
+                        count: cardManagement.stats['totalCards'] ?? 0,
                         color: Colors.orange,
                         icon: Icons.star,
                       ),
@@ -100,7 +100,7 @@ class DashboardScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton.icon(
-                    onPressed: () => _startExerciseSession(context, cardProvider),
+                    onPressed: () => _startExerciseSession(context, cardManagement),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -126,7 +126,7 @@ class DashboardScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 48,
                   child: OutlinedButton.icon(
-                    onPressed: () => _startReview(context, cardProvider),
+                    onPressed: () => _startReview(context, cardManagement),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -150,7 +150,7 @@ class DashboardScreen extends StatelessWidget {
                   child: ListTile(
                     leading: const Icon(Icons.library_books),
                     title: const Text('Cards'),
-                    subtitle: Text('${cardProvider.filteredCards.length} cards'),
+                    subtitle: Text('${cardManagement.filteredCards.length} cards'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.pushCards(),
                   ),
@@ -163,16 +163,16 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  void _startReview(BuildContext context, CardProvider cardProvider) {
-    if (cardProvider.reviewCards.isNotEmpty) {
+  void _startReview(BuildContext context, CardManagementProvider cardManagement) {
+    if (cardManagement.reviewCards.isNotEmpty) {
       context.pushCardReview();
     } else {
       _showNoCardsMessage(context);
     }
   }
 
-  void _startExerciseSession(BuildContext context, CardProvider cardProvider) {
-    if (cardProvider.reviewCards.isNotEmpty) {
+  void _startExerciseSession(BuildContext context, CardManagementProvider cardManagement) {
+    if (cardManagement.reviewCards.isNotEmpty) {
       context.pushExerciseSession();
     } else {
       _showNoCardsMessage(context);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/shared.dart';
 import '../../../language/domain/language_provider.dart';
 
 /// Widget for selecting the active language in the app bar
@@ -17,7 +16,7 @@ class LanguageSelectorWidget extends StatelessWidget {
         return PopupMenuButton<String>(
           onSelected: (String languageCode) {
             languageProvider.setActiveLanguage(languageCode);
-            context.read<CardProvider>().onLanguageChanged();
+            // CardManagementProvider listens to LanguageProvider automatically
           },
           itemBuilder: (BuildContext context) {
             return languageProvider.availableLanguages.entries.map((entry) {

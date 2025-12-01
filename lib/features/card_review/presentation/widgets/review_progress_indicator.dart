@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:lingua_flutter/shared/shared.dart';
+import '../../domain/providers/review_session_provider.dart';
 
 /// Progress indicator for card review session
 class ReviewProgressIndicator extends StatelessWidget {
-  final CardProvider cardProvider;
+  final ReviewSessionProvider reviewSession;
 
   const ReviewProgressIndicator({
     super.key,
-    required this.cardProvider,
+    required this.reviewSession,
   });
 
   @override
@@ -20,7 +20,7 @@ class ReviewProgressIndicator extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Card ${cardProvider.currentReviewIndex + 1} of ${cardProvider.currentReviewSession.length}',
+                'Card ${reviewSession.currentIndex + 1} of ${reviewSession.sessionCards.length}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -28,7 +28,7 @@ class ReviewProgressIndicator extends StatelessWidget {
                 ),
               ),
               Text(
-                '${(cardProvider.reviewProgress * 100).toInt()}%',
+                '${(reviewSession.progress * 100).toInt()}%',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -39,7 +39,7 @@ class ReviewProgressIndicator extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           LinearProgressIndicator(
-            value: cardProvider.reviewProgress,
+            value: reviewSession.progress,
             backgroundColor: Colors.grey.withValues(alpha: 0.2),
             valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
             minHeight: 6,

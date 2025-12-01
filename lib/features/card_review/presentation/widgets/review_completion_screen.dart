@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:lingua_flutter/shared/domain/card_provider.dart';
+import '../../domain/providers/review_session_provider.dart';
 
 /// Completion screen shown when review session is finished
 class ReviewCompletionScreen extends StatelessWidget {
-  final CardProvider cardProvider;
+  final ReviewSessionProvider reviewSession;
   final VoidCallback onRestart;
   final VoidCallback onClose;
 
   const ReviewCompletionScreen({
     super.key,
-    required this.cardProvider,
+    required this.reviewSession,
     required this.onRestart,
     required this.onClose,
   });
 
   @override
   Widget build(BuildContext context) {
-    final sessionDuration = cardProvider.sessionStartTime != null
-        ? DateTime.now().difference(cardProvider.sessionStartTime!)
+    final sessionDuration = reviewSession.sessionStartTime != null
+        ? DateTime.now().difference(reviewSession.sessionStartTime!)
         : Duration.zero;
 
     return Center(
@@ -54,7 +54,7 @@ class ReviewCompletionScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'You reviewed ${cardProvider.sessionCardsReviewed} cards',
+              'You reviewed ${reviewSession.cardsReviewed} cards',
               style: const TextStyle(
                 fontSize: 18,
                 color: Colors.white70,

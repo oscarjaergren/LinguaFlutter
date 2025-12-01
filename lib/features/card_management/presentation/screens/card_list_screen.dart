@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/shared.dart';
 import '../../../../shared/navigation/app_router.dart';
+import '../../../duplicate_detection/duplicate_detection.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
+import '../../domain/providers/card_management_provider.dart';
 import '../view_models/card_list_view_model.dart';
 import '../widgets/card_list_view.dart';
 
@@ -22,7 +23,8 @@ class CardsScreen extends StatelessWidget {
 
     return ChangeNotifierProvider(
       create: (context) => CardListViewModel(
-        cardProvider: context.read<CardProvider>(),
+        cardManagement: context.read<CardManagementProvider>(),
+        duplicateDetection: context.read<DuplicateDetectionProvider>(),
         languageProvider: context.read<LanguageProvider>(),
       ),
       child: Consumer<CardListViewModel>(
@@ -96,7 +98,7 @@ class CardsScreen extends StatelessWidget {
         return PopupMenuButton<String>(
           onSelected: (String languageCode) {
             languageProvider.setActiveLanguage(languageCode);
-            context.read<CardProvider>().onLanguageChanged();
+            // CardManagementProvider listens to LanguageProvider automatically
           },
           itemBuilder: (BuildContext context) {
             return languageProvider.availableLanguages.entries.map((entry) {

@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
-import '../../../../shared/domain/card_provider.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../card_management/domain/providers/card_management_provider.dart';
 import '../../../streak/domain/streak_provider.dart';
 import '../../../mascot/domain/mascot_provider.dart';
+import '../../domain/providers/review_session_provider.dart';
 
 /// ViewModel for card review functionality, handling review session state and logic
 class CardReviewViewModel extends ChangeNotifier {
-  final CardProvider _cardProvider;
+  final CardManagementProvider _cardManagement;
+  final ReviewSessionProvider _reviewSession;
   final StreakProvider _streakProvider;
   final MascotProvider _mascotProvider;
 
@@ -16,7 +18,6 @@ class CardReviewViewModel extends ChangeNotifier {
   DateTime? _sessionStartTime;
   int _sessionCardsReviewed = 0;
   int _sessionCorrectAnswers = 0;
-  // List<String> _sessionCardIds = []; // Unused field
 
   // Current card state
   CardModel? _currentCard;
@@ -28,22 +29,26 @@ class CardReviewViewModel extends ChangeNotifier {
   bool _showConfetti = false;
 
   CardReviewViewModel({
-    required CardProvider cardProvider,
+    required CardManagementProvider cardManagement,
+    required ReviewSessionProvider reviewSession,
     required StreakProvider streakProvider,
     required MascotProvider mascotProvider,
-  })  : _cardProvider = cardProvider,
+  })  : _cardManagement = cardManagement,
+        _reviewSession = reviewSession,
         _streakProvider = streakProvider,
         _mascotProvider = mascotProvider {
     
     // Listen to provider changes
-    _cardProvider.addListener(_onCardProviderChanged);
+    _cardManagement.addListener(_onCardManagementChanged);
+    _reviewSession.addListener(_onReviewSessionChanged);
     _streakProvider.addListener(_onStreakProviderChanged);
     _mascotProvider.addListener(_onMascotProviderChanged);
   }
 
   @override
   void dispose() {
-    _cardProvider.removeListener(_onCardProviderChanged);
+    _cardManagement.removeListener(_onCardManagementChanged);
+    _reviewSession.removeListener(_onReviewSessionChanged);
     _streakProvider.removeListener(_onStreakProviderChanged);
     _mascotProvider.removeListener(_onMascotProviderChanged);
     super.dispose();
@@ -64,7 +69,7 @@ class CardReviewViewModel extends ChangeNotifier {
   bool get hasCurrentCard => _currentCard != null;
 
   // Session progress getters
-  List<CardModel> get reviewCards => _cardProvider.currentReviewSession;
+  List<CardModel> get reviewCards => _reviewSession.sessionCards;
   int get totalCardsInSession => reviewCards.length;
   int get remainingCards => totalCardsInSession - _currentCardIndex;
   double get progressPercentage => 
@@ -95,7 +100,7 @@ class CardReviewViewModel extends ChangeNotifier {
       if (specificCards != null && specificCards.isNotEmpty) {
         cardsToReview = specificCards;
       } else {
-        cardsToReview = _cardProvider.reviewCards;
+        cardsToReview = _cardManagement.reviewCards;
       }
 
       if (cardsToReview.isEmpty) {
@@ -105,13 +110,12 @@ class CardReviewViewModel extends ChangeNotifier {
       }
 
       // Initialize session
-      _cardProvider.startReviewSession(cards: cardsToReview);
+      _reviewSession.startSession(cardsToReview);
       
       _sessionActive = true;
       _sessionStartTime = DateTime.now();
       _sessionCardsReviewed = 0;
       _sessionCorrectAnswers = 0;
-      // _sessionCardIds = cardsToReview.map((card) => card.id).toList(); // Unused
       _currentCardIndex = 0;
       _showingBack = false;
       
@@ -164,7 +168,7 @@ class CardReviewViewModel extends ChangeNotifier {
 
     try {
       // Update card statistics - use existing method
-      await _cardProvider.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
+      await _reviewSession.answerCard(isCorrect ? CardAnswer.correct : CardAnswer.incorrect);
       
       // Update session statistics
       _sessionCardsReviewed++;
@@ -209,11 +213,6 @@ class CardReviewViewModel extends ChangeNotifier {
   Future<void> _endReviewSession() async {
     _sessionActive = false;
     _currentCard = null;
-    
-    // Calculate session duration (unused but kept for future use)
-    // final sessionDuration = _sessionStartTime != null 
-    //     ? DateTime.now().difference(_sessionStartTime!)
-    //     : Duration.zero;
 
     // Show confetti for good performance
     if (_sessionCorrectAnswers / _sessionCardsReviewed >= 0.8) {
@@ -224,7 +223,7 @@ class CardReviewViewModel extends ChangeNotifier {
     _mascotProvider.reactToAction(MascotAction.sessionCompleted);
 
     // End the provider's review session
-    _cardProvider.endReviewSession();
+    _reviewSession.endSession();
     
     notifyListeners();
   }
@@ -244,7 +243,7 @@ class CardReviewViewModel extends ChangeNotifier {
     _showingBack = false;
     
     // End the provider's review session
-    _cardProvider.endReviewSession();
+    _reviewSession.endSession();
     
     // Reset mascot
     _mascotProvider.resetSession();
@@ -300,7 +299,11 @@ class CardReviewViewModel extends ChangeNotifier {
     }
   }
 
-  void _onCardProviderChanged() {
+  void _onCardManagementChanged() {
+    notifyListeners();
+  }
+
+  void _onReviewSessionChanged() {
     // Update current card if it changed in the provider
     if (_sessionActive && _currentCardIndex < reviewCards.length) {
       _currentCard = reviewCards[_currentCardIndex];

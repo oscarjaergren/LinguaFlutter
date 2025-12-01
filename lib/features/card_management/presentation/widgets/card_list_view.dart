@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/navigation/app_router.dart';
+import '../../../duplicate_detection/duplicate_detection.dart';
 import '../view_models/card_list_view_model.dart';
 import 'card_item_widget.dart';
 import 'search_bar_widget.dart';
@@ -65,7 +66,8 @@ class CardListView extends StatelessWidget {
             if (viewModel.selectedCategory.isNotEmpty ||
                 viewModel.selectedTags.isNotEmpty ||
                 viewModel.showOnlyDue ||
-                viewModel.showOnlyFavorites)
+                viewModel.showOnlyFavorites ||
+                viewModel.showOnlyDuplicates)
               _buildFilterChips(context, viewModel),
 
             // Cards count and stats
@@ -114,6 +116,13 @@ class CardListView extends StatelessWidget {
               label: const Text('Favorites'),
               onDeleted: viewModel.toggleShowOnlyFavorites,
               deleteIcon: const Icon(Icons.close, size: 18),
+            ),
+          if (viewModel.showOnlyDuplicates)
+            Chip(
+              label: Text('Duplicates (${viewModel.duplicateCount})'),
+              onDeleted: viewModel.toggleShowOnlyDuplicates,
+              deleteIcon: const Icon(Icons.close, size: 18),
+              backgroundColor: Colors.orange.withValues(alpha: 0.2),
             ),
           TextButton(
             onPressed: viewModel.clearAllFilters,
@@ -198,12 +207,17 @@ class CardListView extends StatelessWidget {
       itemCount: viewModel.displayCards.length,
       itemBuilder: (context, index) {
         final card = viewModel.displayCards[index];
+        final duplicates = viewModel.getDuplicatesForCard(card.id);
         return CardItemWidget(
           card: card,
           onTap: () => _onCardTap(context, card),
           onEdit: () => _onCardEdit(context, card),
           onDelete: () => _onCardDelete(context, viewModel, card),
           onToggleFavorite: () => viewModel.toggleCardFavorite(card.id),
+          duplicates: duplicates.isNotEmpty ? duplicates : null,
+          onDuplicateTap: duplicates.isNotEmpty 
+              ? () => _showDuplicatesDialog(context, card, duplicates, viewModel)
+              : null,
         );
       },
     );
@@ -255,6 +269,20 @@ class CardListView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+  
+  void _showDuplicatesDialog(
+    BuildContext context, 
+    CardModel card, 
+    List<DuplicateMatch> duplicates,
+    CardListViewModel viewModel,
+  ) {
+    DuplicatesDialog.show(
+      context,
+      card: card,
+      duplicates: duplicates,
+      onDeleteCard: (cardToDelete) => _onCardDelete(context, viewModel, cardToDelete),
     );
   }
 }

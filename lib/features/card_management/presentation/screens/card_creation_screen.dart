@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../icon_search/icon_search.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/domain/models/icon_model.dart';
+import '../../../../shared/widgets/iconify_icon.dart';
 import '../../../language/domain/language_provider.dart';
+import '../../domain/providers/card_management_provider.dart';
 
 /// Simple screen for creating and editing language learning cards
 class CreationCreationScreen extends StatefulWidget {
@@ -101,7 +104,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     });
     
     try {
-      final cardProvider = context.read<CardProvider>();
+      final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
       final activeLanguage = languageProvider.activeLanguage;
       
@@ -124,7 +127,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           germanArticle: activeLanguage == 'de' ? _germanArticle : null,
           updatedAt: DateTime.now(),
         );
-                await cardProvider.saveCard(updatedCard);
+                await cardManagement.saveCard(updatedCard);
       } else {
         // Create new card
         final newCard = CardModel.create(
@@ -137,7 +140,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           germanArticle: activeLanguage == 'de' ? _germanArticle : null,
         );
         
-        await cardProvider.saveCard(newCard);
+        await cardManagement.saveCard(newCard);
       }
       
       if (mounted) {

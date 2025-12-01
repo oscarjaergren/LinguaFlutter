@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../shared/shared.dart';
+import '../../../../../shared/domain/models/icon_model.dart';
+import '../../../../../shared/widgets/iconify_icon.dart';
+import '../../../../../shared/widgets/speaker_button.dart';
+import '../../../../card_management/domain/providers/card_management_provider.dart';
 import '../../../domain/providers/exercise_session_provider.dart';
 import '../exercise_stats_widget.dart';
 
@@ -27,13 +30,13 @@ class _MultipleChoiceIconWidgetState extends State<MultipleChoiceIconWidget> {
 
   void _generateIconOptions() {
     final provider = Provider.of<ExerciseSessionProvider>(context, listen: false);
-    final cardProvider = Provider.of<CardProvider>(context, listen: false);
+    final cardManagement = Provider.of<CardManagementProvider>(context, listen: false);
     final currentCard = provider.currentCard;
     
     if (currentCard?.icon == null) return;
 
     // Get other cards with icons
-    final otherIcons = cardProvider.allCards
+    final otherIcons = cardManagement.allCards
         .where((c) => c.icon != null && c.id != currentCard!.id)
         .map((c) => c.icon!)
         .toSet()
