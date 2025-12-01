@@ -173,6 +173,118 @@ features/[feature_name]/
 
 ---
 
+## The Three Tiers of Sharing
+
+### Tier 1: Technical Infrastructure (Share Freely)
+
+Pure plumbing that affects all features equally. Lives in `core/services/`.
+
+**Examples:**
+- Storage services (`CardStorageService`, `PreferencesService`)
+- Text-to-speech (`TtsService`, `GoogleCloudTtsService`, `ElevenLabsTtsService`)
+- Logging and analytics
+- HTTP clients
+- Navigation/routing (`AppRouter`)
+- Generic UI widgets (`IconifyIcon`, `SpeakerButton`)
+
+```dart
+// core/services/card_storage_service.dart
+// ✅ Good: Technical infrastructure shared by all features
+class CardStorageService {
+  Future<List<CardModel>> loadCards();
+  Future<void> saveCards(List<CardModel> cards);
+}
+```
+
+**Rule:** If it's about HOW data moves (not WHAT the data means), it's infrastructure.
+
+### Tier 2: Core Domain Models (Share with Business Logic Inside)
+
+Central entities that multiple features need. Lives in `core/domain/models/`.
+
+**Examples:**
+- `CardModel` - the central entity with spaced repetition logic
+- `ExerciseType` - exercise definitions with validation
+- `IconModel` - icon data structure
+
+```dart
+// core/domain/models/card_model.dart
+// ✅ Good: Business logic lives IN the model
+class CardModel {
+  bool get isDue => nextReview == null || nextReview!.isBefore(DateTime.now());
+  bool get isNew => reviewCount == 0;
+  
+  CardModel processAnswer(CardAnswer answer) {
+    // Spaced repetition algorithm - shared by all features
+    return copyWith(
+      reviewCount: reviewCount + 1,
+      nextReview: _calculateNextReview(answer),
+    );
+  }
+}
+```
+
+**Rule:** Push business logic INTO the model. Don't scatter it across features.
+
+### Tier 3: Feature-Specific (Keep Local)
+
+Logic and models used by only one feature. Lives in `features/[name]/`.
+
+**Examples:**
+- `DuplicateMatch` - only used by duplicate_detection
+- `ReviewSessionProvider` - only used by card_review
+- Feature-specific widgets and screens
+
+```dart
+// features/duplicate_detection/domain/models/duplicate_match.dart
+// ✅ Good: Only this feature needs this model
+class DuplicateMatch {
+  final CardModel card;
+  final CardModel duplicate;
+  final double similarity;
+}
+```
+
+**Rule:** If deleting the feature means this code is useless, it belongs in the feature.
+
+---
+
+## Decision Framework
+
+When you're unsure where code belongs, ask these questions:
+
+### 1. Is this infrastructural or domain?
+
+| Type | Location |
+|------|----------|
+| **Infrastructure** (storage, HTTP, logging, TTS) | `core/services/` |
+| **Domain** (business rules, entities) | `core/domain/models/` or feature |
+
+### 2. How many features need this?
+
+| Usage | Location |
+|-------|----------|
+| All/most features | `core/` |
+| 2-3 related features | Consider if they'll diverge, maybe duplicate |
+| Single feature | Keep in feature |
+
+### 3. How stable is this concept?
+
+| Stability | Action |
+|-----------|--------|
+| Changes rarely (core domain) | Safe to share in `core/` |
+| Changes with feature requests | Keep local to feature |
+
+### 4. Rule of Three
+
+| Occurrences | Action |
+|-------------|--------|
+| 1 | Just write it |
+| 2 | Consider if they'll diverge |
+| 3+ identical & stable | Extract to `core/` |
+
+---
+
 ## When to Share vs. Duplicate
 
 | Scenario | Action |
