@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/domain/models/exercise_type.dart';
+import '../../../card_management/domain/providers/card_management_provider.dart';
 
 /// Model representing a card with a specific exercise type to practice
 class ExerciseItem {
@@ -25,7 +27,7 @@ class ExerciseItem {
 
 /// Provider for managing exercise practice sessions
 class ExerciseSessionProvider extends ChangeNotifier {
-  final CardProvider cardProvider;
+  final CardManagementProvider cardManagement;
   
   // Session state
   List<ExerciseItem> _sessionQueue = [];
@@ -39,7 +41,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
   bool _isAnswerShown = false;
   List<String>? _multipleChoiceOptions;
   
-  ExerciseSessionProvider({required this.cardProvider});
+  ExerciseSessionProvider({required this.cardManagement});
   
   // Getters
   List<ExerciseItem> get sessionQueue => _sessionQueue;
@@ -74,7 +76,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
   
   /// Start a new exercise session with specified cards
   void startSession({List<CardModel>? cards}) {
-    final cardsToUse = cards ?? cardProvider.reviewCards;
+    final cardsToUse = cards ?? cardManagement.reviewCards;
     
     // Build exercise queue
     _sessionQueue = _buildExerciseQueue(cardsToUse);
@@ -152,7 +154,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
     if (currentCard == null) return;
     
     final correctAnswer = currentCard!.backText;
-    final allCards = cardProvider.allCards
+    final allCards = cardManagement.allCards
         .where((c) => c.id != currentCard!.id)
         .toList()
       ..shuffle();
@@ -186,7 +188,7 @@ class ExerciseSessionProvider extends ChangeNotifier {
     );
     
     // Save updated card
-    await cardProvider.updateCard(updatedCard);
+    await cardManagement.updateCard(updatedCard);
     
     // Update session stats
     if (isCorrect) {
