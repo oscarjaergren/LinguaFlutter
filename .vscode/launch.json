@@ -2,25 +2,36 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter (Debug)",
+      "name": "Windows (Debug)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": ["--debug"]
+      "flutterMode": "debug",
+      "deviceId": "windows"
     },
     {
-      "name": "Flutter (Release)",
+      "name": "Windows (Release)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": ["--release"]
+      "flutterMode": "release",
+      "deviceId": "windows"
     },
     {
-      "name": "Flutter (Profile)",
+      "name": "Web (Chrome)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
-      "args": ["--profile"]
+      "flutterMode": "debug",
+      "deviceId": "chrome"
+    },
+    {
+      "name": "Web (Edge)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "debug",
+      "deviceId": "edge"
     }
   ]
 }
