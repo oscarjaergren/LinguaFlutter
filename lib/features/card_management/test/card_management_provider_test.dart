@@ -1,13 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../../shared/shared.dart';
+import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/features/language/domain/language_provider.dart';
+import 'package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/review_session_provider.dart';
 
 void main() {
-  group('CardProvider', () {
-    late CardProvider provider;
+  group('CardManagementProvider', () {
+    late CardManagementProvider provider;
 
     setUp(() {
-      provider = CardProvider(languageProvider: LanguageProvider());
+      provider = CardManagementProvider(languageProvider: LanguageProvider());
     });
 
     tearDown(() {
@@ -18,10 +20,6 @@ void main() {
       expect(provider.allCards, isEmpty);
       expect(provider.filteredCards, isEmpty);
       expect(provider.reviewCards, isEmpty);
-      expect(provider.currentReviewSession, isEmpty);
-      expect(provider.currentReviewIndex, 0);
-      expect(provider.isReviewMode, false);
-      expect(provider.showingBack, false);
       expect(provider.searchQuery, isEmpty);
       expect(provider.selectedCategory, isEmpty);
       expect(provider.selectedTags, isEmpty);
@@ -30,63 +28,8 @@ void main() {
       expect(provider.stats, isEmpty);
       expect(provider.isLoading, false);
       expect(provider.errorMessage, isNull);
-      expect(provider.currentCard, isNull);
-      expect(provider.reviewProgress, 0.0);
       expect(provider.categories, isEmpty);
       expect(provider.availableTags, isEmpty);
-    });
-
-    test('should start and end review session', () {
-      final card1 = CardModel.create(
-        frontText: 'Hello',
-        backText: 'Hola',
-        language: 'es',
-        category: 'Greetings',
-      );
-
-      final card2 = CardModel.create(
-        frontText: 'Goodbye',
-        backText: 'Adiós',
-        language: 'es',
-        category: 'Greetings',
-      );
-
-      provider.startReviewSession(cards: [card1, card2]);
-
-      expect(provider.isReviewMode, true);
-      expect(provider.currentReviewSession, [card1, card2]);
-      expect(provider.currentReviewIndex, 0);
-      expect(provider.showingBack, false);
-      expect(provider.currentCard, card1);
-      expect(provider.reviewProgress, 0.5);
-
-      provider.endReviewSession();
-
-      expect(provider.isReviewMode, false);
-      expect(provider.currentReviewSession, isEmpty);
-      expect(provider.currentReviewIndex, 0);
-      expect(provider.showingBack, false);
-      expect(provider.currentCard, isNull);
-      expect(provider.reviewProgress, 0.0);
-    });
-
-    test('should flip card', () {
-      final card = CardModel.create(
-        frontText: 'Hello',
-        backText: 'Hola',
-        language: 'es',
-        category: 'Greetings',
-      );
-
-      provider.startReviewSession(cards: [card]);
-
-      expect(provider.showingBack, false);
-
-      provider.flipCard();
-      expect(provider.showingBack, true);
-
-      provider.flipCard();
-      expect(provider.showingBack, false);
     });
 
     test('should search cards', () {
@@ -145,6 +88,80 @@ void main() {
       expect(provider.showOnlyDue, false);
       expect(provider.showOnlyFavorites, false);
     });
+  });
+
+  group('ReviewSessionProvider', () {
+    late ReviewSessionProvider provider;
+    late CardManagementProvider cardManagement;
+
+    setUp(() {
+      cardManagement = CardManagementProvider(languageProvider: LanguageProvider());
+      provider = ReviewSessionProvider(cardManagement: cardManagement);
+    });
+
+    tearDown(() {
+      provider.dispose();
+      cardManagement.dispose();
+    });
+
+    test('should have initial state', () {
+      expect(provider.sessionCards, isEmpty);
+      expect(provider.currentIndex, 0);
+      expect(provider.showingBack, false);
+      expect(provider.isSessionActive, false);
+      expect(provider.currentCard, isNull);
+      expect(provider.progress, 0.0);
+    });
+
+    test('should start and end review session', () {
+      final card1 = CardModel.create(
+        frontText: 'Hello',
+        backText: 'Hola',
+        language: 'es',
+        category: 'Greetings',
+      );
+
+      final card2 = CardModel.create(
+        frontText: 'Goodbye',
+        backText: 'Adiós',
+        language: 'es',
+        category: 'Greetings',
+      );
+
+      provider.startSession([card1, card2]);
+
+      expect(provider.isSessionActive, true);
+      expect(provider.sessionCards, [card1, card2]);
+      expect(provider.currentIndex, 0);
+      expect(provider.showingBack, false);
+      expect(provider.currentCard, card1);
+      expect(provider.progress, 0.5);
+
+      provider.endSession();
+
+      expect(provider.isSessionActive, false);
+      expect(provider.sessionCards, isEmpty);
+      expect(provider.currentIndex, 0);
+      expect(provider.showingBack, false);
+      expect(provider.currentCard, isNull);
+      expect(provider.progress, 0.0);
+    });
+
+    test('should flip card', () {
+      final card = CardModel.create(
+        frontText: 'Hello',
+        backText: 'Hola',
+        language: 'es',
+        category: 'Greetings',
+      );
+
+      provider.startSession([card]);
+
+      expect(provider.showingBack, false);
+
+      provider.flipCard();
+      expect(provider.showingBack, true);
+    });
 
     test('should calculate review progress correctly', () {
       final cards = [
@@ -168,14 +185,10 @@ void main() {
         ),
       ];
 
-      provider.startReviewSession(cards: cards);
+      provider.startSession(cards);
 
-      expect(provider.reviewProgress, 1.0 / 3.0);
+      expect(provider.progress, 1.0 / 3.0);
       expect(provider.currentCard, cards[0]);
     });
-
-    // Note: More complex tests involving actual card operations (add, update, delete)
-    // would require mocking the CardStorageService or using a test-specific implementation.
-    // For now, these tests cover the basic state management functionality.
   });
 }
