@@ -5,6 +5,7 @@ import '../../../../shared/navigation/app_router.dart';
 import '../../../card_management/card_management.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../mascot/presentation/widgets/mascot_widget.dart';
+import '../../../streak/streak.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
 
@@ -77,13 +78,24 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 24),
                 
                 // Mascot with speech bubble
-                Consumer<MascotProvider>(
-                  builder: (context, mascotProvider, child) {
+                Consumer2<MascotProvider, StreakProvider>(
+                  builder: (context, mascotProvider, streakProvider, child) {
+                    // Trigger contextual message on first build
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      mascotProvider.showContextualMessage(
+                        totalCards: totalCards,
+                        dueCards: dueCount,
+                        currentStreak: streakProvider.currentStreak,
+                        hasStudiedToday: streakProvider.cardsReviewedToday > 0,
+                      );
+                    });
+                    
                     return Center(
                       child: MascotWidget(
                         size: 120,
-                        message: _getMascotMessage(dueCount, totalCards),
-                        mascotState: dueCount > 0 ? MascotState.excited : MascotState.idle,
+                        message: mascotProvider.currentMessage,
+                        mascotState: mascotProvider.currentState,
+                        onTap: () => mascotProvider.reactToAction(MascotAction.tapped),
                       ),
                     );
                   },
@@ -135,7 +147,7 @@ class DashboardScreen extends StatelessWidget {
                 
                 // Streak indicator (compact)
                 const SizedBox(height: 8),
-                _buildStreakIndicator(context),
+                const StreakStatusWidget(compact: true),
               ],
             ),
           );
@@ -164,51 +176,4 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  String _getMascotMessage(int dueCount, int totalCards) {
-    if (totalCards == 0) {
-      return "Let's add some cards to get started!";
-    } else if (dueCount == 0) {
-      return "Great job! You're all caught up! 🎉";
-    } else if (dueCount == 1) {
-      return "Just 1 card waiting for you!";
-    } else if (dueCount <= 5) {
-      return "You have $dueCount cards to review. Let's go!";
-    } else {
-      return "$dueCount cards are ready. Time to learn!";
-    }
-  }
-
-  Widget _buildStreakIndicator(BuildContext context) {
-    // TODO: Connect to actual streak provider when ready
-    const streakDays = 0; // Placeholder
-    
-    if (streakDays == 0) {
-      return const SizedBox.shrink();
-    }
-    
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            const Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
-            const SizedBox(width: 12),
-            Text(
-              '$streakDays day streak',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              'Keep it up!',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
