@@ -47,6 +47,9 @@ dependencies:
   # JSON serialization
   json_annotation: ^4.9.0
   
+  # Immutable data classes and unions
+  freezed_annotation: ^3.0.0
+  
   # Local storage
   shared_preferences: ^2.4.0
   path_provider: ^2.1.5
@@ -79,9 +82,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   
-  # Code generation for JSON serialization
+  # Code generation for JSON serialization and data classes
   build_runner: ^2.9.0
   json_serializable: ^6.11.1
+  freezed: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

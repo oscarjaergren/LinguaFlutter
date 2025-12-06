@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'icon_model.dart';
 import 'exercise_type.dart';
 import 'exercise_score.dart';
+import 'word_data.dart';
 
 part 'card_model.g.dart';
 
@@ -63,6 +64,21 @@ class CardModel {
   /// Exercise-specific scores for different practice types
   /// Maps ExerciseType to ExerciseScore tracking performance
   final Map<ExerciseType, ExerciseScore> exerciseScores;
+  
+  // === NEW: Word enrichment data ===
+  
+  /// Word-specific grammatical data (verb conjugations, noun gender, etc.)
+  /// Uses a tagged union for type-safe handling of different word types
+  final WordData? wordData;
+  
+  /// Example sentences demonstrating usage
+  final List<String> examples;
+  
+  /// Link to parent/base word (e.g., "absprechen" links to "sprechen")
+  final String? parentId;
+  
+  /// Additional notes about usage, grammar, or context
+  final String? notes;
 
   const CardModel({
     required this.id,
@@ -83,6 +99,10 @@ class CardModel {
     this.isFavorite = false,
     this.isArchived = false,
     this.exerciseScores = const {},
+    this.wordData,
+    this.examples = const [],
+    this.parentId,
+    this.notes,
   });
 
   /// Create a new card with generated ID and timestamps
@@ -245,6 +265,10 @@ class CardModel {
     bool? isFavorite,
     bool? isArchived,
     Map<ExerciseType, ExerciseScore>? exerciseScores,
+    WordData? wordData,
+    List<String>? examples,
+    String? parentId,
+    String? notes,
   }) {
     return CardModel(
       id: id ?? this.id,
@@ -265,6 +289,10 @@ class CardModel {
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       exerciseScores: exerciseScores ?? this.exerciseScores,
+      wordData: wordData ?? this.wordData,
+      examples: examples ?? this.examples,
+      parentId: parentId ?? this.parentId,
+      notes: notes ?? this.notes,
     );
   }
 
