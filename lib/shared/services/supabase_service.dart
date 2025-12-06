@@ -1,0 +1,104 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'logger_service.dart';
+
+/// Service for managing Supabase connection and operations
+class SupabaseService {
+  static SupabaseClient? _client;
+  static bool _initialized = false;
+
+  /// Initialize Supabase - call this once at app startup
+  static Future<void> initialize() async {
+    if (_initialized) return;
+
+    try {
+      await dotenv.load(fileName: '.env');
+      
+      final url = dotenv.env['SUPABASE_URL'];
+      final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
+
+      if (url == null || anonKey == null) {
+        throw Exception('Missing Supabase configuration in .env file');
+      }
+
+      await Supabase.initialize(
+        url: url,
+        anonKey: anonKey,
+      );
+
+      _client = Supabase.instance.client;
+      _initialized = true;
+      LoggerService.info('✅ Supabase initialized successfully');
+    } catch (e) {
+      LoggerService.error('Failed to initialize Supabase', e);
+      rethrow;
+    }
+  }
+
+  /// Get the Supabase client instance
+  static SupabaseClient get client {
+    if (!_initialized || _client == null) {
+      throw Exception('Supabase not initialized. Call SupabaseService.initialize() first.');
+    }
+    return _client!;
+  }
+
+  /// Check if user is authenticated
+  static bool get isAuthenticated => client.auth.currentUser != null;
+
+  /// Get current user ID
+  static String? get currentUserId => client.auth.currentUser?.id;
+
+  /// Get current user
+  static User? get currentUser => client.auth.currentUser;
+
+  /// Sign up with email and password
+  static Future<AuthResponse> signUp({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await client.auth.signUp(
+        email: email,
+        password: password,
+      );
+      LoggerService.info('User signed up: ${response.user?.email}');
+      return response;
+    } catch (e) {
+      LoggerService.error('Sign up failed', e);
+      rethrow;
+    }
+  }
+
+  /// Sign in with email and password
+  static Future<AuthResponse> signIn({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      LoggerService.info('User signed in: ${response.user?.email}');
+      return response;
+    } catch (e) {
+      LoggerService.error('Sign in failed', e);
+      rethrow;
+    }
+  }
+
+  /// Sign out
+  static Future<void> signOut() async {
+    try {
+      await client.auth.signOut();
+      LoggerService.info('User signed out');
+    } catch (e) {
+      LoggerService.error('Sign out failed', e);
+      rethrow;
+    }
+  }
+
+  /// Listen to auth state changes
+  static Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
+}

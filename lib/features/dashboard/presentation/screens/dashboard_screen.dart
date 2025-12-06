@@ -6,6 +6,7 @@ import '../../../card_management/card_management.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../mascot/presentation/widgets/mascot_widget.dart';
 import '../../../streak/streak.dart';
+import '../../../theme/theme.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
 
@@ -24,6 +25,19 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: const LanguageSelectorWidget(),
         actions: [
+          // Theme toggle
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              // Check actual visual brightness (accounts for system theme)
+              final brightness = Theme.of(context).brightness;
+              final isVisuallyDark = brightness == Brightness.dark;
+              return IconButton(
+                onPressed: () => themeProvider.toggleTheme(currentBrightness: brightness),
+                icon: Icon(isVisuallyDark ? Icons.light_mode : Icons.dark_mode),
+                tooltip: isVisuallyDark ? 'Switch to light mode' : 'Switch to dark mode',
+              );
+            },
+          ),
           // Debug menu
           if (kDebugMode)
             IconButton(

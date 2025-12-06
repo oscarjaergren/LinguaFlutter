@@ -1,132 +1,183 @@
-# LinguaFlutter
+# Supabase CLI
 
-A card-based language learning app with advanced icon search functionality, built with Flutter.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## Features
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-- 🔍 **Icon Search**: Search and browse thousands of icons from the Iconify API
-- 🎨 **SVG Support**: High-quality vector icons that scale perfectly
-- 📱 **Modern UI**: Clean, Material Design 3 interface
-- 🎯 **Icon Selection**: Select icons for use in language learning cards
-- 🃏 **Card Management**: Create, edit, and organize language learning cards
-- 📚 **Swipeable Review**: Anki/Duocards-style flashcard review with swipe gestures
-- 🧠 **Spaced Repetition**: Intelligent scheduling based on your performance
-- 📊 **Progress Tracking**: Track your learning progress and statistics
-- ❤️ **Favorites & Categories**: Organize cards with favorites and custom categories
-- ⚡ **Fast Performance**: Optimized with caching and state management
+This repository contains all the functionality for Supabase CLI.
 
-## Project Structure
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-```
-lib/
-├── models/          # Data models (IconModel, CardModel, etc.)
-├── services/        # API services (IconifyService, CardStorageService)
-├── providers/       # State management (IconProvider, CardProvider)
-├── widgets/         # Reusable UI components
-├── screens/         # Main app screens
-└── main.dart        # App entry point
+## Getting started
+
+### Install the CLI
+
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
+
+```bash
+npm i supabase --save-dev
 ```
 
-## Getting Started
+To install the beta release channel:
 
-### Prerequisites
+```bash
+npm i supabase@beta --save-dev
+```
 
-- Flutter SDK (3.8.1 or later)
-- Dart SDK
-- Visual Studio Code with Flutter extension (recommended)
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
-### Installation
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd LinguaFlutter
-   ```
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
 
-2. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
+<details>
+  <summary><b>macOS</b></summary>
 
-3. Generate code (for JSON serialization):
-   ```bash
-   dart run build_runner build
-   ```
+  Available via [Homebrew](https://brew.sh). To install:
 
-4. Run the app:
-   ```bash
-   flutter run
-   ```
+  ```sh
+  brew install supabase/tap/supabase
+  ```
 
-## Usage
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
 
-1. **Home Screen**: Welcome screen with navigation to main features
-2. **Icon Search**: 
-   - Search for icons using keywords
-   - Browse popular icons
-   - Select icons for use in cards
-   - View icon details (name, set, category)
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
 
-3. **Card Management**:
-   - Create new language learning cards with text, icons, and metadata
-   - Edit existing cards
-   - Organize cards by categories and tags
-   - Mark cards as favorites
-   - Archive cards you no longer need
+<details>
+  <summary><b>Windows</b></summary>
 
-4. **Review System**:
-   - Swipe-based flashcard review (like Anki/Duocards)
-   - Flip cards to reveal answers
-   - Rate your performance (correct/incorrect)
-   - Automatic spaced repetition scheduling
-   - Track learning progress and statistics
+  Available via [Scoop](https://scoop.sh). To install:
 
-## Architecture
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
 
-- **State Management**: Provider pattern for reactive UI updates
-- **Data Persistence**: Local storage with SharedPreferences for cards
-- **API Integration**: HTTP client for Iconify API requests
-- **SVG Rendering**: High-quality vector graphics with `flutter_svg`
-- **Spaced Repetition**: Custom algorithm for optimal learning intervals
+  To upgrade:
 
-## API Integration
+  ```powershell
+  scoop update supabase
+  ```
+</details>
 
-The app integrates with the [Iconify API](https://api.iconify.design/) to provide:
-- Icon search functionality
-- Access to 100+ icon collections
-- SVG icon data with metadata
-- Collections browsing
+<details>
+  <summary><b>Linux</b></summary>
 
-## Development Tasks
+  Available via [Homebrew](https://brew.sh) and Linux packages.
 
-Available VS Code tasks:
-- `Flutter: Run App` - Start the app in debug mode
-- `Flutter: Build` - Build the app for release
-- `Flutter: Test` - Run all tests
+  #### via Homebrew
 
-## Contributing
+  To install:
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run tests: `flutter test`
-6. Submit a pull request
+  ```sh
+  brew install supabase/tap/supabase
+  ```
 
-## Roadmap
+  To upgrade:
 
-- [x] Icon search and selection
-- [x] Card creation and management
-- [x] Swipeable flashcard review system
-- [x] Spaced repetition algorithm
-- [x] Local data persistence
-- [ ] Advanced statistics and analytics
-- [ ] Import/export functionality
-- [ ] Multiple language support
-- [ ] Custom card templates
-- [ ] Cloud synchronization
-- [ ] Offline mode improvements
+  ```sh
+  brew upgrade supabase
+  ```
 
-## License
+  #### via Linux packages
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
+```bash
+supabase bootstrap
+```
+
+Or using npx:
+
+```bash
+npx supabase bootstrap
+```
+
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
+```

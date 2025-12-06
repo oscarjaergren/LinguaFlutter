@@ -67,3 +67,14 @@ pubspec.lock
 assets/google_tts_api_key.txt
 assets/elevenlabs_api_key.txt
 assets/*_credentials.json
+
+# Environment files
+.env
+.env.*
+
+# Supabase CLI binary (downloaded locally)
+supabase.exe
+supabase.tar.gz
+
+# Supabase local config (contains project-specific settings)
+supabase/.temp/

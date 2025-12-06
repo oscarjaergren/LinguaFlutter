@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'features/icon_search/icon_search.dart';
 import 'features/streak/streak.dart';
 import 'features/language/language.dart';
@@ -11,6 +10,7 @@ import 'features/card_management/card_management.dart';
 import 'features/duplicate_detection/duplicate_detection.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
+import 'shared/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,12 +19,13 @@ void main() async {
   LoggerService.initialize();
   LoggerService.info('🚀 LinguaFlutter app starting...');
 
-  final prefs = await SharedPreferences.getInstance();
+  // Initialize Supabase
+  await SupabaseService.initialize();
 
   // Create core providers
   final languageProvider = LanguageProvider();
   final streakProvider = StreakProvider();
-  final themeProvider = ThemeProvider(prefs: prefs);
+  final themeProvider = ThemeProvider();
   
   // Create feature-specific providers (VSA architecture)
   final cardManagementProvider = CardManagementProvider(
@@ -33,6 +34,7 @@ void main() async {
   final duplicateDetectionProvider = DuplicateDetectionProvider();
 
   // Initialize providers that need async setup
+  await themeProvider.initialize();
   await cardManagementProvider.initialize();
   await streakProvider.loadStreak();
   
