@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../shared/navigation/app_router.dart';
 import '../../../card_management/card_management.dart';
 import '../../../mascot/domain/mascot_provider.dart';
-import '../../../streak/presentation/widgets/streak_status_widget.dart';
+import '../../../mascot/presentation/widgets/mascot_widget.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
 
@@ -33,6 +33,11 @@ class DashboardScreen extends StatelessWidget {
       ),
       body: Consumer<CardManagementProvider>(
         builder: (context, cardManagement, child) {
+          final dueCount = cardManagement.filteredCards.where((c) => !c.isArchived && c.isDue).length;
+          final learningCount = cardManagement.filteredCards.where((c) => !c.isArchived && !c.isDue && c.reviewCount > 0).length;
+          final masteredCount = cardManagement.filteredCards.where((c) => !c.isArchived && c.masteryLevel == 'Mastered').length;
+          final totalCards = cardManagement.filteredCards.where((c) => !c.isArchived).length;
+          
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -42,28 +47,28 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: StatsCardWidget(
-                        title: 'To learn',
-                        count: cardManagement.filteredCards.where((c) => !c.isArchived && c.isDue).length,
+                        title: 'Due Now',
+                        count: dueCount,
                         color: Colors.green,
-                        icon: Icons.school,
+                        icon: Icons.schedule,
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: StatsCardWidget(
-                        title: 'Known',
-                        count: cardManagement.filteredCards.where((c) => !c.isArchived && !c.isDue).length,
+                        title: 'Learning',
+                        count: learningCount,
+                        color: Colors.amber,
+                        icon: Icons.trending_up,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: StatsCardWidget(
+                        title: 'Mastered',
+                        count: masteredCount,
                         color: Colors.blue,
-                        icon: Icons.lightbulb,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: StatsCardWidget(
-                        title: 'Learned',
-                        count: cardManagement.stats['totalCards'] ?? 0,
-                        color: Colors.orange,
-                        icon: Icons.star,
+                        icon: Icons.check_circle,
                       ),
                     ),
                   ],
@@ -71,47 +76,43 @@ class DashboardScreen extends StatelessWidget {
                 
                 const SizedBox(height: 24),
                 
-                // Streak status
-                const StreakStatusWidget(),
-                
-                const SizedBox(height: 32),
-                
-                // Mascot illustration area
-                Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.pets,
-                      size: 80,
-                      color: Colors.grey,
-                    ),
-                  ),
+                // Mascot with speech bubble
+                Consumer<MascotProvider>(
+                  builder: (context, mascotProvider, child) {
+                    return Center(
+                      child: MascotWidget(
+                        size: 120,
+                        message: _getMascotMessage(dueCount, totalCards),
+                        mascotState: dueCount > 0 ? MascotState.excited : MascotState.idle,
+                      ),
+                    );
+                  },
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 
-                // Exercise Practice button (new system)
+                // Primary action button
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton.icon(
-                    onPressed: () => _startExerciseSession(context, cardManagement),
+                    onPressed: dueCount > 0 
+                        ? () => _startExerciseSession(context, cardManagement)
+                        : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
                       ),
                     ),
-                    icon: const Icon(Icons.fitness_center),
-                    label: const Text(
-                      'START PRACTICE',
-                      style: TextStyle(
+                    icon: const Icon(Icons.play_arrow_rounded, size: 28),
+                    label: Text(
+                      dueCount > 0 
+                          ? 'START LEARNING ($dueCount due)'
+                          : 'ALL CAUGHT UP!',
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
@@ -119,56 +120,28 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 
-                const SizedBox(height: 12),
-                
-                // Quick Review button (old system)
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _startReview(context, cardManagement),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                    ),
-                    icon: const Icon(Icons.flash_on, size: 20),
-                    label: const Text(
-                      'Quick Review',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-                
                 const SizedBox(height: 24),
                 
-                // Navigation cards
+                // Browse cards
                 Card(
                   child: ListTile(
                     leading: const Icon(Icons.library_books),
-                    title: const Text('Cards'),
-                    subtitle: Text('${cardManagement.filteredCards.length} cards'),
+                    title: const Text('Browse Cards'),
+                    subtitle: Text('$totalCards cards total'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => context.pushCards(),
                   ),
                 ),
+                
+                // Streak indicator (compact)
+                const SizedBox(height: 8),
+                _buildStreakIndicator(context),
               ],
             ),
           );
         },
       ),
     );
-  }
-
-  void _startReview(BuildContext context, CardManagementProvider cardManagement) {
-    if (cardManagement.reviewCards.isNotEmpty) {
-      context.pushCardReview();
-    } else {
-      _showNoCardsMessage(context);
-    }
   }
 
   void _startExerciseSession(BuildContext context, CardManagementProvider cardManagement) {
@@ -187,6 +160,54 @@ class DashboardScreen extends StatelessWidget {
         content: Text('No cards available for review'),
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  String _getMascotMessage(int dueCount, int totalCards) {
+    if (totalCards == 0) {
+      return "Let's add some cards to get started!";
+    } else if (dueCount == 0) {
+      return "Great job! You're all caught up! 🎉";
+    } else if (dueCount == 1) {
+      return "Just 1 card waiting for you!";
+    } else if (dueCount <= 5) {
+      return "You have $dueCount cards to review. Let's go!";
+    } else {
+      return "$dueCount cards are ready. Time to learn!";
+    }
+  }
+
+  Widget _buildStreakIndicator(BuildContext context) {
+    // TODO: Connect to actual streak provider when ready
+    const streakDays = 0; // Placeholder
+    
+    if (streakDays == 0) {
+      return const SizedBox.shrink();
+    }
+    
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            const Icon(Icons.local_fire_department, color: Colors.orange, size: 24),
+            const SizedBox(width: 12),
+            Text(
+              '$streakDays day streak',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              'Keep it up!',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../domain/models/card_model.dart';
+import '../domain/models/word_data.dart';
 
 /// Service for storing and retrieving cards from local storage
 class CardStorageService {
@@ -127,5 +130,69 @@ class CardStorageService {
   void dispose() {
     // SharedPreferences doesn't need explicit disposal
     _prefs = null;
+  }
+
+  /// Load seed cards from assets if storage is empty
+  /// Returns true if seed cards were loaded, false if cards already exist
+  Future<bool> loadSeedCardsIfEmpty() async {
+    final existingCards = await loadCards();
+    if (existingCards.isNotEmpty) {
+      return false; // Cards already exist
+    }
+
+    try {
+      final String jsonString = await rootBundle.loadString('assets/data/seed_cards.json');
+      final Map<String, dynamic> jsonData = jsonDecode(jsonString);
+      final List<dynamic> cardsData = jsonData['cards'] as List<dynamic>;
+
+      final List<CardModel> seedCards = [];
+      final now = DateTime.now();
+      const uuid = Uuid();
+
+      for (final cardData in cardsData) {
+        final data = cardData as Map<String, dynamic>;
+        
+        // Parse WordData if present
+        WordData? wordData;
+        if (data['wordData'] != null) {
+          wordData = WordData.fromJson(data['wordData'] as Map<String, dynamic>);
+        }
+
+        // Parse examples
+        final examples = (data['examples'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ?? [];
+
+        // Parse tags
+        final tags = (data['tags'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ?? [];
+
+        final card = CardModel(
+          id: uuid.v4(),
+          frontText: data['frontText'] as String,
+          backText: data['backText'] as String,
+          language: data['language'] as String? ?? 'de',
+          category: data['category'] as String? ?? 'vocabulary',
+          tags: tags,
+          createdAt: now,
+          updatedAt: now,
+          wordData: wordData,
+          examples: examples,
+          notes: data['notes'] as String?,
+          // Make cards due immediately so user can start practicing
+          nextReview: now.subtract(const Duration(hours: 1)),
+        );
+
+        seedCards.add(card);
+      }
+
+      await saveCards(seedCards);
+      print('Loaded ${seedCards.length} seed cards');
+      return true;
+    } catch (e) {
+      print('Error loading seed cards: $e');
+      return false;
+    }
   }
 }

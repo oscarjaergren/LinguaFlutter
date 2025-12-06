@@ -107,7 +107,12 @@ class CardManagementProvider extends ChangeNotifier {
   // ============================================================
 
   /// Initialize the provider by loading cards
+  /// On first run, loads seed cards from assets
   Future<void> initialize() async {
+    // Load seed cards if this is first run (no cards exist)
+    final storageService = CardStorageService();
+    await storageService.loadSeedCardsIfEmpty();
+    
     await loadCards();
   }
 

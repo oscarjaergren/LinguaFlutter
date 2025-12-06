@@ -1,0 +1,195 @@
+{
+  "cards": [
+    {
+      "frontText": "sprechen",
+      "backText": "to speak",
+      "language": "de",
+      "category": "verbs",
+      "tags": ["german", "verbs", "common"],
+      "examples": [
+        "Kannst du Deutsch sprechen?",
+        "Er spricht sehr schnell.",
+        "Wir haben gestern darüber gesprochen."
+      ],
+      "notes": "Irregular verb with stem change e→i in du/er forms",
+      "wordData": {
+        "runtimeType": "verb",
+        "isRegular": false,
+        "isSeparable": false,
+        "auxiliary": "haben",
+        "presentDu": "sprichst",
+        "presentEr": "spricht",
+        "pastSimple": "sprach",
+        "pastParticiple": "gesprochen"
+      }
+    },
+    {
+      "frontText": "absprechen",
+      "backText": "to agree on, to arrange",
+      "language": "de",
+      "category": "verbs",
+      "tags": ["german", "verbs", "separable"],
+      "examples": [
+        "Wir müssen das Treffen absprechen.",
+        "Das wurde bereits abgesprochen.",
+        "Lasst uns die Details absprechen."
+      ],
+      "notes": "Separable verb derived from sprechen",
+      "wordData": {
+        "runtimeType": "verb",
+        "isRegular": false,
+        "isSeparable": true,
+        "separablePrefix": "ab",
+        "auxiliary": "haben",
+        "presentDu": "sprichst ab",
+        "presentEr": "spricht ab",
+        "pastSimple": "sprach ab",
+        "pastParticiple": "abgesprochen"
+      }
+    },
+    {
+      "frontText": "der Schaden",
+      "backText": "the damage, the harm",
+      "language": "de",
+      "category": "nouns",
+      "tags": ["german", "nouns", "masculine"],
+      "examples": [
+        "Der Sturm hat viele Schäden verursacht.",
+        "Wir müssen den Schaden reparieren.",
+        "Die Versicherung übernimmt den Schaden."
+      ],
+      "wordData": {
+        "runtimeType": "noun",
+        "gender": "der",
+        "plural": "Schäden",
+        "genitive": "des Schadens"
+      }
+    },
+    {
+      "frontText": "die Brieftasche",
+      "backText": "the wallet",
+      "language": "de",
+      "category": "nouns",
+      "tags": ["german", "nouns", "feminine", "everyday"],
+      "examples": [
+        "Er hat seine Brieftasche verloren.",
+        "In meiner Brieftasche sind viele Karten.",
+        "Ich habe meine Brieftasche im Auto vergessen."
+      ],
+      "wordData": {
+        "runtimeType": "noun",
+        "gender": "die",
+        "plural": "Brieftaschen"
+      }
+    },
+    {
+      "frontText": "das Kunstwerk",
+      "backText": "the artwork",
+      "language": "de",
+      "category": "nouns",
+      "tags": ["german", "nouns", "neuter", "culture"],
+      "examples": [
+        "Das Kunstwerk hängt in der Galerie.",
+        "Viele Menschen bewundern das Kunstwerk.",
+        "Das Kunstwerk wurde von einem Künstler geschaffen."
+      ],
+      "wordData": {
+        "runtimeType": "noun",
+        "gender": "das",
+        "plural": "Kunstwerke",
+        "genitive": "des Kunstwerks"
+      }
+    },
+    {
+      "frontText": "groß",
+      "backText": "big, tall, great",
+      "language": "de",
+      "category": "adjectives",
+      "tags": ["german", "adjectives", "common"],
+      "examples": [
+        "Das Haus ist sehr groß.",
+        "Er ist größer als sein Bruder.",
+        "Das ist eine große Überraschung."
+      ],
+      "wordData": {
+        "runtimeType": "adjective",
+        "comparative": "größer",
+        "superlative": "größten"
+      }
+    },
+    {
+      "frontText": "schnell",
+      "backText": "fast, quick",
+      "language": "de",
+      "category": "adjectives",
+      "tags": ["german", "adjectives", "common"],
+      "examples": [
+        "Das Auto ist sehr schnell.",
+        "Er läuft schneller als ich.",
+        "Das war eine schnelle Entscheidung."
+      ],
+      "wordData": {
+        "runtimeType": "adjective",
+        "comparative": "schneller",
+        "superlative": "schnellsten"
+      }
+    },
+    {
+      "frontText": "gehen",
+      "backText": "to go, to walk",
+      "language": "de",
+      "category": "verbs",
+      "tags": ["german", "verbs", "common", "motion"],
+      "examples": [
+        "Ich gehe zur Schule.",
+        "Wir sind gestern ins Kino gegangen.",
+        "Wie geht es dir?"
+      ],
+      "notes": "Uses 'sein' as auxiliary in Perfekt",
+      "wordData": {
+        "runtimeType": "verb",
+        "isRegular": false,
+        "isSeparable": false,
+        "auxiliary": "sein",
+        "pastSimple": "ging",
+        "pastParticiple": "gegangen"
+      }
+    },
+    {
+      "frontText": "machen",
+      "backText": "to make, to do",
+      "language": "de",
+      "category": "verbs",
+      "tags": ["german", "verbs", "common", "regular"],
+      "examples": [
+        "Was machst du heute?",
+        "Ich habe meine Hausaufgaben gemacht.",
+        "Das macht nichts."
+      ],
+      "notes": "Regular verb - good example of standard conjugation",
+      "wordData": {
+        "runtimeType": "verb",
+        "isRegular": true,
+        "isSeparable": false,
+        "auxiliary": "haben",
+        "pastParticiple": "gemacht"
+      }
+    },
+    {
+      "frontText": "hier",
+      "backText": "here",
+      "language": "de",
+      "category": "adverbs",
+      "tags": ["german", "adverbs", "location", "common"],
+      "examples": [
+        "Ich bin hier.",
+        "Komm bitte hier her!",
+        "Hier ist es sehr schön."
+      ],
+      "wordData": {
+        "runtimeType": "adverb",
+        "usageNote": "Indicates location at the speaker's position"
+      }
+    }
+  ]
+}

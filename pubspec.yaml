@@ -102,6 +102,7 @@ flutter:
   assets:
     - lingualabs_mascot_manual_crop-removebg-preview.png
     - assets/data/german_words.json
+    - assets/data/seed_cards.json
     - assets/google_tts_api_key.txt
     - assets/elevenlabs_api_key.txt
 
