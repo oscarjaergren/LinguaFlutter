@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../shared/services/logger_service.dart';
 import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
 import '../data/iconify_service.dart';
 
@@ -48,7 +49,7 @@ class IconProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Error searching icons: $e';
       _searchResults = [];
-      debugPrint('Icon search error: $e');
+      LoggerService.error('Icon search error', e);
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -98,7 +99,7 @@ class IconProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Error loading popular icons: $e';
       _searchResults = [];
-      debugPrint('Popular icons error: $e');
+      LoggerService.error('Popular icons error', e);
     } finally {
       _isLoading = false;
       notifyListeners();

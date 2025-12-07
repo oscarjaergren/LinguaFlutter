@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../../shared/services/logger_service.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
 import '../../../language/domain/language_provider.dart';
@@ -158,7 +159,7 @@ class CardListViewModel extends ChangeNotifier {
       await _cardManagement.deleteCard(cardId);
     } catch (e) {
       // Error is handled by CardManagementProvider and exposed via errorMessage
-      debugPrint('Error deleting card: $e');
+      LoggerService.error('Error deleting card', e);
     }
   }
 
@@ -166,7 +167,7 @@ class CardListViewModel extends ChangeNotifier {
     try {
       await _cardManagement.toggleFavorite(cardId);
     } catch (e) {
-      debugPrint('Error toggling favorite: $e');
+      LoggerService.error('Error toggling favorite', e);
     }
   }
 
@@ -174,7 +175,7 @@ class CardListViewModel extends ChangeNotifier {
     try {
       await _cardManagement.loadCards();
     } catch (e) {
-      debugPrint('Error refreshing cards: $e');
+      LoggerService.error('Error refreshing cards', e);
     }
   }
 

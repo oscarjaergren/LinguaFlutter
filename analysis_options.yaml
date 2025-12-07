@@ -2,8 +2,9 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
-    # Allow print in debug code
-    avoid_print: false
+    # Enforce using LoggerService instead of print
+    # Exception: debug feature uses print intentionally for developer tools
+    avoid_print: true
 
 analyzer:
   exclude:

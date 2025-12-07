@@ -4,11 +4,16 @@ import 'package:mockito/mockito.dart';
 import 'package:lingua_flutter/features/icon_search/domain/icon_provider.dart';
 import 'package:lingua_flutter/features/icon_search/data/iconify_service.dart';
 import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 @GenerateMocks([IconifyService])
 import 'icon_provider_test.mocks.dart';
 
 void main() {
+  setUpAll(() {
+    LoggerService.initialize();
+  });
+
   group('IconProvider', () {
     late IconProvider provider;
     late MockIconifyService mockService;

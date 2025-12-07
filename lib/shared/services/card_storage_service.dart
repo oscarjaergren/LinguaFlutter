@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/models/card_model.dart';
 import '../domain/models/word_data.dart';
+import 'logger_service.dart';
 
 /// Service for storing and retrieving cards from local storage
 class CardStorageService {
@@ -32,7 +33,7 @@ class CardStorageService {
     } catch (e) {
       // If there's an error loading cards (likely due to format changes),
       // clear the storage and return empty list
-      print('Error loading cards, clearing storage: $e');
+      LoggerService.warning('Error loading cards, clearing storage: $e');
       await clearAllCards();
       return [];
     }
@@ -188,10 +189,10 @@ class CardStorageService {
       }
 
       await saveCards(seedCards);
-      print('Loaded ${seedCards.length} seed cards');
+      LoggerService.info('Loaded ${seedCards.length} seed cards');
       return true;
     } catch (e) {
-      print('Error loading seed cards: $e');
+      LoggerService.error('Error loading seed cards', e);
       return false;
     }
   }

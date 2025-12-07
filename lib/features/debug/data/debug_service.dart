@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../../../shared/domain/models/card_model.dart';
+import '../../../shared/services/logger_service.dart';
 
 /// Service for debug functionality and test data generation
 class DebugService {
@@ -78,7 +79,7 @@ class DebugService {
       final Map<String, dynamic> jsonData = json.decode(jsonString) as Map<String, dynamic>;
       final List<dynamic> words = jsonData['words'] as List<dynamic>;
       
-      print('DEBUG: Loaded ${words.length} words from JSON');
+      LoggerService.debug('Loaded ${words.length} words from JSON');
       
       // Convert to CardModel objects
       final List<CardModel> cards = [];
@@ -86,7 +87,7 @@ class DebugService {
           ? words.sublist(0, limit) 
           : words;
       
-      print('DEBUG: Processing ${wordsToProcess.length} words');
+      LoggerService.debug('Processing ${wordsToProcess.length} words');
       
       for (var i = 0; i < wordsToProcess.length; i++) {
         final word = wordsToProcess[i] as Map<String, dynamic>;
@@ -128,16 +129,15 @@ class DebugService {
         
         cards.add(card);
         
-        if ((i + 1) % 10 == 0) {
-          print('DEBUG: Processed ${i + 1} cards');
+        if ((i + 1) % 50 == 0) {
+          LoggerService.debug('Processed ${i + 1} cards');
         }
       }
       
-      print('DEBUG: Successfully created ${cards.length} card objects');
+      LoggerService.debug('Successfully created ${cards.length} card objects');
       return cards;
     } catch (e, stackTrace) {
-      print('DEBUG ERROR: Failed to load German words: $e');
-      print('DEBUG STACK: $stackTrace');
+      LoggerService.error('Failed to load German words', e, stackTrace);
       throw Exception('Failed to load German words from JSON: $e');
     }
   }

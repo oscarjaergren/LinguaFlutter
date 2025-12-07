@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'tts_service.dart';
+import 'logger_service.dart';
 
 /// ElevenLabs Text-to-Speech service with ultra-realistic AI voices
 /// Falls back to native TTS if ElevenLabs is not configured
@@ -19,14 +20,13 @@ class ElevenLabsTtsService {
   bool _isInitialized = false;
 
   /// Initialize the service
-  /// Attempts to load ElevenLabs API key, falls back to native TTS
   Future<void> initialize() async {
     if (_isInitialized) return;
 
     try {
       await _loadElevenLabsApiKey();
     } catch (e) {
-      print('ElevenLabs TTS not available, using native TTS: $e');
+      LoggerService.debug('ElevenLabs TTS not available, using native TTS');
     }
 
     await _nativeTts.initialize();
@@ -36,45 +36,34 @@ class ElevenLabsTtsService {
   /// Load ElevenLabs API key from assets
   Future<void> _loadElevenLabsApiKey() async {
     try {
-      print('🔍 [TTS DEBUG] Attempting to load ElevenLabs API key...');
       final apiKey = await rootBundle.loadString('assets/elevenlabs_api_key.txt');
       _elevenLabsApiKey = apiKey.trim();
       _isElevenLabsEnabled = _elevenLabsApiKey!.isNotEmpty;
       if (_isElevenLabsEnabled) {
-        print('✅ [TTS DEBUG] ElevenLabs TTS enabled!');
-        print('🔑 [TTS DEBUG] API Key loaded: ${_elevenLabsApiKey!.substring(0, 20)}... (${_elevenLabsApiKey!.length} chars)');
+        LoggerService.info('ElevenLabs TTS enabled');
       } else {
-        print('⚠️ [TTS DEBUG] API key file exists but is empty');
+        LoggerService.warning('ElevenLabs API key file exists but is empty');
       }
     } catch (e) {
       _isElevenLabsEnabled = false;
-      print('❌ [TTS DEBUG] Failed to load ElevenLabs API key: $e');
-      print('ℹ️ [TTS DEBUG] Using native TTS fallback');
+      LoggerService.debug('ElevenLabs TTS not configured, using native TTS fallback');
     }
   }
 
   /// Speak text using the best available TTS engine
   Future<void> speak(String text, String languageCode) async {
     if (!_isInitialized) {
-      print('🔍 [TTS DEBUG] Initializing ElevenLabs TTS service...');
       await initialize();
     }
 
-    print('🎤 [TTS DEBUG] ElevenLabs speak() called: "$text" (lang: $languageCode)');
-    print('🔍 [TTS DEBUG] ElevenLabs enabled: $_isElevenLabsEnabled, Has API key: ${_elevenLabsApiKey != null}');
-
     if (_isElevenLabsEnabled && _elevenLabsApiKey != null) {
-      print('✅ [TTS DEBUG] Using ElevenLabs TTS');
       try {
         await _speakWithElevenLabs(text, languageCode);
-        print('✅ [TTS DEBUG] ElevenLabs TTS completed successfully');
       } catch (e) {
-        print('❌ [TTS DEBUG] ElevenLabs TTS error: $e');
-        print('🔄 [TTS DEBUG] Falling back to native TTS');
+        LoggerService.error('ElevenLabs TTS error, falling back to native', e);
         await _nativeTts.speak(text, languageCode);
       }
     } else {
-      print('🔄 [TTS DEBUG] Using native TTS (ElevenLabs not configured)');
       await _nativeTts.speak(text, languageCode);
     }
   }
@@ -83,19 +72,13 @@ class ElevenLabsTtsService {
   Future<void> _speakWithElevenLabs(String text, String languageCode) async {
     final voiceId = _getElevenLabsVoiceId(languageCode);
     
-    print('🔍 [TTS DEBUG] ElevenLabs request:');
-    print('   - Text: "$text"');
-    print('   - Language: $languageCode');
-    print('   - Voice ID: $voiceId');
-    
-    // ElevenLabs API endpoint
     final url = Uri.parse(
       'https://api.elevenlabs.io/v1/text-to-speech/$voiceId'
     );
     
     final body = jsonEncode({
       'text': text,
-      'model_id': 'eleven_multilingual_v2', // Best quality multilingual model
+      'model_id': 'eleven_multilingual_v2',
       'voice_settings': {
         'stability': 0.5,
         'similarity_boost': 0.75,
@@ -104,7 +87,6 @@ class ElevenLabsTtsService {
       },
     });
 
-    print('🌐 [TTS DEBUG] Making API request to ElevenLabs...');
     final response = await http.post(
       url,
       headers: {
@@ -114,20 +96,12 @@ class ElevenLabsTtsService {
       },
       body: body,
     );
-
-    print('📡 [TTS DEBUG] Response status: ${response.statusCode}');
     
     if (response.statusCode == 200) {
-      print('✅ [TTS DEBUG] API call successful');
       final audioBytes = response.bodyBytes;
-      
-      print('🔊 [TTS DEBUG] Audio size: ${audioBytes.length} bytes');
-      print('🔊 [TTS DEBUG] Playing audio...');
       await _audioPlayer.play(BytesSource(audioBytes));
-      print('✅ [TTS DEBUG] Audio playback started');
     } else {
-      print('❌ [TTS DEBUG] API error response: ${response.body}');
-      throw Exception('ElevenLabs TTS API error: ${response.statusCode} - ${response.body}');
+      throw Exception('ElevenLabs TTS API error: ${response.statusCode}');
     }
   }
 

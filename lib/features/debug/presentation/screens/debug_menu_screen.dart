@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../shared/services/google_cloud_tts_service.dart';
 import '../../../../shared/services/tts_service.dart';
 import '../../../../shared/services/elevenlabs_tts_service.dart';
+import '../../../../shared/services/logger_service.dart';
 import 'package:provider/provider.dart';
 import '../../../card_management/card_management.dart';
 import '../../../debug/data/debug_service.dart';
@@ -557,13 +558,13 @@ class DebugMenuScreen extends StatelessWidget {
       languageProvider.setActiveLanguage('de');
       
       // Load German words from JSON
-      print('DEBUG: Calling loadGermanWordsFromJson with limit=$limit, makeAvailableNow=$makeAvailableNow');
+      LoggerService.debug('Calling loadGermanWordsFromJson with limit=$limit, makeAvailableNow=$makeAvailableNow');
       final cards = await DebugService.loadGermanWordsFromJson(
         limit: limit,
         makeAvailableNow: makeAvailableNow,
       );
       
-      print('DEBUG: Received ${cards.length} cards from service');
+      LoggerService.debug('Received ${cards.length} cards from service');
       
       // Batch add all cards
       await cardManagement.addMultipleCards(cards);
@@ -589,8 +590,7 @@ class DebugMenuScreen extends StatelessWidget {
         );
       }
     } catch (e, stackTrace) {
-      print('DEBUG ERROR in _loadGermanWords: $e');
-      print('DEBUG STACK: $stackTrace');
+      LoggerService.error('Error in _loadGermanWords', e, stackTrace);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -717,7 +717,7 @@ class DebugMenuScreen extends StatelessWidget {
     try {
       switch (provider) {
         case TtsProviderType.native:
-          print('🧪 [TTS TEST] Testing Native TTS...');
+          LoggerService.debug('Testing Native TTS...');
           final nativeTts = NativeTtsService();
           await nativeTts.initialize();
           await nativeTts.speak(testPhrase, 'de');
@@ -734,7 +734,7 @@ class DebugMenuScreen extends StatelessWidget {
           break;
           
         case TtsProviderType.google:
-          print('🧪 [TTS TEST] Testing Google Cloud TTS...');
+          LoggerService.debug('Testing Google Cloud TTS...');
           final googleTts = GoogleCloudTtsService();
           await googleTts.initialize();
           await googleTts.speak(testPhrase, 'de');
@@ -751,7 +751,7 @@ class DebugMenuScreen extends StatelessWidget {
           break;
           
         case TtsProviderType.elevenLabs:
-          print('🧪 [TTS TEST] Testing ElevenLabs TTS...');
+          LoggerService.debug('Testing ElevenLabs TTS...');
           final elevenLabsTts = ElevenLabsTtsService();
           await elevenLabsTts.initialize();
           await elevenLabsTts.speak(testPhrase, 'de');
@@ -768,7 +768,7 @@ class DebugMenuScreen extends StatelessWidget {
           break;
       }
     } catch (e) {
-      print('❌ [TTS TEST] Error: $e');
+      LoggerService.error('TTS test error', e);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

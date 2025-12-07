@@ -1,4 +1,5 @@
 import 'package:flutter_tts/flutter_tts.dart';
+import 'logger_service.dart';
 
 /// Service for native platform text-to-speech functionality
 class NativeTtsService {
@@ -34,7 +35,7 @@ class NativeTtsService {
 
       _isInitialized = true;
     } catch (e) {
-      print('TTS initialization error: $e');
+      LoggerService.error('TTS initialization error', e);
     }
   }
 
@@ -44,7 +45,7 @@ class NativeTtsService {
       final languages = await _flutterTts.getLanguages;
       return List<String>.from(languages ?? []);
     } catch (e) {
-      print('Error getting languages: $e');
+      LoggerService.error('Error getting languages', e);
       return [];
     }
   }
@@ -68,7 +69,7 @@ class NativeTtsService {
 
       await _flutterTts.speak(text);
     } catch (e) {
-      print('Error speaking: $e');
+      LoggerService.error('Error speaking', e);
     }
   }
 
@@ -77,7 +78,7 @@ class NativeTtsService {
     try {
       await _flutterTts.stop();
     } catch (e) {
-      print('Error stopping speech: $e');
+      LoggerService.error('Error stopping speech', e);
     }
   }
 
@@ -86,7 +87,7 @@ class NativeTtsService {
     try {
       await _flutterTts.pause();
     } catch (e) {
-      print('Error pausing speech: $e');
+      LoggerService.error('Error pausing speech', e);
     }
   }
 
@@ -103,7 +104,7 @@ class NativeTtsService {
     try {
       await _flutterTts.setSpeechRate(rate.clamp(0.0, 1.0));
     } catch (e) {
-      print('Error setting speech rate: $e');
+      LoggerService.error('Error setting speech rate', e);
     }
   }
 
