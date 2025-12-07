@@ -217,7 +217,7 @@ class DashboardScreen extends StatelessWidget {
 
   void _startExerciseSession(BuildContext context, CardManagementProvider cardManagement) {
     if (cardManagement.reviewCards.isNotEmpty) {
-      context.pushExerciseSession();
+      context.pushPractice();
     } else {
       _showNoCardsMessage(context);
     }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 /// Types of exercises available for flashcard practice
@@ -135,6 +136,28 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'mdi:microphone';
       case ExerciseType.sentenceFill:
         return 'mdi:text-box';
+    }
+  }
+  
+  /// Material icon to represent this exercise type in UI
+  IconData get icon {
+    switch (this) {
+      case ExerciseType.readingRecognition:
+        return Icons.menu_book;
+      case ExerciseType.writingTranslation:
+        return Icons.edit;
+      case ExerciseType.multipleChoiceText:
+        return Icons.checklist;
+      case ExerciseType.multipleChoiceIcon:
+        return Icons.image;
+      case ExerciseType.reverseTranslation:
+        return Icons.swap_horiz;
+      case ExerciseType.listeningRecognition:
+        return Icons.hearing;
+      case ExerciseType.speakingPronunciation:
+        return Icons.mic;
+      case ExerciseType.sentenceFill:
+        return Icons.short_text;
     }
   }
 }

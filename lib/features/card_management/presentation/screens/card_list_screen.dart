@@ -193,7 +193,7 @@ class CardsScreen extends StatelessWidget {
   }
 
   void _startReview(BuildContext context) {
-    context.pushCardReview();
+    context.pushPractice();
   }
 
   void _createNewCard(BuildContext context) {

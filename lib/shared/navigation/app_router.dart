@@ -5,8 +5,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import '../../features/auth/auth.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/card_management/card_management.dart';
-import '../../features/card_review/presentation/screens/card_review_screen.dart';
-import '../../features/card_review/presentation/screens/exercise_session_screen.dart';
+import '../../features/card_review/presentation/screens/practice_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
 import '../services/logger_service.dart';
 import '../services/supabase_service.dart';
@@ -18,8 +17,7 @@ class AppRouter {
   static const String cards = '/cards';
   static const String cardCreation = '/card-creation';
   static const String cardEdit = '/card-edit';
-  static const String cardReview = '/card-review';
-  static const String exerciseSession = '/exercise-session';
+  static const String practice = '/practice';
   static const String debug = '/debug';
   static const String logs = '/logs';
 
@@ -123,18 +121,11 @@ class AppRouter {
         },
       ),
       
-      // Card Review Screen
+      // Practice Screen
       GoRoute(
-        path: cardReview,
-        name: 'card-review',
-        builder: (context, state) => const CardReviewScreen(),
-      ),
-      
-      // Exercise Session Screen
-      GoRoute(
-        path: exerciseSession,
-        name: 'exercise-session',
-        builder: (context, state) => const ExerciseSessionScreen(),
+        path: practice,
+        name: 'practice',
+        builder: (context, state) => const PracticeScreen(),
       ),
       
       // Debug Menu Screen
@@ -220,11 +211,8 @@ extension AppRouterExtension on BuildContext {
   /// Navigate to card edit screen
   void goToCardEdit(String cardId) => go('${AppRouter.cardEdit}/$cardId');
   
-  /// Navigate to card review screen
-  void goToCardReview() => go(AppRouter.cardReview);
-  
-  /// Navigate to exercise session screen
-  void goToExerciseSession() => go(AppRouter.exerciseSession);
+  /// Navigate to practice screen
+  void goToPractice() => go(AppRouter.practice);
   
   /// Navigate to debug menu
   void goToDebug() => go(AppRouter.debug);
@@ -238,11 +226,8 @@ extension AppRouterExtension on BuildContext {
   /// Push card edit screen
   void pushCardEdit(String cardId) => push('${AppRouter.cardEdit}/$cardId');
   
-  /// Push card review screen
-  void pushCardReview() => push(AppRouter.cardReview);
-  
-  /// Push exercise session screen
-  void pushExerciseSession() => push(AppRouter.exerciseSession);
+  /// Push practice screen
+  void pushPractice() => push(AppRouter.practice);
   
   /// Push debug menu
   void pushDebug() => push(AppRouter.debug);

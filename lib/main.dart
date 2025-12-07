@@ -79,25 +79,18 @@ void main() async {
         ChangeNotifierProvider(create: (_) => MascotProvider()),
         ChangeNotifierProvider(create: (_) => IconProvider()),
         
-        // Session providers
-        ChangeNotifierProxyProvider<CardManagementProvider, ReviewSessionProvider>(
-          create: (context) => ReviewSessionProvider(
-            updateCard: context.read<CardManagementProvider>().updateCard,
-          ),
-          update: (context, cardManagement, previous) =>
-              previous ?? ReviewSessionProvider(updateCard: cardManagement.updateCard),
-        ),
-        ChangeNotifierProxyProvider<CardManagementProvider, ExerciseSessionProvider>(
+        // Practice session provider
+        ChangeNotifierProxyProvider<CardManagementProvider, PracticeSessionProvider>(
           create: (context) {
             final cm = context.read<CardManagementProvider>();
-            return ExerciseSessionProvider(
+            return PracticeSessionProvider(
               getReviewCards: () => cm.reviewCards,
               getAllCards: () => cm.allCards,
               updateCard: cm.updateCard,
             );
           },
           update: (context, cardManagement, previous) =>
-              previous ?? ExerciseSessionProvider(
+              previous ?? PracticeSessionProvider(
                 getReviewCards: () => cardManagement.reviewCards,
                 getAllCards: () => cardManagement.allCards,
                 updateCard: cardManagement.updateCard,
