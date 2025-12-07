@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'logger_service.dart';
 
@@ -11,6 +12,8 @@ class NativeTtsService {
   bool _isInitialized = false;
   String? _currentLanguage;
 
+  bool get _isIOS => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
   /// Initialize the TTS service
   Future<void> initialize() async {
     if (_isInitialized) return;
@@ -21,17 +24,19 @@ class NativeTtsService {
       await _flutterTts.setSpeechRate(0.45); // Slightly slower for learning
       await _flutterTts.setPitch(1.0);
 
-      // Set iOS specific settings
-      await _flutterTts.setSharedInstance(true);
-      await _flutterTts.setIosAudioCategory(
-        IosTextToSpeechAudioCategory.playback,
-        [
-          IosTextToSpeechAudioCategoryOptions.allowBluetooth,
-          IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
-          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
-        ],
-        IosTextToSpeechAudioMode.voicePrompt,
-      );
+      // iOS-specific settings (not available on web)
+      if (_isIOS) {
+        await _flutterTts.setSharedInstance(true);
+        await _flutterTts.setIosAudioCategory(
+          IosTextToSpeechAudioCategory.playback,
+          [
+            IosTextToSpeechAudioCategoryOptions.allowBluetooth,
+            IosTextToSpeechAudioCategoryOptions.allowBluetoothA2DP,
+            IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          ],
+          IosTextToSpeechAudioMode.voicePrompt,
+        );
+      }
 
       _isInitialized = true;
     } catch (e) {

@@ -177,7 +177,7 @@ class SupabaseCardService {
       'review_count': card.reviewCount,
       'ease_factor': 2.5, // Default SM-2 ease factor
       'interval_days': _calculateIntervalDays(card),
-      'mastery_level': card.masteryLevel,
+      'mastery_level': card.masteryLevelNumeric,
       'is_archived': card.isArchived,
       'is_favorite': card.isFavorite,
       'created_at': card.createdAt.toIso8601String(),

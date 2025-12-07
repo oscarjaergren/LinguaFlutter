@@ -224,5 +224,51 @@ void main() {
       expect(copied.isFavorite, true);
       expect(copied.id, original.id); // ID should remain the same
     });
+
+    test('should return correct mastery level string', () {
+      // New card (< 3 reviews)
+      final newCard = CardModel.create(
+        frontText: 'Test',
+        backText: 'Test',
+        language: 'de',
+        category: 'Test',
+      );
+      expect(newCard.masteryLevel, 'New');
+
+      // Card with reviews - test different success rates
+      final difficultCard = newCard.copyWith(reviewCount: 10, correctCount: 3);
+      expect(difficultCard.masteryLevel, 'Difficult'); // 30% success
+
+      final learningCard = newCard.copyWith(reviewCount: 10, correctCount: 5);
+      expect(learningCard.masteryLevel, 'Learning'); // 50% success
+
+      final goodCard = newCard.copyWith(reviewCount: 10, correctCount: 7);
+      expect(goodCard.masteryLevel, 'Good'); // 70% success
+
+      final masteredCard = newCard.copyWith(reviewCount: 10, correctCount: 9);
+      expect(masteredCard.masteryLevel, 'Mastered'); // 90% success
+    });
+
+    test('should return correct numeric mastery level for database', () {
+      final newCard = CardModel.create(
+        frontText: 'Test',
+        backText: 'Test',
+        language: 'de',
+        category: 'Test',
+      );
+      expect(newCard.masteryLevelNumeric, 0); // New
+
+      final difficultCard = newCard.copyWith(reviewCount: 10, correctCount: 3);
+      expect(difficultCard.masteryLevelNumeric, 1); // Difficult
+
+      final learningCard = newCard.copyWith(reviewCount: 10, correctCount: 5);
+      expect(learningCard.masteryLevelNumeric, 2); // Learning
+
+      final goodCard = newCard.copyWith(reviewCount: 10, correctCount: 7);
+      expect(goodCard.masteryLevelNumeric, 3); // Good
+
+      final masteredCard = newCard.copyWith(reviewCount: 10, correctCount: 9);
+      expect(masteredCard.masteryLevelNumeric, 4); // Mastered
+    });
   });
 }

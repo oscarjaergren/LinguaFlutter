@@ -166,6 +166,18 @@ class CardModel {
     if (rate >= 50) return 'Learning';
     return 'Difficult';
   }
+
+  /// Get numeric mastery level for database storage (0-4)
+  /// 0 = New, 1 = Difficult, 2 = Learning, 3 = Good, 4 = Mastered
+  int get masteryLevelNumeric {
+    if (reviewCount < 3) return 0; // New
+    
+    final rate = successRate;
+    if (rate >= 90) return 4; // Mastered
+    if (rate >= 70) return 3; // Good
+    if (rate >= 50) return 2; // Learning
+    return 1; // Difficult
+  }
   
   /// Get the score for a specific exercise type
   ExerciseScore? getExerciseScore(ExerciseType type) {
