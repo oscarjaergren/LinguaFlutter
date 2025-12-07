@@ -27,6 +27,12 @@ class SupabaseStreakService implements StreakService {
 
   @override
   Future<StreakModel> loadStreak() async {
+    // Guard: return initial streak if not authenticated
+    if (!isAuthenticated) {
+      LoggerService.debug('Not authenticated, returning initial streak');
+      return StreakModel.initial();
+    }
+    
     try {
       final response = await _client
           .from(_tableName)
@@ -49,6 +55,12 @@ class SupabaseStreakService implements StreakService {
 
   @override
   Future<void> saveStreak(StreakModel streak) async {
+    // Guard: skip save if not authenticated
+    if (!isAuthenticated) {
+      LoggerService.debug('Not authenticated, skipping streak save');
+      return;
+    }
+    
     try {
       final data = _streakToSupabase(streak);
       

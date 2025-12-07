@@ -52,6 +52,7 @@ class SupabaseCardService {
   Future<CardModel> saveCard(CardModel card) async {
     try {
       final data = _cardToSupabase(card);
+      LoggerService.debug('Saving card to Supabase: $data');
       
       final response = await _client
           .from(_tableName)
@@ -61,6 +62,10 @@ class SupabaseCardService {
 
       LoggerService.debug('Card saved to Supabase: ${card.id}');
       return _cardFromSupabase(response);
+    } on PostgrestException catch (e) {
+      LoggerService.error('Supabase error saving card: ${e.message}', e);
+      LoggerService.error('Error code: ${e.code}, details: ${e.details}');
+      rethrow;
     } catch (e) {
       LoggerService.error('Failed to save card to Supabase', e);
       rethrow;

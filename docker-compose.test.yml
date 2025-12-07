@@ -1,0 +1,95 @@
+# Docker Compose for Integration Tests
+# Runs a local Supabase stack for testing database operations
+#
+# Usage:
+#   docker-compose -f docker-compose.test.yml up -d
+#   flutter test integration_test/
+#   docker-compose -f docker-compose.test.yml down -v
+
+version: '3.8'
+
+services:
+  # PostgreSQL database
+  db:
+    image: supabase/postgres:15.8.1.060
+    container_name: lingua_test_db
+    ports:
+      - "54322:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - ./supabase/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Supabase Auth (GoTrue)
+  auth:
+    image: supabase/gotrue:v2.164.0
+    container_name: lingua_test_auth
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "9999:9999"
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: http://localhost:9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://postgres:postgres@db:5432/postgres?search_path=auth
+      GOTRUE_SITE_URL: http://localhost:3000
+      GOTRUE_URI_ALLOW_LIST: "*"
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@localhost
+      GOTRUE_SMTP_HOST: ""
+      GOTRUE_SMTP_PORT: ""
+      GOTRUE_SMTP_USER: ""
+      GOTRUE_SMTP_PASS: ""
+      GOTRUE_SMTP_SENDER_NAME: ""
+
+  # Supabase REST API (PostgREST)
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: lingua_test_rest
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://postgres:postgres@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: super-secret-jwt-token-with-at-least-32-characters-long
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  # Kong API Gateway (optional, for full Supabase compatibility)
+  kong:
+    image: kong:3.4
+    container_name: lingua_test_kong
+    depends_on:
+      - auth
+      - rest
+    ports:
+      - "8000:8000"
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+    volumes:
+      - ./test/integration/kong.yml:/kong/kong.yml:ro
+
+networks:
+  default:
+    name: lingua_test_network
