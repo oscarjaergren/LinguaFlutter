@@ -13,6 +13,8 @@ import '../../domain/models/duplicate_match.dart';
 /// The service is designed to be extensible - new strategies can be added
 /// by implementing additional check methods and adding them to the strategy enum.
 class DuplicateDetectionService {
+  static final _whitespacePattern = RegExp(r'\s+');
+  
   final DuplicateDetectionConfig config;
   
   DuplicateDetectionService({
@@ -254,7 +256,7 @@ class DuplicateDetectionService {
   // Utility methods
   
   String _normalizeWhitespace(String text) {
-    return text.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
+    return text.toLowerCase().trim().replaceAll(_whitespacePattern, ' ');
   }
   
   /// Calculate similarity between two strings using Levenshtein distance

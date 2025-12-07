@@ -8,6 +8,8 @@ typedef OnAuthStateChanged = Future<void> Function(bool isAuthenticated);
 
 /// Provider for managing authentication state
 class AuthProvider extends ChangeNotifier {
+  static final _jsonMessagePattern = RegExp(r'"message"\s*:\s*"([^"]+)"');
+  
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
@@ -94,9 +96,7 @@ class AuthProvider extends ChangeNotifier {
     // Parse JSON error if present
     if (e.message.contains('"code"')) {
       try {
-        // Extract message from JSON
-        final pattern = r'"message"\s*:\s*"([^"]+)"';
-        final match = RegExp(pattern).firstMatch(e.message);
+        final match = _jsonMessagePattern.firstMatch(e.message);
         if (match != null) {
           final errorMsg = match.group(1)!;
           if (errorMsg.contains('Database error')) {

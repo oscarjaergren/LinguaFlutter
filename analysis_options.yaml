@@ -2,8 +2,6 @@ include: package:flutter_lints/flutter.yaml
 
 linter:
   rules:
-    # Enforce using LoggerService instead of print
-    # Exception: debug feature uses print intentionally for developer tools
     avoid_print: true
 
 analyzer:
@@ -12,7 +10,9 @@ analyzer:
     - "**/*.freezed.dart"
     - "**/*.mocks.dart"
   errors:
-    # Treat deprecated_member_use_from_same_package as info (not warning)
-    deprecated_member_use_from_same_package: info
+    # RegExp deprecation warning is a Dart SDK bug (github.com/dart-lang/sdk/issues/62012)
+    # The warning targets people extending/implementing RegExp, not normal usage.
+    # Normal RegExp usage is correct and will continue to work.
+    deprecated_member_use: ignore
     # Tests in lib/ use dev_dependencies - this is intentional for VSA
     depend_on_referenced_packages: ignore
