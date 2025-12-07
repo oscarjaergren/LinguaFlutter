@@ -5,7 +5,7 @@ void main() {
   group('StreakModel', () {
     
     // Helper function to format dates
-    String _formatDate(DateTime date) {
+    String formatDate(DateTime date) {
       return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     }
     test('should create initial streak model', () {
@@ -84,9 +84,9 @@ void main() {
 
     test('should calculate average cards per day', () {
       final now = DateTime.now();
-      final today = _formatDate(now);
-      final yesterday = _formatDate(now.subtract(const Duration(days: 1)));
-      final twoDaysAgo = _formatDate(now.subtract(const Duration(days: 2)));
+      final today = formatDate(now);
+      final yesterday = formatDate(now.subtract(const Duration(days: 1)));
+      final twoDaysAgo = formatDate(now.subtract(const Duration(days: 2)));
       
       final streak = StreakModel(
         currentStreak: 3,

@@ -95,7 +95,8 @@ class AuthProvider extends ChangeNotifier {
     if (e.message.contains('"code"')) {
       try {
         // Extract message from JSON
-        final match = RegExp(r'"message"\s*:\s*"([^"]+)"').firstMatch(e.message);
+        final pattern = r'"message"\s*:\s*"([^"]+)"';
+        final match = RegExp(pattern).firstMatch(e.message);
         if (match != null) {
           final errorMsg = match.group(1)!;
           if (errorMsg.contains('Database error')) {

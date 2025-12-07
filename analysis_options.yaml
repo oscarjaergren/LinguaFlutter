@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Allow print in debug code
+    avoid_print: false
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "**/*.mocks.dart"
+  errors:
+    # Treat deprecated_member_use_from_same_package as info (not warning)
+    deprecated_member_use_from_same_package: info
+    # Tests in lib/ use dev_dependencies - this is intentional for VSA
+    depend_on_referenced_packages: ignore

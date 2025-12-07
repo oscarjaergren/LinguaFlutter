@@ -24,7 +24,7 @@ class CardCreationViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool _isEditing = false;
   String? _errorMessage;
-  CardModel? _cardToEdit;
+  final CardModel? _cardToEdit;
 
   // Validation state
   bool _frontTextValid = false;
@@ -204,7 +204,7 @@ class CardCreationViewModel extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      await _cardManagement.deleteCard(_cardToEdit!.id);
+      await _cardManagement.deleteCard(_cardToEdit.id);
       _setLoading(false);
     } catch (e) {
       _setLoading(false);

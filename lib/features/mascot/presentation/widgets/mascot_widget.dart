@@ -282,7 +282,7 @@ class _MascotWidgetState extends State<MascotWidget>
             left: 0,
             right: 0,
             child: Center(
-              child: Container(
+              child: SizedBox(
                 width: 20,
                 height: 12,
                 child: CustomPaint(
@@ -297,7 +297,7 @@ class _MascotWidgetState extends State<MascotWidget>
   }
 
   Widget _buildMascot() {
-    return Container(
+    return SizedBox(
       width: widget.size,
       height: widget.size,
       child: AnimatedBuilder(

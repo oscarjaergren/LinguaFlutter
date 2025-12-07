@@ -25,7 +25,7 @@ class SupabaseStreakService implements StreakService {
   /// Check if user is authenticated
   bool get isAuthenticated => SupabaseService.isAuthenticated;
 
-  /// Load streak data for current user
+  @override
   Future<StreakModel> loadStreak() async {
     try {
       final response = await _client
@@ -47,7 +47,7 @@ class SupabaseStreakService implements StreakService {
     }
   }
 
-  /// Save streak data
+  @override
   Future<void> saveStreak(StreakModel streak) async {
     try {
       final data = _streakToSupabase(streak);
@@ -63,7 +63,7 @@ class SupabaseStreakService implements StreakService {
     }
   }
 
-  /// Update streak with a review session
+  @override
   Future<StreakModel> updateStreakWithReview({
     required int cardsReviewed,
     DateTime? reviewDate,
@@ -77,14 +77,14 @@ class SupabaseStreakService implements StreakService {
     return updatedStreak;
   }
 
-  /// Reset streak data
+  @override
   Future<void> resetStreak() async {
     final currentStreak = await loadStreak();
     final resetStreak = currentStreak.resetStreak();
     await saveStreak(resetStreak);
   }
 
-  /// Clear all streak data for current user
+  @override
   Future<void> clearStreakData() async {
     try {
       await _client
@@ -153,7 +153,7 @@ class SupabaseStreakService implements StreakService {
     );
   }
 
-  /// Get streak statistics
+  @override
   Future<Map<String, dynamic>> getStreakStats() async {
     final streak = await loadStreak();
     
@@ -170,7 +170,7 @@ class SupabaseStreakService implements StreakService {
     };
   }
 
-  /// Get daily review data for charts/graphs
+  @override
   Future<Map<String, int>> getDailyReviewData({int days = 30}) async {
     final streak = await loadStreak();
     final now = DateTime.now();

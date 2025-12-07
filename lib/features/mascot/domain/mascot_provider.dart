@@ -205,7 +205,7 @@ class MascotProvider extends ChangeNotifier {
     if (!hasStudiedToday && dueCards > 0) {
       showMessage('motivation', state: MascotState.thinking);
     } else if (currentStreak > 0 && currentStreak % 7 == 0) {
-      celebrate('${currentStreak} day streak! You\'re amazing! 🔥');
+      celebrate('$currentStreak day streak! You\'re amazing! 🔥');
     } else if (dueCards == 0 && totalCards > 0) {
       showMessage('celebration', state: MascotState.celebrating);
     } else if (totalCards == 0) {
