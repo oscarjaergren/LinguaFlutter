@@ -249,26 +249,5 @@ void main() {
       expect(masteredCard.masteryLevel, 'Mastered'); // 90% success
     });
 
-    test('should return correct numeric mastery level for database', () {
-      final newCard = CardModel.create(
-        frontText: 'Test',
-        backText: 'Test',
-        language: 'de',
-        category: 'Test',
-      );
-      expect(newCard.masteryLevelNumeric, 0); // New
-
-      final difficultCard = newCard.copyWith(reviewCount: 10, correctCount: 3);
-      expect(difficultCard.masteryLevelNumeric, 1); // Difficult
-
-      final learningCard = newCard.copyWith(reviewCount: 10, correctCount: 5);
-      expect(learningCard.masteryLevelNumeric, 2); // Learning
-
-      final goodCard = newCard.copyWith(reviewCount: 10, correctCount: 7);
-      expect(goodCard.masteryLevelNumeric, 3); // Good
-
-      final masteredCard = newCard.copyWith(reviewCount: 10, correctCount: 9);
-      expect(masteredCard.masteryLevelNumeric, 4); // Mastered
-    });
   });
 }

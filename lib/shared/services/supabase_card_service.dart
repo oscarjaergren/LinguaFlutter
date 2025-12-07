@@ -175,9 +175,9 @@ class SupabaseCardService {
       'word_data': card.wordData?.toJson(),
       'next_review': card.nextReview?.toIso8601String(),
       'review_count': card.reviewCount,
+      'correct_count': card.correctCount,
       'ease_factor': 2.5, // Default SM-2 ease factor
       'interval_days': _calculateIntervalDays(card),
-      'mastery_level': card.masteryLevelNumeric,
       'is_archived': card.isArchived,
       'is_favorite': card.isFavorite,
       'created_at': card.createdAt.toIso8601String(),
@@ -217,7 +217,7 @@ class SupabaseCardService {
           ? DateTime.parse(json['next_review'] as String)
           : null,
       reviewCount: json['review_count'] as int? ?? 0,
-      correctCount: 0, // Will be calculated from review history
+      correctCount: json['correct_count'] as int? ?? 0,
       isArchived: json['is_archived'] as bool? ?? false,
       isFavorite: json['is_favorite'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
