@@ -36,6 +36,18 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
   final FocusNode _textFocusNode = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    // Listen to text changes to update button state
+    _textController.addListener(_onTextChanged);
+  }
+  
+  void _onTextChanged() {
+    // Trigger rebuild to update button enabled state
+    setState(() {});
+  }
+
+  @override
   void didUpdateWidget(ExerciseContentWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Reset state when card changes
@@ -49,6 +61,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _textController.dispose();
     _textFocusNode.dispose();
     super.dispose();

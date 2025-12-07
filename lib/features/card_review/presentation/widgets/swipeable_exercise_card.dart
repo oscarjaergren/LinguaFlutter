@@ -38,7 +38,7 @@ class SwipeableExerciseCard extends StatefulWidget {
 
 /// State class for SwipeableExerciseCard - public to allow keyboard swipe triggering
 class SwipeableExerciseCardState extends State<SwipeableExerciseCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   double _swipeOffset = 0.0;
   double _swipeVerticalOffset = 0.0;
   bool _isDragging = false;
@@ -47,6 +47,13 @@ class SwipeableExerciseCardState extends State<SwipeableExerciseCard>
   late AnimationController _resetController;
   late Animation<double> _resetAnimation;
   double _animationStartOffset = 0.0;
+  
+  // Swipe completion animation
+  AnimationController? _swipeController;
+  Animation<double>? _swipeAnimation;
+  double _swipeStartOffset = 0.0;
+  double _swipeTargetOffset = 0.0;
+  bool? _swipeIsCorrect;
 
   @override
   void initState() {
@@ -65,6 +72,7 @@ class SwipeableExerciseCardState extends State<SwipeableExerciseCard>
   @override
   void dispose() {
     _resetController.dispose();
+    _swipeController?.dispose();
     super.dispose();
   }
 
@@ -123,39 +131,52 @@ class SwipeableExerciseCardState extends State<SwipeableExerciseCard>
     }
   }
 
-  Future<void> _completeSwipe(bool isCorrect) async {
+  void _completeSwipe(bool isCorrect) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final targetOffset = isCorrect ? (screenWidth + 200) : -(screenWidth + 200);
+    _swipeTargetOffset = isCorrect ? (screenWidth + 200) : -(screenWidth + 200);
+    _swipeStartOffset = _swipeOffset;
+    _swipeIsCorrect = isCorrect;
     
-    // Animate card off screen
-    final duration = const Duration(milliseconds: 400);
-    final startTime = DateTime.now();
-    final startOffset = _swipeOffset;
+    // Dispose previous controller if exists
+    _swipeController?.dispose();
     
-    while (DateTime.now().difference(startTime) < duration) {
-      if (!mounted) return;
-      
-      final elapsed = DateTime.now().difference(startTime).inMilliseconds;
-      final progress = (elapsed / duration.inMilliseconds).clamp(0.0, 1.0);
-      final easedProgress = Curves.easeInBack.transform(progress);
-      
-      // Create arc motion
-      final arcHeight = 100.0;
-      final verticalOffset = 4 * progress * (progress - 1) * arcHeight;
-      
-      setState(() {
-        _swipeOffset = startOffset + (targetOffset - startOffset) * easedProgress;
-        _swipeVerticalOffset = verticalOffset;
-      });
-      
-      await Future.delayed(const Duration(milliseconds: 16));
-    }
-
-    // Trigger callback
-    if (mounted) {
-      if (isCorrect) {
+    // Create new animation controller for swipe completion
+    _swipeController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    
+    _swipeAnimation = CurvedAnimation(
+      parent: _swipeController!,
+      curve: Curves.easeInBack,
+    );
+    
+    _swipeController!.addListener(_onSwipeAnimation);
+    _swipeController!.addStatusListener(_onSwipeAnimationStatus);
+    _swipeController!.forward();
+  }
+  
+  void _onSwipeAnimation() {
+    if (_swipeAnimation == null) return;
+    
+    final progress = _swipeAnimation!.value;
+    
+    // Create arc motion
+    const arcHeight = 100.0;
+    final verticalOffset = 4 * progress * (progress - 1) * arcHeight;
+    
+    setState(() {
+      _swipeOffset = _swipeStartOffset + (_swipeTargetOffset - _swipeStartOffset) * progress;
+      _swipeVerticalOffset = verticalOffset;
+    });
+  }
+  
+  void _onSwipeAnimationStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed) {
+      // Trigger callback
+      if (_swipeIsCorrect == true) {
         widget.onSwipeRight();
-      } else {
+      } else if (_swipeIsCorrect == false) {
         widget.onSwipeLeft();
       }
       
@@ -165,6 +186,10 @@ class SwipeableExerciseCardState extends State<SwipeableExerciseCard>
         _swipeVerticalOffset = 0;
         _feedbackColor = null;
       });
+      
+      // Clean up
+      _swipeController?.removeListener(_onSwipeAnimation);
+      _swipeController?.removeStatusListener(_onSwipeAnimationStatus);
     }
   }
 
