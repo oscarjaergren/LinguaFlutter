@@ -1,4 +1,4 @@
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/card_model.dart';
 import '../services/supabase_card_service.dart';
 
 /// Repository interface for card management operations

@@ -139,9 +139,9 @@ features/[feature_name]/
 │   └── providers/         # State management (ChangeNotifiers)
 ├── presentation/
 │   ├── screens/           # Full-page widgets
-│   ├── widgets/           # Feature UI components
-│   └── view_models/       # UI logic (MVVM)
-├── test/                  # Feature tests
+│   ├── presentation/        # Feature UI components
+│   └── view_models/         # UI logic (MVVM)
+├── test/                  # Feature tests (co-located)
 └── [feature_name].dart    # Barrel export
 ```
 
@@ -170,6 +170,12 @@ features/[feature_name]/
 ```
 
 **Goal:** Features depend on `core/`, not on each other.
+
+### Tests: Co-locate with Features
+
+- **Preferred:** Unit/widget tests live inside each feature’s `test/` folder.
+- **Integration:** Cross-feature and end-to-end tests live in `test/integration/`.
+- **Current state:** Some tests are still in the root `test/` directory; migrate them into their feature folders over time to keep tests close to the code they cover.
 
 ---
 

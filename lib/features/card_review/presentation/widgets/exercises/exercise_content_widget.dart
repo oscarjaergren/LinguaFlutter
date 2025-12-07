@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/domain/models/card_model.dart';
 import '../../../../../shared/domain/models/exercise_type.dart';
-import '../../../../../shared/widgets/speaker_button.dart';
+import '../../../../tts/presentation/widgets/speaker_button.dart';
 import '../../../domain/providers/practice_session_provider.dart';
 
 /// Unified exercise content widget that renders the appropriate exercise

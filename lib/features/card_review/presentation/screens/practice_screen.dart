@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/shared.dart';
+import '../../../../shared/domain/models/exercise_type.dart';
 import '../../domain/providers/practice_session_provider.dart';
 import '../widgets/swipeable_exercise_card.dart';
 import '../widgets/exercises/exercise_content_widget.dart';

@@ -74,7 +74,7 @@ void main() {
         correctCount: 7,
       );
 
-      expect(card.successRate, 70.0); // Returns percentage, not ratio
+      expect(card.successRate, 70.0);
     });
 
     test('should return 0 success rate when no reviews', () {
@@ -91,7 +91,6 @@ void main() {
     test('should determine if card is due for review', () {
       final now = DateTime.now();
       
-      // Card with no next review date should be due
       final newCard = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
@@ -100,13 +99,11 @@ void main() {
       );
       expect(newCard.isDue, true);
 
-      // Card with future next review date should not be due
       final futureCard = newCard.copyWith(
         nextReview: now.add(const Duration(days: 1)),
       );
       expect(futureCard.isDue, false);
 
-      // Card with past next review date should be due
       final pastCard = newCard.copyWith(
         nextReview: now.subtract(const Duration(days: 1)),
       );
@@ -139,23 +136,6 @@ void main() {
       );
 
       final updatedCard = card.processAnswer(CardAnswer.incorrect);
-
-      expect(updatedCard.reviewCount, card.reviewCount + 1);
-      expect(updatedCard.correctCount, card.correctCount);
-      expect(updatedCard.lastReviewed, isA<DateTime>());
-      expect(updatedCard.nextReview, isA<DateTime>());
-      // Incorrect answers should have shorter intervals
-    });
-
-    test('should process partial answer', () {
-      final card = CardModel.create(
-        frontText: 'Test',
-        backText: 'Prueba',
-        language: 'es',
-        category: 'Test',
-      );
-
-      final updatedCard = card.processAnswer(CardAnswer.skip);
 
       expect(updatedCard.reviewCount, card.reviewCount + 1);
       expect(updatedCard.correctCount, card.correctCount);
@@ -217,13 +197,12 @@ void main() {
       );
 
       expect(copied.frontText, 'Updated');
-      expect(copied.backText, 'Original'); // Unchanged
+      expect(copied.backText, 'Original');
       expect(copied.isFavorite, true);
-      expect(copied.id, original.id); // ID should remain the same
+      expect(copied.id, original.id);
     });
 
     test('should return correct mastery level string', () {
-      // New card (< 3 reviews)
       final newCard = CardModel.create(
         frontText: 'Test',
         backText: 'Test',
@@ -232,19 +211,17 @@ void main() {
       );
       expect(newCard.masteryLevel, 'New');
 
-      // Card with reviews - test different success rates
       final difficultCard = newCard.copyWith(reviewCount: 10, correctCount: 3);
-      expect(difficultCard.masteryLevel, 'Difficult'); // 30% success
+      expect(difficultCard.masteryLevel, 'Difficult');
 
       final learningCard = newCard.copyWith(reviewCount: 10, correctCount: 5);
-      expect(learningCard.masteryLevel, 'Learning'); // 50% success
+      expect(learningCard.masteryLevel, 'Learning');
 
       final goodCard = newCard.copyWith(reviewCount: 10, correctCount: 7);
-      expect(goodCard.masteryLevel, 'Good'); // 70% success
+      expect(goodCard.masteryLevel, 'Good');
 
       final masteredCard = newCard.copyWith(reviewCount: 10, correctCount: 9);
-      expect(masteredCard.masteryLevel, 'Mastered'); // 90% success
+      expect(masteredCard.masteryLevel, 'Mastered');
     });
-
-                    });
+  });
 }

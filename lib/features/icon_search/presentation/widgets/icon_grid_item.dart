@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../shared/shared.dart';
+import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
+import 'iconify_icon.dart';
 
 /// Grid item widget for displaying an icon in the icon search results
 class IconGridItem extends StatelessWidget {

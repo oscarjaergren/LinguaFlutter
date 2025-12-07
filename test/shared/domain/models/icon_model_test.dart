@@ -55,7 +55,7 @@ void main() {
       );
 
       expect(icon.id, 'mdi:home');
-      expect(icon.name, 'home'); // Name should be formatted from ID
+      expect(icon.name, 'home');
       expect(icon.set, 'mdi');
       expect(icon.category, 'Material Design Icons');
       expect(icon.tags, ['house', 'building']);
@@ -67,7 +67,7 @@ void main() {
 
       final icon = IconModel.fromIconify(iconId: iconId);
 
-      expect(icon.name, 'account plus outline'); // Should replace - and _ with spaces
+      expect(icon.name, 'account plus outline');
     });
 
     test('should handle icon ID without collection prefix', () {
@@ -93,7 +93,7 @@ void main() {
 
       const icon2 = IconModel(
         id: 'mdi:home',
-        name: 'Home Different Name', // Different name, same ID
+        name: 'Home Different Name',
         set: 'mdi',
         category: 'Actions',
         tags: ['house'],
@@ -109,8 +109,8 @@ void main() {
         svgUrl: 'https://api.iconify.design/mdi:heart.svg',
       );
 
-      expect(icon1, equals(icon2)); // Same ID = equal
-      expect(icon1, isNot(equals(icon3))); // Different ID = not equal
+      expect(icon1, equals(icon2));
+      expect(icon1, isNot(equals(icon3)));
       expect(icon1.hashCode, equals(icon2.hashCode));
       expect(icon1.hashCode, isNot(equals(icon3.hashCode)));
     });

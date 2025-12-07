@@ -1,4 +1,4 @@
-import '../../../../shared/shared.dart';
+import '../../../../shared/services/animation_service.dart';
 
 /// Service for mascot behavior and animation logic
 class MascotService {

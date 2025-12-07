@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../../icon_search/icon_search.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
-import '../../../../shared/widgets/iconify_icon.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../domain/providers/card_management_provider.dart';
 

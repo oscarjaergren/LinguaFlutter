@@ -93,7 +93,6 @@ void main() {
       test('should return true only for multipleChoiceIcon', () {
         expect(ExerciseType.multipleChoiceIcon.requiresIcon, true);
 
-        // All others should be false
         for (final type in ExerciseType.values) {
           if (type != ExerciseType.multipleChoiceIcon) {
             expect(type.requiresIcon, false, reason: '${type.name} should not require icon');
@@ -106,7 +105,6 @@ void main() {
       test('should return true only for readingRecognition', () {
         expect(ExerciseType.readingRecognition.benefitsFromIcon, true);
 
-        // All others should be false
         for (final type in ExerciseType.values) {
           if (type != ExerciseType.readingRecognition) {
             expect(type.benefitsFromIcon, false, reason: '${type.name} should not benefit from icon');

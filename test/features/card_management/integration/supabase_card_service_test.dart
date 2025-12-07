@@ -10,7 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/features/card_management/data/services/supabase_card_service.dart';
 
-import 'supabase_test_helper.dart';
+import '../../../shared/test_helpers/supabase_test_helper.dart';
 
 void main() {
   late SupabaseCardService cardService;

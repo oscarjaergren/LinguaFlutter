@@ -1,6 +1,6 @@
 # Integration Tests
 
-This directory contains integration tests that run against a real PostgreSQL database using Docker.
+This directory contains shared test helpers for integration tests that run against a real PostgreSQL database using Docker.
 
 ## Prerequisites
 
@@ -26,13 +26,7 @@ This directory contains integration tests that run against a real PostgreSQL dat
 3. **Run integration tests:**
 
    ```bash
-   flutter test --tags integration
-   ```
-
-   Or run a specific test file:
-
-   ```bash
-   flutter test test/integration/supabase_card_service_test.dart
+   flutter test lib/ --tags integration
    ```
 
 4. **Stop containers when done:**
@@ -69,7 +63,7 @@ A test user is automatically created by the migration:
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'supabase_test_helper.dart';
+import 'package:lingua_flutter/shared/test/test_helpers/supabase_test_helper.dart';
 
 void main() {
   setUpAll(() async {
@@ -87,24 +81,3 @@ void main() {
   });
 }
 ```
-
-## Troubleshooting
-
-### Containers not starting
-
-```bash
-# Check logs
-docker-compose -f docker-compose.test.yml logs
-
-# Restart fresh
-docker-compose -f docker-compose.test.yml down -v
-docker-compose -f docker-compose.test.yml up -d
-```
-
-### Database not ready
-
-The `SupabaseTestHelper.waitForDatabase()` method will wait up to 30 seconds for the database to be ready. If tests still fail, increase the timeout or check container health.
-
-### Port conflicts
-
-If ports are already in use, modify `docker-compose.test.yml` to use different ports and update `test_config.dart` accordingly.
