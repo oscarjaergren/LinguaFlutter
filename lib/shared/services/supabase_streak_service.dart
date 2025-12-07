@@ -47,8 +47,8 @@ class SupabaseStreakService implements StreakService {
 
       return _streakFromSupabase(response);
     } catch (e) {
-      LoggerService.error('Failed to load streak from Supabase', e);
-      // Return initial streak on error
+      // Expected on first load or stale session - return initial streak
+      LoggerService.warning('Could not load streak, using initial: $e');
       return StreakModel.initial();
     }
   }

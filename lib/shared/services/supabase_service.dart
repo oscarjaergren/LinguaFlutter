@@ -29,11 +29,28 @@ class SupabaseService {
           // Use implicit flow for web (handles URL fragments with tokens)
           authFlowType: kIsWeb ? AuthFlowType.implicit : AuthFlowType.pkce,
         ),
-        debug: kDebugMode, // Enable debug logging in dev
+        debug: kDebugMode,
       );
 
       _client = Supabase.instance.client;
       _initialized = true;
+      
+      // Handle stale refresh tokens by listening for auth errors
+      _client!.auth.onAuthStateChange.listen((data) {
+        // AuthChangeEvent.tokenRefreshFailed indicates stale token
+        if (data.event == AuthChangeEvent.signedOut) {
+          LoggerService.debug('Auth state: signed out');
+        }
+      }, onError: (error) {
+        // Stale refresh token - this is expected after restart with old cache
+        if (error is AuthException && 
+            error.message.contains('Refresh Token')) {
+          LoggerService.debug('Stale session detected, clearing auth state');
+          // Session will be cleared automatically by Supabase
+        } else {
+          LoggerService.warning('Auth error: $error');
+        }
+      });
       
       // Log current auth state
       final user = _client!.auth.currentUser;
@@ -43,6 +60,15 @@ class SupabaseService {
         LoggerService.info('✅ Supabase initialized - No user session');
       }
     } catch (e) {
+      // Handle stale token during initialization
+      if (e is AuthException && e.message.contains('Refresh Token')) {
+        LoggerService.debug('Stale session on init, starting fresh');
+        _client = Supabase.instance.client;
+        _initialized = true;
+        // Clear the stale session
+        _client!.auth.signOut();
+        return;
+      }
       LoggerService.error('Failed to initialize Supabase', e);
       rethrow;
     }
