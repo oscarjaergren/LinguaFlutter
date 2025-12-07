@@ -4,10 +4,6 @@
 export 'domain/providers/review_session_provider.dart';
 export 'domain/providers/exercise_session_provider.dart';
 
-// Data Layer
-export 'data/repositories/review_repository.dart';
-export 'data/services/review_service.dart';
-
 // Presentation Layer - Screens
 export 'presentation/screens/card_review_screen.dart';
 export 'presentation/screens/exercise_session_screen.dart';
