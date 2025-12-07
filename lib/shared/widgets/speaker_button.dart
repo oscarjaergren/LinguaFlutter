@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/google_cloud_tts_service.dart';
+import 'package:lingua_flutter/features/tts/tts.dart';
 
 /// A button that speaks text when pressed using text-to-speech
 /// Uses Google Cloud TTS Neural2 voices if configured, falls back to native TTS

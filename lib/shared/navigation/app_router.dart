@@ -8,7 +8,6 @@ import '../../features/card_management/card_management.dart';
 import '../../features/card_review/presentation/screens/practice_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
 import '../services/logger_service.dart';
-import '../services/supabase_service.dart';
 
 /// Application routes configuration using go_router
 class AppRouter {
@@ -24,7 +23,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: auth, // Start at auth - redirect will handle if already logged in
     redirect: (context, state) {
-      final isAuthenticated = SupabaseService.isAuthenticated;
+      final isAuthenticated = SupabaseAuthService.isAuthenticated;
       final path = state.matchedLocation;
       final isAuthRoute = path == auth;
       
@@ -153,7 +152,7 @@ class AppRouter {
       if (uri.contains('access_token') || uri.contains('refresh_token')) {
         // Auth callback - redirect based on auth state
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.go(SupabaseService.isAuthenticated ? dashboard : auth);
+          context.go(SupabaseAuthService.isAuthenticated ? dashboard : auth);
         });
         return const Scaffold(
           body: Center(child: CircularProgressIndicator()),

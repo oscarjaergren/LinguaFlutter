@@ -1,8 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../features/streak/domain/models/streak_model.dart';
-import '../../features/streak/data/services/streak_service.dart';
-import 'supabase_service.dart';
-import 'logger_service.dart';
+import 'package:lingua_flutter/features/auth/data/services/supabase_auth_service.dart';
+import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
+import 'streak_service.dart';
 
 /// Supabase implementation of [StreakService].
 /// 
@@ -11,11 +11,11 @@ class SupabaseStreakService implements StreakService {
   static const String _tableName = 'streaks';
 
   /// Get the Supabase client
-  SupabaseClient get _client => SupabaseService.client;
+  SupabaseClient get _client => SupabaseAuthService.client;
 
   /// Get current user ID or throw if not authenticated
   String get _userId {
-    final userId = SupabaseService.currentUserId;
+    final userId = SupabaseAuthService.currentUserId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
@@ -23,7 +23,7 @@ class SupabaseStreakService implements StreakService {
   }
 
   /// Check if user is authenticated
-  bool get isAuthenticated => SupabaseService.isAuthenticated;
+  bool get isAuthenticated => SupabaseAuthService.isAuthenticated;
 
   @override
   Future<StreakModel> loadStreak() async {

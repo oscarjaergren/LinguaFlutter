@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'tts_service.dart';
-import 'logger_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 /// ElevenLabs Text-to-Speech service with ultra-realistic AI voices
 /// Falls back to native TTS if ElevenLabs is not configured

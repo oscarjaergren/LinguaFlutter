@@ -11,7 +11,6 @@ import 'features/auth/auth.dart';
 import 'features/duplicate_detection/duplicate_detection.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
-import 'shared/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +19,8 @@ void main() async {
   LoggerService.initialize();
   LoggerService.info('🚀 LinguaFlutter app starting...');
 
-  // Initialize Supabase
-  await SupabaseService.initialize();
+  // Initialize Supabase auth
+  await SupabaseAuthService.initialize();
 
   // Create core providers
   final authProvider = AuthProvider();

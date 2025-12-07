@@ -8,7 +8,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
-import 'package:lingua_flutter/shared/services/supabase_streak_service.dart';
+import 'package:lingua_flutter/features/streak/data/services/supabase_streak_service.dart';
 
 import 'supabase_test_helper.dart';
 

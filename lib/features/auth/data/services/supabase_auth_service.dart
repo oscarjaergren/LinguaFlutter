@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'logger_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
-/// Service for managing Supabase connection and operations
-class SupabaseService {
+/// Service for managing Supabase authentication
+/// 
+/// Handles initialization, sign in, sign up, sign out, and session management.
+class SupabaseAuthService {
   static SupabaseClient? _client;
   static bool _initialized = false;
 
@@ -49,9 +51,6 @@ class SupabaseService {
         // No session to recover, that's fine
       }
       
-      // Now enable auto-refresh for future token refreshes
-      // (handled internally by Supabase after successful auth)
-      
       // Log current auth state
       final user = _client!.auth.currentUser;
       if (user != null) {
@@ -68,7 +67,7 @@ class SupabaseService {
   /// Get the Supabase client instance
   static SupabaseClient get client {
     if (!_initialized || _client == null) {
-      throw Exception('Supabase not initialized. Call SupabaseService.initialize() first.');
+      throw Exception('Supabase not initialized. Call SupabaseAuthService.initialize() first.');
     }
     return _client!;
   }

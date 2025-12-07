@@ -1,21 +1,21 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../domain/models/card_model.dart';
-import '../domain/models/word_data.dart';
-import '../domain/models/exercise_type.dart';
-import '../domain/models/exercise_score.dart';
-import 'supabase_service.dart';
-import 'logger_service.dart';
+import 'package:lingua_flutter/shared/domain/models/card_model.dart';
+import 'package:lingua_flutter/shared/domain/models/word_data.dart';
+import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
+import 'package:lingua_flutter/shared/domain/models/exercise_score.dart';
+import 'package:lingua_flutter/features/auth/data/services/supabase_auth_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 /// Service for storing and retrieving cards from Supabase
 class SupabaseCardService {
   static const String _tableName = 'cards';
 
   /// Get the Supabase client
-  SupabaseClient get _client => SupabaseService.client;
+  SupabaseClient get _client => SupabaseAuthService.client;
 
   /// Get current user ID or throw if not authenticated
   String get _userId {
-    final userId = SupabaseService.currentUserId;
+    final userId = SupabaseAuthService.currentUserId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
@@ -23,7 +23,7 @@ class SupabaseCardService {
   }
 
   /// Check if user is authenticated
-  bool get isAuthenticated => SupabaseService.isAuthenticated;
+  bool get isAuthenticated => SupabaseAuthService.isAuthenticated;
 
   /// Load all cards for current user
   Future<List<CardModel>> loadCards({String? languageCode}) async {

@@ -153,9 +153,9 @@ void main() {
       });
     });
 
-    group('SupabaseService Integration Simulation', () {
+    group('SupabaseAuthService Integration Simulation', () {
       test('should simulate stale token recovery flow', () async {
-        // This simulates what happens in SupabaseService.initialize()
+        // This simulates what happens in SupabaseAuthService.initialize()
         var sessionCleared = false;
         var errorLogged = false;
         
@@ -207,7 +207,7 @@ void main() {
 }
 
 /// Helper function to classify auth errors as recoverable (stale session) or not
-/// This mirrors the logic we use in SupabaseService
+/// This mirrors the logic we use in SupabaseAuthService
 bool _isRecoverableAuthError(AuthException error) {
   final message = error.message.toLowerCase();
   

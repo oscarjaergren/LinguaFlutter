@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'tts_service.dart';
-import 'logger_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 /// Google Cloud Text-to-Speech service with high-quality Neural2 voices
 /// Falls back to native TTS if Google Cloud is not configured

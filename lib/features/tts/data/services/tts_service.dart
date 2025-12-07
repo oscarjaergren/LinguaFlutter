@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_tts/flutter_tts.dart';
-import 'logger_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 /// Service for native platform text-to-speech functionality
 class NativeTtsService {

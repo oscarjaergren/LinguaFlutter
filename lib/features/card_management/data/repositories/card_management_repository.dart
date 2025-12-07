@@ -1,5 +1,5 @@
 import '../../../../shared/shared.dart';
-import '../../../../shared/services/supabase_card_service.dart';
+import '../services/supabase_card_service.dart';
 
 /// Repository interface for card management operations
 abstract class CardManagementRepository {

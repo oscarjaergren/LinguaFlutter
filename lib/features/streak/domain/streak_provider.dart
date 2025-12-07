@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'models/streak_model.dart';
 import '../data/services/streak_service.dart';
-import '../../../shared/services/supabase_streak_service.dart';
+import '../data/services/supabase_streak_service.dart';
 
 /// Provider for managing streak state and operations.
 /// Assumes user is authenticated - callers must ensure this.

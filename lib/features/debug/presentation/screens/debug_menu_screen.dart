@@ -1,9 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../../shared/services/google_cloud_tts_service.dart';
-import '../../../../shared/services/tts_service.dart';
-import '../../../../shared/services/elevenlabs_tts_service.dart';
-import '../../../../shared/services/logger_service.dart';
+import 'package:lingua_flutter/features/tts/tts.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 import 'package:provider/provider.dart';
 import '../../../card_management/card_management.dart';
 import '../../../debug/data/debug_service.dart';

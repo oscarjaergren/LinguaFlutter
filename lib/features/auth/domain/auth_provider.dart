@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../shared/services/supabase_service.dart';
+import '../data/services/supabase_auth_service.dart';
 import '../../../shared/services/logger_service.dart';
 
 /// Callback type for when auth state changes
@@ -19,7 +19,7 @@ class AuthProvider extends ChangeNotifier {
 
   AuthProvider() {
     // Listen to auth state changes
-    SupabaseService.client.auth.onAuthStateChange.listen((data) async {
+    SupabaseAuthService.client.auth.onAuthStateChange.listen((data) async {
       final wasAuthenticated = _user != null;
       _user = data.session?.user;
       final isNowAuthenticated = _user != null;
@@ -33,7 +33,7 @@ class AuthProvider extends ChangeNotifier {
     });
     
     // Initialize with current user
-    _user = SupabaseService.client.auth.currentUser;
+    _user = SupabaseAuthService.client.auth.currentUser;
   }
 
   // Getters
@@ -55,7 +55,7 @@ class AuthProvider extends ChangeNotifier {
     try {
       LoggerService.debug('Attempting signup for: $email');
       
-      final response = await SupabaseService.signUp(
+      final response = await SupabaseAuthService.signUp(
         email: email,
         password: password,
       );
@@ -153,7 +153,7 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      final response = await SupabaseService.signIn(
+      final response = await SupabaseAuthService.signIn(
         email: email,
         password: password,
       );
@@ -186,7 +186,7 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      await SupabaseService.signOut();
+      await SupabaseAuthService.signOut();
       _user = null;
       LoggerService.info('User signed out');
       notifyListeners();
@@ -207,7 +207,7 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      await SupabaseService.client.auth.resetPasswordForEmail(email);
+      await SupabaseAuthService.client.auth.resetPasswordForEmail(email);
       LoggerService.info('Password reset email sent to: $email');
       return true;
     } on AuthException catch (e) {
