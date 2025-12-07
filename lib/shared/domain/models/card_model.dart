@@ -31,9 +31,6 @@ class CardModel {
   /// Tags for organizing cards
   final List<String> tags;
   
-  /// Difficulty level (1-5, where 1 is easiest)
-  final int difficulty;
-  
   /// German article for nouns (der, die, das) - only used for German language cards
   final String? germanArticle;
   
@@ -88,7 +85,6 @@ class CardModel {
     required this.language,
     required this.category,
     this.tags = const [],
-    this.difficulty = 1,
     this.germanArticle,
     this.reviewCount = 0,
     this.correctCount = 0,
@@ -113,7 +109,6 @@ class CardModel {
     required String language,
     required String category,
     List<String> tags = const [],
-    int difficulty = 1,
     String? germanArticle,
   }) {
     final now = DateTime.now();
@@ -136,7 +131,6 @@ class CardModel {
       language: language,
       category: category,
       tags: tags,
-      difficulty: difficulty,
       germanArticle: germanArticle,
       createdAt: now,
       updatedAt: now,
@@ -254,7 +248,6 @@ class CardModel {
     String? language,
     String? category,
     List<String>? tags,
-    int? difficulty,
     String? germanArticle,
     int? reviewCount,
     int? correctCount,
@@ -278,7 +271,6 @@ class CardModel {
       language: language ?? this.language,
       category: category ?? this.category,
       tags: tags ?? this.tags,
-      difficulty: difficulty ?? this.difficulty,
       germanArticle: germanArticle ?? this.germanArticle,
       reviewCount: reviewCount ?? this.reviewCount,
       correctCount: correctCount ?? this.correctCount,
@@ -317,23 +309,34 @@ class CardModel {
   bool get isDue => isDueForReview;
 
   /// Process a card answer and return updated card with spaced repetition logic
+  /// Uses a simple algorithm based on consecutive correct answers:
+  /// - 0 correct: 1 day
+  /// - 1 correct: 3 days
+  /// - 2 correct: 7 days (1 week)
+  /// - 3 correct: 14 days (2 weeks)
+  /// - 4+ correct: 30 days (1 month)
   CardModel processAnswer(CardAnswer answer) {
     final wasCorrect = answer == CardAnswer.correct;
     DateTime? nextReviewDate;
     
     if (wasCorrect) {
-      // Spaced repetition: increase interval based on difficulty and success
-      final baseInterval = switch (difficulty) {
-        1 => 1, // 1 day
-        2 => 3, // 3 days  
-        3 => 7, // 1 week
-        4 => 14, // 2 weeks
-        5 => 30, // 1 month
-        _ => 1,
+      // Calculate interval based on success rate and review history
+      // Higher success rate = longer intervals
+      final newCorrectCount = correctCount + 1;
+      final newReviewCount = reviewCount + 1;
+      final successRatio = newCorrectCount / newReviewCount;
+      
+      // Base interval grows with consecutive successes
+      final baseInterval = switch (newCorrectCount) {
+        1 => 1,   // First correct: 1 day
+        2 => 3,   // Second correct: 3 days
+        3 => 7,   // Third correct: 1 week
+        4 => 14,  // Fourth correct: 2 weeks
+        _ => 30,  // 5+ correct: 1 month base
       };
       
-      final multiplier = (correctCount / (reviewCount + 1)) + 1;
-      final intervalDays = (baseInterval * multiplier).round();
+      // Multiply by success ratio (0.0 to 1.0) + 1 for scaling
+      final intervalDays = (baseInterval * (successRatio + 1)).round();
       nextReviewDate = DateTime.now().add(Duration(days: intervalDays));
     } else {
       // If incorrect, review again tomorrow

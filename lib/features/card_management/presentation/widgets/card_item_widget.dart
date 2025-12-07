@@ -162,8 +162,8 @@ class CardItemWidget extends StatelessWidget {
                     colorScheme.onPrimaryContainer,
                   ),
                   
-                  // Difficulty indicator
-                  _buildDifficultyChip(context, card.difficulty),
+                  // Mastery level indicator
+                  _buildMasteryChip(context, card.masteryLevel),
                   
                   // Tags
                   ...card.tags.map(
@@ -212,36 +212,36 @@ class CardItemWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDifficultyChip(BuildContext context, int difficulty) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
+  Widget _buildMasteryChip(BuildContext context, String masteryLevel) {
     Color backgroundColor;
     Color textColor;
+    IconData icon;
     
-    switch (difficulty) {
-      case 1:
+    switch (masteryLevel) {
+      case 'Mastered':
         backgroundColor = Colors.green.withValues(alpha: 0.2);
         textColor = Colors.green.shade700;
+        icon = Icons.star;
         break;
-      case 2:
+      case 'Good':
         backgroundColor = Colors.lightGreen.withValues(alpha: 0.2);
         textColor = Colors.lightGreen.shade700;
+        icon = Icons.thumb_up;
         break;
-      case 3:
+      case 'Learning':
         backgroundColor = Colors.orange.withValues(alpha: 0.2);
         textColor = Colors.orange.shade700;
+        icon = Icons.school;
         break;
-      case 4:
-        backgroundColor = Colors.deepOrange.withValues(alpha: 0.2);
-        textColor = Colors.deepOrange.shade700;
-        break;
-      case 5:
+      case 'Difficult':
         backgroundColor = Colors.red.withValues(alpha: 0.2);
         textColor = Colors.red.shade700;
+        icon = Icons.warning;
         break;
-      default:
-        backgroundColor = colorScheme.surfaceContainerHighest;
-        textColor = colorScheme.onSurfaceVariant;
+      default: // 'New'
+        backgroundColor = Colors.blue.withValues(alpha: 0.2);
+        textColor = Colors.blue.shade700;
+        icon = Icons.fiber_new;
     }
 
     return Container(
@@ -254,13 +254,13 @@ class CardItemWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.signal_cellular_alt,
+            icon,
             size: 12,
             color: textColor,
           ),
           const SizedBox(width: 4),
           Text(
-            'Level $difficulty',
+            masteryLevel,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: textColor,
               fontWeight: FontWeight.w500,

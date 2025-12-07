@@ -63,7 +63,6 @@ CREATE TABLE IF NOT EXISTS cards (
   interval_days INTEGER DEFAULT 0,
   
   -- Status fields
-  mastery_level TEXT DEFAULT 'New' CHECK (mastery_level IN ('New', 'Learning', 'Reviewing', 'Mastered')),
   is_archived BOOLEAN DEFAULT FALSE,
   is_favorite BOOLEAN DEFAULT FALSE,
   

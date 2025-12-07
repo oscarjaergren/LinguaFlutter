@@ -21,7 +21,6 @@ void main() {
       expect(card.germanArticle, isNull);
       expect(card.isFavorite, false);
       expect(card.isArchived, false);
-      expect(card.difficulty, 1); // Default difficulty is 1 (easiest)
       expect(card.reviewCount, 0);
       expect(card.correctCount, 0);
       expect(card.lastReviewed, isNull);
@@ -50,7 +49,6 @@ void main() {
         icon: icon,
         germanArticle: 'das',
         isFavorite: true,
-        difficulty: 2,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -63,7 +61,6 @@ void main() {
       expect(card.icon, icon);
       expect(card.germanArticle, 'das');
       expect(card.isFavorite, true);
-      expect(card.difficulty, 2);
     });
 
     test('should calculate success rate correctly', () {
@@ -249,5 +246,5 @@ void main() {
       expect(masteredCard.masteryLevel, 'Mastered'); // 90% success
     });
 
-  });
+                    });
 }

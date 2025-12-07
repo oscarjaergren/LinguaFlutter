@@ -18,7 +18,6 @@ class CardCreationViewModel extends ChangeNotifier {
   List<String> _tags = [];
   IconModel? _selectedIcon;
   String? _germanArticle;
-  int _difficulty = 1;
   
   // UI state
   bool _isLoading = false;
@@ -73,7 +72,6 @@ class CardCreationViewModel extends ChangeNotifier {
   String get tagsAsString => _tags.join(', ');
   IconModel? get selectedIcon => _selectedIcon;
   String? get germanArticle => _germanArticle;
-  int get difficulty => _difficulty;
 
   // Validation getters
   bool get frontTextValid => _frontTextValid;
@@ -128,12 +126,6 @@ class CardCreationViewModel extends ChangeNotifier {
 
   void updateGermanArticle(String? article) {
     _germanArticle = article;
-    _clearError();
-    notifyListeners();
-  }
-
-  void updateDifficulty(int difficulty) {
-    _difficulty = difficulty.clamp(1, 5);
     _clearError();
     notifyListeners();
   }
@@ -219,7 +211,6 @@ class CardCreationViewModel extends ChangeNotifier {
     _tags = [];
     _selectedIcon = null;
     _germanArticle = null;
-    _difficulty = 1;
     _frontTextValid = false;
     _backTextValid = false;
     _categoryValid = false;
@@ -237,7 +228,6 @@ class CardCreationViewModel extends ChangeNotifier {
       language: activeLanguage,
       category: _category,
       tags: _tags,
-      difficulty: _difficulty,
       germanArticle: _germanArticle,
       createdAt: _isEditing ? _cardToEdit!.createdAt : DateTime.now(),
       updatedAt: DateTime.now(),
@@ -256,7 +246,6 @@ class CardCreationViewModel extends ChangeNotifier {
     _tags = List.from(card.tags);
     _selectedIcon = card.icon;
     _germanArticle = card.germanArticle;
-    _difficulty = card.difficulty;
     
     // Update validation state
     _frontTextValid = _frontText.isNotEmpty;
