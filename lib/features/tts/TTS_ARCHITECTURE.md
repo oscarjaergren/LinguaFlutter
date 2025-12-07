@@ -9,7 +9,6 @@ services/
 ├── tts_service.dart             # NativeTtsService (flutter_tts)
 ├── enhanced_tts_service.dart    # GoogleCloudTtsService 
 ├── tts_provider.dart            # Factory/Provider pattern
-└── [future] elevenlabs_tts_service.dart
 ```
 
 ## Services
@@ -31,82 +30,6 @@ services/
 - Singleton factory
 - Provides best available TTS
 - Easy to extend
-
-## Adding New Providers (e.g., ElevenLabs)
-
-### Step 1: Create Service Class
-
-```dart
-// elevenlabs_tts_service.dart
-import 'tts_service.dart';
-
-class ElevenLabsTtsService {
-  final NativeTtsService _fallback = NativeTtsService();
-  String? _apiKey;
-  bool _isEnabled = false;
-
-  Future<void> initialize() async {
-    // Load ElevenLabs API key
-    await _loadApiKey();
-    await _fallback.initialize();
-  }
-
-  Future<void> speak(String text, String languageCode) async {
-    if (_isEnabled && _apiKey != null) {
-      try {
-        await _speakWithElevenLabs(text, languageCode);
-      } catch (e) {
-        await _fallback.speak(text, languageCode);
-      }
-    } else {
-      await _fallback.speak(text, languageCode);
-    }
-  }
-
-  Future<void> _speakWithElevenLabs(String text, String lang) async {
-    // ElevenLabs API implementation
-  }
-
-  // ... other methods
-}
-```
-
-### Step 2: Update TtsProvider
-
-```dart
-// tts_provider.dart
-import 'elevenlabs_tts_service.dart';
-
-class TtsProvider {
-  // Option A: Use ElevenLabs if configured, else Google Cloud, else Native
-  TtsServiceBase _selectBestService() {
-    if (hasElevenLabsKey()) return ElevenLabsTtsService();
-    if (hasGoogleCloudKey()) return GoogleCloudTtsService();
-    return NativeTtsService();
-  }
-
-  // Option B: Let user choose in settings
-  void setPreferredProvider(TtsProviderType type) {
-    switch (type) {
-      case TtsProviderType.elevenLabs:
-        _service = ElevenLabsTtsService();
-      case TtsProviderType.googleCloud:
-        _service = GoogleCloudTtsService();
-      case TtsProviderType.native:
-        _service = NativeTtsService();
-    }
-  }
-}
-```
-
-### Step 3: Add to Dependencies
-
-```yaml
-# pubspec.yaml
-dependencies:
-  # ElevenLabs SDK (example)
-  elevenlabs: ^1.0.0
-```
 
 ## Architecture Benefits
 

@@ -181,7 +181,7 @@ Pure plumbing that affects all features equally. Lives in `core/services/`.
 
 **Examples:**
 - Storage services (`CardStorageService`, `PreferencesService`)
-- Text-to-speech (`TtsService`, `GoogleCloudTtsService`, `ElevenLabsTtsService`)
+- Text-to-speech (`TtsService`, `GoogleCloudTtsService`)
 - Logging and analytics
 - HTTP clients
 - Navigation/routing (`AppRouter`)

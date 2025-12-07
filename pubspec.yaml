@@ -108,7 +108,6 @@ flutter:
     - assets/data/german_words.json
     - assets/data/seed_cards.json
     - assets/google_tts_api_key.txt
-    - assets/elevenlabs_api_key.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

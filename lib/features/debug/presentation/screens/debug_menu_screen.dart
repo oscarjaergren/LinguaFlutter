@@ -372,19 +372,6 @@ class DebugMenuScreen extends StatelessWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () => _testTts(context, TtsProviderType.elevenLabs),
-                              icon: const Icon(Icons.auto_awesome),
-                              label: const Text('ElevenLabs (Ultra-Realistic)'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.purple,
-                                side: const BorderSide(color: Colors.purple),
-                              ),
-                            ),
-                          ),
                         ],
                       );
                     },
@@ -719,7 +706,7 @@ class DebugMenuScreen extends StatelessWidget {
           final nativeTts = NativeTtsService();
           await nativeTts.initialize();
           await nativeTts.speak(testPhrase, 'de');
-          
+
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -730,13 +717,13 @@ class DebugMenuScreen extends StatelessWidget {
             );
           }
           break;
-          
+
         case TtsProviderType.google:
           LoggerService.debug('Testing Google Cloud TTS...');
           final googleTts = GoogleCloudTtsService();
           await googleTts.initialize();
           await googleTts.speak(testPhrase, 'de');
-          
+
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -747,26 +734,9 @@ class DebugMenuScreen extends StatelessWidget {
             );
           }
           break;
-          
-        case TtsProviderType.elevenLabs:
-          LoggerService.debug('Testing ElevenLabs TTS...');
-          final elevenLabsTts = ElevenLabsTtsService();
-          await elevenLabsTts.initialize();
-          await elevenLabsTts.speak(testPhrase, 'de');
-          
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✨ Playing ElevenLabs ultra-realistic voice'),
-                backgroundColor: Colors.purple,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-          break;
       }
-    } catch (e) {
-      LoggerService.error('TTS test error', e);
+    } catch (e, stack) {
+      LoggerService.error('TTS test error', e, stack);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -782,5 +752,4 @@ class DebugMenuScreen extends StatelessWidget {
 enum TtsProviderType {
   native,
   google,
-  elevenLabs,
 }
