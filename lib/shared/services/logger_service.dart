@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:talker_dio_logger/talker_dio_logger.dart';
 
 /// Centralized logging service using Talker
 class LoggerService {
@@ -79,21 +78,6 @@ class LoggerService {
   /// Log user interactions
   static void logUserInteraction(String interaction, [Map<String, dynamic>? context]) {
     _talker.debug('👤 User interaction: $interaction${context != null ? ' - $context' : ''}');
-  }
-  
-  // HTTP logging setup methods
-  
-  /// Get Dio interceptor for Dio HTTP client
-  static TalkerDioLogger getDioLogger() {
-    return TalkerDioLogger(
-      talker: _talker,
-      settings: const TalkerDioLoggerSettings(
-        printRequestHeaders: true,
-        printResponseHeaders: false,
-        printRequestData: kDebugMode,
-        printResponseData: kDebugMode,
-      ),
-    );
   }
   
   // Advanced logging methods
