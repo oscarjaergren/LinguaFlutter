@@ -2,7 +2,7 @@
 -- Run this in Supabase SQL Editor (Dashboard > SQL Editor > New Query)
 
 -- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
 
 -- ============================================
 -- LANGUAGES TABLE (reference data)
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
   display_name TEXT,
-  preferred_language TEXT REFERENCES languages(code) DEFAULT 'de',
+  preferred_language TEXT REFERENCES languages(code),
   theme_mode TEXT DEFAULT 'system' CHECK (theme_mode IN ('light', 'dark', 'system')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 -- CARDS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS cards (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   front_text TEXT NOT NULL,
   back_text TEXT NOT NULL,
@@ -82,7 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_cards_user_language ON cards(user_id, language_co
 -- STREAKS TABLE
 -- ============================================
 CREATE TABLE IF NOT EXISTS streaks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   current_streak INTEGER DEFAULT 0,
   best_streak INTEGER DEFAULT 0,
@@ -184,17 +184,20 @@ CREATE TRIGGER streaks_updated_at
 
 -- Auto-create profile and streak on user signup
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO profiles (id, email)
+  INSERT INTO public.profiles (id, email)
   VALUES (NEW.id, NEW.email);
   
-  INSERT INTO streaks (user_id)
+  INSERT INTO public.streaks (user_id)
   VALUES (NEW.id);
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users

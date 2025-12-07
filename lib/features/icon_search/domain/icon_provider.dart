@@ -4,7 +4,11 @@ import '../data/iconify_service.dart';
 
 /// Provider for managing icon search state and selected icons
 class IconProvider extends ChangeNotifier {
-  final IconifyService _iconifyService = IconifyService();
+  final IconifyService _iconifyService;
+  
+  /// Create an IconProvider with optional service injection for testing.
+  IconProvider({IconifyService? iconifyService}) 
+      : _iconifyService = iconifyService ?? IconifyService();
   
   // Search state
   List<IconModel> _searchResults = [];

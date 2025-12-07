@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/navigation/app_router.dart';
+import '../../../auth/auth.dart';
 import '../../../card_management/card_management.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../mascot/presentation/widgets/mascot_widget.dart';
@@ -35,6 +36,50 @@ class DashboardScreen extends StatelessWidget {
                 onPressed: () => themeProvider.toggleTheme(currentBrightness: brightness),
                 icon: Icon(isVisuallyDark ? Icons.light_mode : Icons.dark_mode),
                 tooltip: isVisuallyDark ? 'Switch to light mode' : 'Switch to dark mode',
+              );
+            },
+          ),
+          // Auth/Profile button
+          Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              if (authProvider.isAuthenticated) {
+                return PopupMenuButton<String>(
+                  icon: const Icon(Icons.account_circle),
+                  tooltip: 'Account',
+                  onSelected: (value) {
+                    if (value == 'signout') {
+                      authProvider.signOut();
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      enabled: false,
+                      child: Text(
+                        authProvider.userEmail ?? 'Signed in',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'signout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout),
+                          SizedBox(width: 8),
+                          Text('Sign Out'),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return IconButton(
+                onPressed: () => context.pushAuth(),
+                icon: const Icon(Icons.login),
+                tooltip: 'Sign in to sync data',
               );
             },
           ),

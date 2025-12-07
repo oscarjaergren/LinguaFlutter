@@ -1,15 +1,28 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:lingua_flutter/features/icon_search/domain/icon_provider.dart';
+import 'package:lingua_flutter/features/icon_search/data/iconify_service.dart';
 import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
+
+@GenerateMocks([IconifyService])
+import 'icon_provider_test.mocks.dart';
 
 void main() {
   group('IconProvider', () {
     late IconProvider provider;
+    late MockIconifyService mockService;
 
     setUp(() {
-      provider = IconProvider();
-      // Note: We would need to modify IconProvider to accept a custom service
-      // for proper testing. For now, these tests demonstrate the testing approach.
+      mockService = MockIconifyService();
+      provider = IconProvider(iconifyService: mockService);
+      
+      // Default stubs
+      when(mockService.searchIcons(any)).thenAnswer((_) async => <IconModel>[]);
+    });
+
+    tearDown(() {
+      provider.dispose();
     });
 
     test('should have initial state', () {
@@ -21,7 +34,6 @@ void main() {
     });
 
     test('should clear search properly', () {
-      // Set some initial state
       provider.selectIcon(const IconModel(
         id: 'test:icon',
         name: 'Test',
@@ -37,7 +49,6 @@ void main() {
       expect(provider.searchQuery, isEmpty);
       expect(provider.errorMessage, isNull);
       expect(provider.isLoading, false);
-      // Note: clearSearch doesn't clear selectedIcon, which is correct behavior
     });
 
     test('should select and clear icon', () {
@@ -63,6 +74,7 @@ void main() {
       expect(provider.searchResults, isEmpty);
       expect(provider.searchQuery, isEmpty);
       expect(provider.errorMessage, isNull);
+      verifyNever(mockService.searchIcons(any));
     });
 
     test('should handle whitespace-only search query', () async {
@@ -71,17 +83,38 @@ void main() {
       expect(provider.searchResults, isEmpty);
       expect(provider.searchQuery, isEmpty);
       expect(provider.errorMessage, isNull);
+      verifyNever(mockService.searchIcons(any));
     });
 
-    // Note: The following tests would require dependency injection
-    // to properly test the async behavior with mocked services
-    
-    test('should update search query when searching', () async {
-      // This test demonstrates how we'd test if we had proper DI
-      const query = 'home';
-      await provider.searchIcons(query);
-      
-      expect(provider.searchQuery, query);
+    test('should search icons via service', () async {
+      const testIcons = [
+        IconModel(
+          id: 'mdi:home',
+          name: 'Home',
+          set: 'mdi',
+          category: 'Actions',
+          tags: ['house'],
+          svgUrl: 'https://api.iconify.design/mdi:home.svg',
+        ),
+      ];
+      when(mockService.searchIcons('home')).thenAnswer((_) async => testIcons);
+
+      await provider.searchIcons('home');
+
+      verify(mockService.searchIcons('home')).called(1);
+      expect(provider.searchQuery, 'home');
+      expect(provider.searchResults, testIcons);
+      expect(provider.errorMessage, isNull);
+    });
+
+    test('should handle search error', () async {
+      when(mockService.searchIcons('error'))
+          .thenThrow(Exception('Network error'));
+
+      await provider.searchIcons('error');
+
+      expect(provider.searchResults, isEmpty);
+      expect(provider.errorMessage, contains('Error searching icons'));
     });
 
     test('should notify listeners when state changes', () {
@@ -107,10 +140,6 @@ void main() {
 
       provider.clearSearch();
       expect(notificationCount, 3);
-    });
-
-    tearDown(() {
-      provider.dispose();
     });
   });
 }

@@ -6,7 +6,7 @@ class ReviewService {
   final ReviewRepository _repository;
   
   ReviewService({ReviewRepository? repository})
-      : _repository = repository ?? LocalReviewRepository();
+      : _repository = repository ?? SupabaseReviewRepository();
 
   /// Get cards ready for review based on spaced repetition algorithm
   Future<List<CardModel>> getReviewCards({

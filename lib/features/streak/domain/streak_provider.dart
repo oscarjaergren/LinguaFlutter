@@ -1,10 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'models/streak_model.dart';
-import '../data/streak_service.dart';
+import '../data/services/streak_service.dart';
+import '../../../shared/services/supabase_streak_service.dart';
 
-/// Provider for managing streak state and operations
+/// Provider for managing streak state and operations.
+/// Assumes user is authenticated - callers must ensure this.
 class StreakProvider extends ChangeNotifier {
-  final StreakService _streakService = StreakService();
+  final StreakService _streakService;
+  
+  /// Create a StreakProvider with optional service injection for testing.
+  /// 
+  /// By default uses [SupabaseStreakService]. Pass a mock implementation
+  /// for unit testing.
+  StreakProvider({StreakService? streakService}) 
+      : _streakService = streakService ?? SupabaseStreakService();
   
   StreakModel _streak = StreakModel.initial();
   bool _isLoading = false;
@@ -57,15 +66,16 @@ class StreakProvider extends ChangeNotifier {
     _clearError();
     
     try {
-      // Check for new milestones before updating
-      final newMilestones = await _streakService.checkNewMilestones(cardsReviewed);
-      _newMilestones = newMilestones;
+      // Track previous streak for milestone detection
+      final previousStreak = _streak.currentStreak;
       
-      // Update streak
       _streak = await _streakService.updateStreakWithReview(
         cardsReviewed: cardsReviewed,
         reviewDate: reviewDate,
       );
+      
+      // Check for new milestones
+      _newMilestones = _streak.getNewMilestones(previousStreak);
       
       notifyListeners();
     } catch (e) {
@@ -137,11 +147,6 @@ class StreakProvider extends ChangeNotifier {
     notifyListeners();
   }
   
-  /// Reset session state (call when screen is reopened)
-  void resetSession() {
-    // Session reset functionality if needed
-  }
-
   /// Record a card review (for integration with CardManagementProvider)
   Future<void> recordCardReview() async {
     await updateStreakWithReview(cardsReviewed: 1);
@@ -195,7 +200,7 @@ class StreakProvider extends ChangeNotifier {
   
   @override
   void dispose() {
-    _streakService.dispose();
+    // No resources to dispose
     super.dispose();
   }
 }

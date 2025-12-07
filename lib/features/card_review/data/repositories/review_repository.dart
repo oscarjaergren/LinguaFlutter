@@ -1,4 +1,5 @@
 import '../../../../shared/shared.dart';
+import '../../../../shared/services/supabase_card_service.dart';
 
 /// Repository interface for card review data operations
 abstract class ReviewRepository {
@@ -18,22 +19,22 @@ abstract class ReviewRepository {
   Future<Map<String, dynamic>> getReviewStats();
 }
 
-/// Local implementation of review repository
-class LocalReviewRepository implements ReviewRepository {
-  final CardStorageService _storageService;
+/// Supabase implementation of review repository.
+/// Assumes user is authenticated - callers must ensure this.
+class SupabaseReviewRepository implements ReviewRepository {
+  final SupabaseCardService _cardService;
   
-  LocalReviewRepository({CardStorageService? storageService})
-      : _storageService = storageService ?? CardStorageService();
+  SupabaseReviewRepository({SupabaseCardService? cardService})
+      : _cardService = cardService ?? SupabaseCardService();
 
   @override
   Future<List<CardModel>> getDueCards() async {
-    final allCards = await _storageService.loadCards();
-    return allCards.where((card) => card.isDue && !card.isArchived).toList();
+    return await _cardService.getDueCards();
   }
 
   @override
   Future<List<CardModel>> getCardsByCategory(String category) async {
-    final allCards = await _storageService.loadCards();
+    final allCards = await _cardService.loadCards();
     return allCards
         .where((card) => card.category == category && !card.isArchived)
         .toList();
@@ -41,20 +42,17 @@ class LocalReviewRepository implements ReviewRepository {
 
   @override
   Future<List<CardModel>> getCardsByLanguage(String language) async {
-    final allCards = await _storageService.loadCards();
-    return allCards
-        .where((card) => card.language == language && !card.isArchived)
-        .toList();
+    return await _cardService.loadCards(languageCode: language);
   }
 
   @override
   Future<void> updateCardAfterReview(CardModel card) async {
-    await _storageService.saveCard(card);
+    await _cardService.saveCard(card);
   }
 
   @override
   Future<Map<String, dynamic>> getReviewStats() async {
-    final allCards = await _storageService.loadCards();
+    final allCards = await _cardService.loadCards();
     final dueCards = allCards.where((card) => card.isDue && !card.isArchived);
     
     return {

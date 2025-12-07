@@ -1,4 +1,5 @@
 import '../../../../shared/shared.dart';
+import '../../../../shared/services/supabase_card_service.dart';
 
 /// Repository interface for card management operations
 abstract class CardManagementRepository {
@@ -30,33 +31,33 @@ abstract class CardManagementRepository {
   Future<void> clearAllCards();
 }
 
-/// Local implementation of card management repository
-class LocalCardManagementRepository implements CardManagementRepository {
-  final CardStorageService _storageService;
+/// Supabase implementation of card management repository.
+/// Assumes user is authenticated - callers must ensure this.
+class SupabaseCardManagementRepository implements CardManagementRepository {
+  final SupabaseCardService _supabaseService;
   
-  LocalCardManagementRepository({CardStorageService? storageService})
-      : _storageService = storageService ?? CardStorageService();
+  SupabaseCardManagementRepository({SupabaseCardService? supabaseService})
+      : _supabaseService = supabaseService ?? SupabaseCardService();
 
   @override
   Future<List<CardModel>> getAllCards() async {
-    return await _storageService.loadCards();
+    return await _supabaseService.loadCards();
   }
 
   @override
   Future<List<CardModel>> getCardsByCategory(String category) async {
-    final allCards = await _storageService.loadCards();
+    final allCards = await _supabaseService.loadCards();
     return allCards.where((card) => card.category == category).toList();
   }
 
   @override
   Future<List<CardModel>> getCardsByLanguage(String language) async {
-    final allCards = await _storageService.loadCards();
-    return allCards.where((card) => card.language == language).toList();
+    return await _supabaseService.loadCards(languageCode: language);
   }
 
   @override
   Future<List<CardModel>> searchCards(String query) async {
-    final allCards = await _storageService.loadCards();
+    final allCards = await _supabaseService.loadCards();
     final lowerQuery = query.toLowerCase();
     
     return allCards.where((card) {
@@ -69,17 +70,17 @@ class LocalCardManagementRepository implements CardManagementRepository {
 
   @override
   Future<void> saveCard(CardModel card) async {
-    await _storageService.saveCard(card);
+    await _supabaseService.saveCard(card);
   }
 
   @override
   Future<void> deleteCard(String cardId) async {
-    await _storageService.deleteCard(cardId);
+    await _supabaseService.deleteCard(cardId);
   }
 
   @override
   Future<List<String>> getCategories() async {
-    final allCards = await _storageService.loadCards();
+    final allCards = await _supabaseService.loadCards();
     return allCards
         .map((card) => card.category)
         .where((category) => category.isNotEmpty)
@@ -89,7 +90,7 @@ class LocalCardManagementRepository implements CardManagementRepository {
 
   @override
   Future<List<String>> getTags() async {
-    final allCards = await _storageService.loadCards();
+    final allCards = await _supabaseService.loadCards();
     return allCards
         .expand((card) => card.tags)
         .toSet()
@@ -98,6 +99,6 @@ class LocalCardManagementRepository implements CardManagementRepository {
 
   @override
   Future<void> clearAllCards() async {
-    await _storageService.clearAllCards();
+    await _supabaseService.clearAllCards();
   }
 }

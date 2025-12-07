@@ -78,3 +78,6 @@ supabase.tar.gz
 
 # Supabase local config (contains project-specific settings)
 supabase/.temp/
+
+# Test coverage
+coverage/

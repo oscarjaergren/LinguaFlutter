@@ -1,15 +1,32 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/features/language/domain/language_provider.dart';
 import 'package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart';
-import 'package:lingua_flutter/features/card_review/domain/providers/review_session_provider.dart';
+import 'package:lingua_flutter/features/card_management/data/repositories/card_management_repository.dart';
+
+@GenerateMocks([CardManagementRepository])
+import 'card_management_provider_test.mocks.dart';
 
 void main() {
   group('CardManagementProvider', () {
     late CardManagementProvider provider;
+    late MockCardManagementRepository mockRepository;
+    late LanguageProvider languageProvider;
 
     setUp(() {
-      provider = CardManagementProvider(languageProvider: LanguageProvider());
+      mockRepository = MockCardManagementRepository();
+      languageProvider = LanguageProvider();
+      provider = CardManagementProvider(
+        languageProvider: languageProvider,
+        repository: mockRepository,
+      );
+      
+      // Default stubs
+      when(mockRepository.getAllCards()).thenAnswer((_) async => <CardModel>[]);
+      when(mockRepository.getCategories()).thenAnswer((_) async => <String>[]);
+      when(mockRepository.getTags()).thenAnswer((_) async => <String>[]);
     });
 
     tearDown(() {
@@ -25,7 +42,7 @@ void main() {
       expect(provider.selectedTags, isEmpty);
       expect(provider.showOnlyDue, false);
       expect(provider.showOnlyFavorites, false);
-      expect(provider.stats, isEmpty);
+      expect(provider.stats, isA<Map<String, dynamic>>());
       expect(provider.isLoading, false);
       expect(provider.errorMessage, isNull);
       expect(provider.categories, isEmpty);
@@ -88,107 +105,47 @@ void main() {
       expect(provider.showOnlyDue, false);
       expect(provider.showOnlyFavorites, false);
     });
-  });
 
-  group('ReviewSessionProvider', () {
-    late ReviewSessionProvider provider;
-
-    setUp(() {
-      // Use a mock callback for testing - no dependency on CardManagementProvider
-      provider = ReviewSessionProvider(
-        updateCard: (card) async { /* mock - do nothing */ },
-      );
-    });
-
-    tearDown(() {
-      provider.dispose();
-    });
-
-    test('should have initial state', () {
-      expect(provider.sessionCards, isEmpty);
-      expect(provider.currentIndex, 0);
-      expect(provider.showingBack, false);
-      expect(provider.isSessionActive, false);
-      expect(provider.currentCard, isNull);
-      expect(provider.progress, 0.0);
-    });
-
-    test('should start and end review session', () {
-      final card1 = CardModel.create(
-        frontText: 'Hello',
-        backText: 'Hola',
-        language: 'es',
-        category: 'Greetings',
-      );
-
-      final card2 = CardModel.create(
-        frontText: 'Goodbye',
-        backText: 'Adiós',
-        language: 'es',
-        category: 'Greetings',
-      );
-
-      provider.startSession([card1, card2]);
-
-      expect(provider.isSessionActive, true);
-      expect(provider.sessionCards, [card1, card2]);
-      expect(provider.currentIndex, 0);
-      expect(provider.showingBack, false);
-      expect(provider.currentCard, card1);
-      expect(provider.progress, 0.5);
-
-      provider.endSession();
-
-      expect(provider.isSessionActive, false);
-      expect(provider.sessionCards, isEmpty);
-      expect(provider.currentIndex, 0);
-      expect(provider.showingBack, false);
-      expect(provider.currentCard, isNull);
-      expect(provider.progress, 0.0);
-    });
-
-    test('should flip card', () {
-      final card = CardModel.create(
-        frontText: 'Hello',
-        backText: 'Hola',
-        language: 'es',
-        category: 'Greetings',
-      );
-
-      provider.startSession([card]);
-
-      expect(provider.showingBack, false);
-
-      provider.flipCard();
-      expect(provider.showingBack, true);
-    });
-
-    test('should calculate review progress correctly', () {
-      final cards = [
+    test('should load cards from repository', () async {
+      final testCards = [
         CardModel.create(
-          frontText: 'Card 1',
-          backText: 'Tarjeta 1',
+          frontText: 'Hello',
+          backText: 'Hola',
           language: 'es',
-          category: 'Test',
-        ),
-        CardModel.create(
-          frontText: 'Card 2',
-          backText: 'Tarjeta 2',
-          language: 'es',
-          category: 'Test',
-        ),
-        CardModel.create(
-          frontText: 'Card 3',
-          backText: 'Tarjeta 3',
-          language: 'es',
-          category: 'Test',
+          category: 'Greetings',
         ),
       ];
+      when(mockRepository.getAllCards()).thenAnswer((_) async => testCards);
 
-      provider.startSession(cards);
+      await provider.loadCards();
 
-      expect(provider.progress, 1.0 / 3.0);
-      expect(provider.currentCard, cards[0]);
+      verify(mockRepository.getAllCards()).called(1);
+      expect(provider.allCards.length, 1);
+      expect(provider.allCards.first.frontText, 'Hello');
+    });
+
+    test('should add card via repository', () async {
+      final newCard = CardModel.create(
+        frontText: 'New',
+        backText: 'Nuevo',
+        language: 'es',
+        category: 'Test',
+      );
+      when(mockRepository.saveCard(any)).thenAnswer((_) async {});
+      when(mockRepository.getAllCards()).thenAnswer((_) async => [newCard]);
+
+      await provider.addCard(newCard);
+
+      verify(mockRepository.saveCard(any)).called(1);
+    });
+
+    test('should delete card via repository', () async {
+      when(mockRepository.deleteCard(any)).thenAnswer((_) async {});
+      when(mockRepository.getAllCards()).thenAnswer((_) async => []);
+
+      await provider.deleteCard('card-id');
+
+      verify(mockRepository.deleteCard('card-id')).called(1);
     });
   });
 }

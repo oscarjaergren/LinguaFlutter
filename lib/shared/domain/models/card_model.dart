@@ -8,7 +8,7 @@ import 'word_data.dart';
 part 'card_model.g.dart';
 
 /// Model representing a language learning card
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class CardModel {
   /// Unique identifier for the card
   final String id;

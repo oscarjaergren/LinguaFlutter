@@ -1,16 +1,15 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
-import '../../../../shared/services/card_storage_service.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../data/repositories/card_management_repository.dart';
 
 /// Provider for managing card data, filtering, and CRUD operations.
 /// 
 /// This is the primary provider for card management within the card_management feature.
-/// Other features should depend on this provider for card data access.
+/// Assumes user is authenticated - callers must ensure this.
 class CardManagementProvider extends ChangeNotifier {
-  final CardManagementRepository _repository;
   final LanguageProvider _languageProvider;
+  final CardManagementRepository _repository;
 
   // Core card data
   List<CardModel> _allCards = [];
@@ -29,11 +28,15 @@ class CardManagementProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
+  /// Create a CardManagementProvider with optional repository injection for testing.
+  /// 
+  /// By default uses [SupabaseCardManagementRepository]. Pass a mock implementation
+  /// for unit testing.
   CardManagementProvider({
     required LanguageProvider languageProvider,
     CardManagementRepository? repository,
   })  : _languageProvider = languageProvider,
-        _repository = repository ?? LocalCardManagementRepository() {
+        _repository = repository ?? SupabaseCardManagementRepository() {
     _languageProvider.addListener(_onLanguageChanged);
   }
 
@@ -107,12 +110,7 @@ class CardManagementProvider extends ChangeNotifier {
   // ============================================================
 
   /// Initialize the provider by loading cards
-  /// On first run, loads seed cards from assets
   Future<void> initialize() async {
-    // Load seed cards if this is first run (no cards exist)
-    final storageService = CardStorageService();
-    await storageService.loadSeedCardsIfEmpty();
-    
     await loadCards();
   }
 
@@ -148,19 +146,9 @@ class CardManagementProvider extends ChangeNotifier {
   /// Add multiple cards in batch
   Future<void> addMultipleCards(List<CardModel> cards) async {
     try {
-      final existingCards = await _repository.getAllCards();
-      final existingCardsMap = {
-        for (var card in existingCards) card.id: card
-      };
-      
-      for (final newCard in cards) {
-        existingCardsMap[newCard.id] = newCard;
+      for (final card in cards) {
+        await _repository.saveCard(card);
       }
-      
-      final allCards = existingCardsMap.values.toList();
-      final storageService = CardStorageService();
-      await storageService.saveCards(allCards);
-      
       await loadCards();
     } catch (e) {
       _setError('Failed to add cards: $e');

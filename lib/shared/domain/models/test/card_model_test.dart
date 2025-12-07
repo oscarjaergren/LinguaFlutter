@@ -21,7 +21,7 @@ void main() {
       expect(card.germanArticle, isNull);
       expect(card.isFavorite, false);
       expect(card.isArchived, false);
-      expect(card.difficulty, 0);
+      expect(card.difficulty, 1); // Default difficulty is 1 (easiest)
       expect(card.reviewCount, 0);
       expect(card.correctCount, 0);
       expect(card.lastReviewed, isNull);
@@ -77,7 +77,7 @@ void main() {
         correctCount: 7,
       );
 
-      expect(card.successRate, 0.7);
+      expect(card.successRate, 70.0); // Returns percentage, not ratio
     });
 
     test('should return 0 success rate when no reviews', () {

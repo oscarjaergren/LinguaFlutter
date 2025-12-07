@@ -7,6 +7,7 @@ import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
 import 'features/card_review/card_review.dart';
 import 'features/card_management/card_management.dart';
+import 'features/auth/auth.dart';
 import 'features/duplicate_detection/duplicate_detection.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
@@ -23,6 +24,7 @@ void main() async {
   await SupabaseService.initialize();
 
   // Create core providers
+  final authProvider = AuthProvider();
   final languageProvider = LanguageProvider();
   final streakProvider = StreakProvider();
   final themeProvider = ThemeProvider();
@@ -35,15 +37,36 @@ void main() async {
 
   // Initialize providers that need async setup
   await themeProvider.initialize();
-  await cardManagementProvider.initialize();
-  await streakProvider.loadStreak();
   
-  LoggerService.info('✅ All providers initialized successfully');
+  // Wire up auth state change callback to initialize data providers
+  authProvider.onAuthStateChanged = (isAuthenticated) async {
+    if (isAuthenticated) {
+      LoggerService.info('🔐 User authenticated, initializing data providers...');
+      try {
+        await cardManagementProvider.initialize();
+        await streakProvider.loadStreak();
+        LoggerService.info('✅ Data providers initialized');
+      } catch (e) {
+        LoggerService.error('Failed to initialize data providers', e);
+      }
+    } else {
+      LoggerService.info('🔓 User signed out');
+    }
+  };
+  
+  // If already authenticated (e.g., session restored), initialize now
+  if (authProvider.isAuthenticated) {
+    await cardManagementProvider.initialize();
+    await streakProvider.loadStreak();
+  }
+  
+  LoggerService.info('✅ Core providers initialized successfully');
 
   runApp(
     MultiProvider(
       providers: [
         // Core providers
+        ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: languageProvider),
         ChangeNotifierProvider.value(value: streakProvider),
         ChangeNotifierProvider.value(value: themeProvider),

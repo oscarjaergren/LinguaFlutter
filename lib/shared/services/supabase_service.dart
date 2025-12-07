@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'logger_service.dart';
@@ -24,11 +25,23 @@ class SupabaseService {
       await Supabase.initialize(
         url: url,
         anonKey: anonKey,
+        authOptions: FlutterAuthClientOptions(
+          // Use implicit flow for web (handles URL fragments with tokens)
+          authFlowType: kIsWeb ? AuthFlowType.implicit : AuthFlowType.pkce,
+        ),
+        debug: kDebugMode, // Enable debug logging in dev
       );
 
       _client = Supabase.instance.client;
       _initialized = true;
-      LoggerService.info('✅ Supabase initialized successfully');
+      
+      // Log current auth state
+      final user = _client!.auth.currentUser;
+      if (user != null) {
+        LoggerService.info('✅ Supabase initialized - User logged in: ${user.email}');
+      } else {
+        LoggerService.info('✅ Supabase initialized - No user session');
+      }
     } catch (e) {
       LoggerService.error('Failed to initialize Supabase', e);
       rethrow;

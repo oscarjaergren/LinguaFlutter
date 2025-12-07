@@ -1,12 +1,13 @@
 import '../../../../shared/shared.dart';
 import '../repositories/card_management_repository.dart';
 
-/// Service for card management business logic
+/// Service for card management business logic.
+/// Assumes user is authenticated - callers must ensure this.
 class CardManagementService {
   final CardManagementRepository _repository;
   
   CardManagementService({CardManagementRepository? repository})
-      : _repository = repository ?? LocalCardManagementRepository();
+      : _repository = repository ?? SupabaseCardManagementRepository();
 
   /// Create a new card with validation
   Future<CardModel> createCard({

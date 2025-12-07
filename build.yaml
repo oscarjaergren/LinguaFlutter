@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      mockito|mockBuilder:
+        generate_for:
+          # Include test files in lib/ for VSA structure
+          - lib/**/test/**_test.dart
+          - test/**_test.dart
