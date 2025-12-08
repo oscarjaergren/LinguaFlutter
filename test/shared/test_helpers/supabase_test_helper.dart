@@ -2,10 +2,13 @@
 ///
 /// Provides setup/teardown and utilities for testing against
 /// the local Docker-based Supabase stack.
+///
+/// Note: These tests require Docker and make real HTTP requests.
+/// Run with: dart test (not flutter test) to avoid HTTP blocking.
 library;
 
 import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase/supabase.dart';
 import 'test_config.dart';
 
 /// Helper class for managing Supabase test environment
@@ -32,12 +35,12 @@ class SupabaseTestHelper {
     // Check if Docker containers are running
     await _ensureContainersRunning();
 
-    await Supabase.initialize(
-      url: TestConfig.supabaseUrl,
-      anonKey: TestConfig.anonKey,
+    // Create Supabase client directly (no Flutter dependencies)
+    _client = SupabaseClient(
+      TestConfig.supabaseUrl,
+      TestConfig.anonKey,
     );
 
-    _client = Supabase.instance.client;
     _isInitialized = true;
   }
 

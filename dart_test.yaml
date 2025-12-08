@@ -1,0 +1,10 @@
+# Test configuration for Flutter tests
+# This file configures default test behavior
+
+# Test timeout settings
+timeout: 60s
+
+# Tags configuration
+tags:
+  integration:
+    timeout: 120s

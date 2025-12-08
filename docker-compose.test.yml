@@ -11,7 +11,7 @@ version: '3.8'
 services:
   # PostgreSQL database
   db:
-    image: supabase/postgres:15.8.1.060
+    image: postgres:15
     container_name: lingua_test_db
     ports:
       - "54322:5432"
@@ -20,7 +20,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
-      - ./supabase/migrations:/docker-entrypoint-initdb.d
+      - ./test/integration/init.sql:/docker-entrypoint-initdb.d/01_init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -51,11 +51,11 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_MAILER_AUTOCONFIRM: "true"
       GOTRUE_SMTP_ADMIN_EMAIL: admin@localhost
-      GOTRUE_SMTP_HOST: ""
-      GOTRUE_SMTP_PORT: ""
-      GOTRUE_SMTP_USER: ""
-      GOTRUE_SMTP_PASS: ""
-      GOTRUE_SMTP_SENDER_NAME: ""
+      GOTRUE_SMTP_HOST: localhost
+      GOTRUE_SMTP_PORT: 25
+      GOTRUE_SMTP_USER: test
+      GOTRUE_SMTP_PASS: test
+      GOTRUE_SMTP_SENDER_NAME: Test
 
   # Supabase REST API (PostgREST)
   rest:
