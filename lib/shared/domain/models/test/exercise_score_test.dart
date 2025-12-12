@@ -327,7 +327,7 @@ void main() {
 
       test('should create from JSON', () {
         final json = {
-          'type': 'readingRecognition',
+          'type': 'reading_recognition',
           'correctCount': 7,
           'incorrectCount': 3,
           'lastPracticed': null,

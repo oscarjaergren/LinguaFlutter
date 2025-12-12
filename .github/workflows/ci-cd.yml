@@ -57,7 +57,7 @@ jobs:
       run: dart run build_runner build --delete-conflicting-outputs
       
     - name: Run unit tests
-      run: flutter test --coverage
+      run: flutter test lib/ --coverage --exclude-tags integration
       
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
@@ -200,6 +200,55 @@ jobs:
       with:
         name: ios-build
         path: build/ios/iphoneos/
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [analyze]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.32.5'
+        channel: 'stable'
+
+    - name: Get dependencies
+      run: flutter pub get
+
+    - name: Generate code
+      run: dart run build_runner build --delete-conflicting-outputs
+
+    - name: Start test infrastructure
+      run: |
+        docker-compose -f docker-compose.test.yml up -d
+        echo "Waiting for services to be healthy..."
+        sleep 15
+
+    - name: Wait for database to be ready
+      run: |
+        timeout 60 bash -c 'until docker exec lingua_test_db pg_isready -U postgres; do sleep 2; done'
+        echo "Database is ready"
+
+    - name: Wait for Kong gateway to be ready
+      run: |
+        timeout 60 bash -c 'until curl -sf http://localhost:8000/rest/v1/ > /dev/null 2>&1; do sleep 2; done' || echo "Kong may not be fully ready, continuing..."
+
+    - name: Create test user
+      run: |
+        curl -sf -X POST "http://localhost:9999/signup" \
+          -H "Content-Type: application/json" \
+          -d '{"email":"test@linguaflutter.dev","password":"testpass123"}' || echo "User may already exist"
+
+    - name: Run integration tests
+      run: dart test lib/features/card_management/test/integration/ lib/features/streak/test/integration/ --tags integration --timeout 120s
+
+    - name: Stop test infrastructure
+      if: always()
+      run: docker-compose -f docker-compose.test.yml down -v
 
   security-scan:
     name: Security Scan

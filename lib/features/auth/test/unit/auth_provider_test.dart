@@ -158,11 +158,9 @@ void main() {
     group('Auth State Detection', () {
       test('should detect authenticated state', () {
         // Simulating auth state check
-        String? userId = 'user-123';
+        const userId = 'user-123';
 
-        final isAuthenticated = userId != null;
-
-        expect(isAuthenticated, true);
+        expect(userId.isNotEmpty, true);
       });
 
       test('should detect unauthenticated state', () {

@@ -34,7 +34,7 @@ jobs:
       run: flutter analyze
       
     - name: Run tests
-      run: flutter test
+      run: flutter test lib/ --exclude-tags integration
       
     - name: Build web (quick check)
       run: flutter build web --debug

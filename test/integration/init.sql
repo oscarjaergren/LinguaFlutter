@@ -20,7 +20,7 @@ BEGIN
 END
 $$;
 
--- Create auth schema (GoTrue will populate it)
+-- Create auth schema (GoTrue will manage its own tables)
 CREATE SCHEMA IF NOT EXISTS auth;
 GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
 GRANT USAGE ON SCHEMA auth TO anon, authenticated, service_role;
