@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
+import '../../../card_management/presentation/screens/card_creation_screen.dart';
 import '../../domain/providers/practice_session_provider.dart';
 import '../widgets/swipeable_exercise_card.dart';
 import '../widgets/exercises/exercise_content_widget.dart';
@@ -42,6 +43,18 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
+  Future<void> _editCurrentCard(BuildContext context, PracticeSessionProvider provider) async {
+    final currentCard = provider.currentCard;
+    if (currentCard == null) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CreationCreationScreen(cardToEdit: currentCard),
+      ),
+    );
+  }
+
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
       final provider = Provider.of<PracticeSessionProvider>(context, listen: false);
@@ -79,14 +92,25 @@ class _PracticeScreenState extends State<PracticeScreen> {
           actions: [
             Consumer<PracticeSessionProvider>(
               builder: (context, provider, child) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Center(
-                    child: Text(
-                      '${provider.currentIndex + 1}/${provider.totalCount}',
-                      style: const TextStyle(fontSize: 16),
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (provider.currentCard != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        tooltip: 'Edit card',
+                        onPressed: () => _editCurrentCard(context, provider),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Center(
+                        child: Text(
+                          '${provider.currentIndex + 1}/${provider.totalCount}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 );
               },
             ),

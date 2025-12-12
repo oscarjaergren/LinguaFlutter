@@ -24,7 +24,7 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "chrome",
-      "args": ["--web-port=3000"]
+      "args": ["--web-port=8080"]
     },
     {
       "name": "Web (Edge)",
@@ -33,7 +33,7 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "edge",
-      "args": ["--web-port=3000"]
+      "args": ["--web-port=8080"]
     }
   ]
 }
