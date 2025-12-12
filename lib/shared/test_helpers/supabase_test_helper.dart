@@ -9,7 +9,7 @@ library;
 
 import 'dart:io';
 import 'package:supabase/supabase.dart';
-import 'test_config.dart';
+import 'package:lingua_flutter/shared/test_helpers/test_config.dart';
 
 /// Helper class for managing Supabase test environment
 class SupabaseTestHelper {

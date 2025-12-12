@@ -8,7 +8,7 @@
 /// 5. Streak is updated
 /// 6. Statistics are accurate
 ///
-/// Run with: flutter test test/features/learning_session/
+/// Run with: flutter test lib/features/card_review/test/integration/
 ///
 /// Note: This test uses mocked services to test the full flow logic.
 /// For true database integration tests, see the card_management and streak

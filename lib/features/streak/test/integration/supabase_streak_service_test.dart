@@ -9,8 +9,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
 import 'package:lingua_flutter/features/streak/data/services/supabase_streak_service.dart';
-
-import '../../../shared/test_helpers/supabase_test_helper.dart';
+import 'package:lingua_flutter/shared/test_helpers/supabase_test_helper.dart';
 
 void main() {
   late SupabaseStreakService streakService;
@@ -23,7 +22,6 @@ void main() {
 
   setUp(() async {
     streakService = SupabaseStreakService();
-    // Reset streak to initial state
     await streakService.resetStreak();
   });
 
@@ -33,10 +31,8 @@ void main() {
 
   group('SupabaseStreakService Integration Tests', () {
     test('should load initial streak for new user', () async {
-      // Act
       final streak = await streakService.loadStreak();
 
-      // Assert
       expect(streak, isNotNull);
       expect(streak.currentStreak, equals(0));
       expect(streak.bestStreak, equals(0));
@@ -44,7 +40,6 @@ void main() {
     });
 
     test('should save and load streak', () async {
-      // Arrange
       final streak = StreakModel(
         currentStreak: 5,
         bestStreak: 10,
@@ -55,11 +50,9 @@ void main() {
         achievedMilestones: [7, 14, 30],
       );
 
-      // Act
       await streakService.saveStreak(streak);
       final loadedStreak = await streakService.loadStreak();
 
-      // Assert
       expect(loadedStreak, isNotNull);
       expect(loadedStreak.currentStreak, equals(5));
       expect(loadedStreak.bestStreak, equals(10));
@@ -69,23 +62,19 @@ void main() {
     });
 
     test('should update streak with review', () async {
-      // Arrange
       final initialStreak = await streakService.loadStreak();
       expect(initialStreak.currentStreak, equals(0));
 
-      // Act
       final updatedStreak = await streakService.updateStreakWithReview(
         cardsReviewed: 10,
       );
 
-      // Assert
       expect(updatedStreak.totalCardsReviewed, equals(10));
       expect(updatedStreak.totalReviewSessions, equals(1));
       expect(updatedStreak.currentStreak, greaterThanOrEqualTo(1));
     });
 
     test('should reset streak', () async {
-      // Arrange - create a streak first
       final streak = StreakModel(
         currentStreak: 5,
         bestStreak: 10,
@@ -95,17 +84,14 @@ void main() {
       );
       await streakService.saveStreak(streak);
 
-      // Act
       await streakService.resetStreak();
       final loadedStreak = await streakService.loadStreak();
 
-      // Assert
       expect(loadedStreak.currentStreak, equals(0));
       expect(loadedStreak.totalCardsReviewed, equals(0));
     });
 
     test('should get streak stats', () async {
-      // Arrange
       final streak = StreakModel(
         currentStreak: 7,
         bestStreak: 14,
@@ -120,10 +106,8 @@ void main() {
       );
       await streakService.saveStreak(streak);
 
-      // Act
       final stats = await streakService.getStreakStats();
 
-      // Assert
       expect(stats['currentStreak'], equals(7));
       expect(stats['bestStreak'], equals(14));
       expect(stats['totalCardsReviewed'], equals(150));
@@ -131,7 +115,6 @@ void main() {
     });
 
     test('should preserve best streak when current resets', () async {
-      // Arrange - set a high best streak
       final streak = StreakModel(
         currentStreak: 30,
         bestStreak: 30,
@@ -141,14 +124,11 @@ void main() {
       );
       await streakService.saveStreak(streak);
 
-      // Act - update with a new review (streak should reset due to gap)
       final updatedStreak = await streakService.updateStreakWithReview(
         cardsReviewed: 5,
       );
 
-      // Assert - best streak should be preserved
       expect(updatedStreak.bestStreak, equals(30));
-      // Current streak resets to 1 (today's review)
       expect(updatedStreak.currentStreak, equals(1));
     });
   });
