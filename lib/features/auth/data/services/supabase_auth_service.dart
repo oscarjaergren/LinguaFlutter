@@ -40,15 +40,20 @@ class SupabaseAuthService {
       _initialized = true;
       
       // Try to recover session manually - this way we catch the exception
-      try {
-        await _client!.auth.recoverSession(_client!.auth.currentSession?.refreshToken ?? '');
-      } on AuthException catch (e) {
-        if (e.message.contains('Refresh Token')) {
-          LoggerService.debug('Stale session cleared on startup');
+      final refreshToken = _client!.auth.currentSession?.refreshToken;
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        try {
+          await _client!.auth.recoverSession(refreshToken);
+        } on AuthException catch (e) {
+          if (e.message.contains('Refresh Token')) {
+            LoggerService.debug('Stale session cleared on startup');
+            await _client!.auth.signOut();
+          }
+        } catch (e) {
+          // JSON parsing error or other issue - clear the corrupt session
+          LoggerService.debug('Corrupt session data, signing out: $e');
           await _client!.auth.signOut();
         }
-      } catch (_) {
-        // No session to recover, that's fine
       }
       
       // Log current auth state

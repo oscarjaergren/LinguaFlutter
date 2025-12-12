@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -311,6 +312,32 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           },
                         ),
                         
+                        // Debug quick login (only in debug mode)
+                        if (kDebugMode) ...[                          
+                          const SizedBox(height: 24),
+                          const Divider(),
+                          const SizedBox(height: 8),
+                          Text(
+                            '🔧 Debug Mode',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: Colors.orange,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: authProvider.isLoading
+                                ? null
+                                : () => _debugQuickLogin(authProvider),
+                            icon: const Icon(Icons.bug_report),
+                            label: const Text('Quick Login (Test User)'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.orange,
+                              side: const BorderSide(color: Colors.orange),
+                            ),
+                          ),
+                        ],
+                        
                       ],
                     ),
                   );
@@ -338,6 +365,21 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
     if (success && mounted) {
       context.go('/'); // Navigate to dashboard
+    }
+  }
+
+  Future<void> _debugQuickLogin(AuthProvider authProvider) async {
+    // Test user credentials from Docker test infrastructure
+    const testEmail = 'test@linguaflutter.dev';
+    const testPassword = 'testpass123';
+
+    final success = await authProvider.signIn(
+      email: testEmail,
+      password: testPassword,
+    );
+
+    if (success && mounted) {
+      context.go('/');
     }
   }
 

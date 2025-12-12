@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../../../shared/domain/models/exercise_type.dart';
 import '../../../card_management/presentation/screens/card_creation_screen.dart';
 import '../../domain/providers/practice_session_provider.dart';
 import '../widgets/swipeable_exercise_card.dart';
@@ -92,25 +91,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
           actions: [
             Consumer<PracticeSessionProvider>(
               builder: (context, provider, child) {
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (provider.currentCard != null)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        tooltip: 'Edit card',
-                        onPressed: () => _editCurrentCard(context, provider),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Center(
-                        child: Text(
-                          '${provider.currentIndex + 1}/${provider.totalCount}',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Center(
+                    child: Text(
+                      '${provider.currentIndex + 1}/${provider.totalCount}',
+                      style: const TextStyle(fontSize: 16),
                     ),
-                  ],
+                  ),
                 );
               },
             ),
@@ -143,11 +131,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   incorrectCount: provider.incorrectCount,
                 ),
                 
-                // Exercise type badge
-                const SizedBox(height: 16),
-                _buildExerciseTypeBadge(context, provider.currentExerciseType!),
-                
-                // Stats display
+                // Stats display (above the card)
                 const SizedBox(height: 8),
                 _buildStatsRow(context, provider),
                 
@@ -156,6 +140,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   child: _SwipeableCardWrapper(
                     key: _cardKey,
                     provider: provider,
+                    onEditCard: () => _editCurrentCard(context, provider),
                   ),
                 ),
                 
@@ -179,34 +164,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
             );
           },
         ),
-      ),
-    );
-  }
-
-  Widget _buildExerciseTypeBadge(BuildContext context, ExerciseType type) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            type.icon,
-            size: 20,
-            color: Theme.of(context).primaryColor,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            type.displayName,
-            style: TextStyle(
-              color: Theme.of(context).primaryColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -266,10 +223,12 @@ class _PracticeScreenState extends State<PracticeScreen> {
 /// Wrapper widget to handle swipeable card with state
 class _SwipeableCardWrapper extends StatefulWidget {
   final PracticeSessionProvider provider;
+  final VoidCallback onEditCard;
 
   const _SwipeableCardWrapper({
     super.key,
     required this.provider,
+    required this.onEditCard,
   });
 
   @override
@@ -295,18 +254,35 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
       onSwipeLeft: () {
         widget.provider.confirmAnswerAndAdvance(markedCorrect: false);
       },
-      child: ExerciseContentWidget(
-        card: widget.provider.currentCard!,
-        exerciseType: widget.provider.currentExerciseType!,
-        multipleChoiceOptions: widget.provider.multipleChoiceOptions,
-        answerState: widget.provider.answerState,
-        currentAnswerCorrect: widget.provider.currentAnswerCorrect,
-        onCheckAnswer: (isCorrect) {
-          widget.provider.checkAnswer(isCorrect: isCorrect);
-        },
-        onOverrideAnswer: (isCorrect) {
-          widget.provider.overrideAnswer(isCorrect: isCorrect);
-        },
+      child: Stack(
+        children: [
+          ExerciseContentWidget(
+            card: widget.provider.currentCard!,
+            exerciseType: widget.provider.currentExerciseType!,
+            multipleChoiceOptions: widget.provider.multipleChoiceOptions,
+            answerState: widget.provider.answerState,
+            currentAnswerCorrect: widget.provider.currentAnswerCorrect,
+            onCheckAnswer: (isCorrect) {
+              widget.provider.checkAnswer(isCorrect: isCorrect);
+            },
+            onOverrideAnswer: (isCorrect) {
+              widget.provider.overrideAnswer(isCorrect: isCorrect);
+            },
+          ),
+          // Edit button in top-right corner of card
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IconButton(
+              icon: Icon(
+                Icons.edit,
+                color: Colors.grey[400],
+              ),
+              tooltip: 'Edit card',
+              onPressed: widget.onEditCard,
+            ),
+          ),
+        ],
       ),
     );
   }
