@@ -329,23 +329,27 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     final answer = widget.card.backText;
     
     if (!hasAnswered) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        child: const Column(
-          children: [
-            Icon(Icons.visibility_off, size: 48, color: Colors.grey),
-            SizedBox(height: 12),
-            Text(
-              'Tap "Reveal Answer" to see the translation',
-              style: TextStyle(color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+      return InkWell(
+        onTap: _onCheckAnswer,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.grey.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: const Column(
+            children: [
+              Icon(Icons.visibility_off, size: 48, color: Colors.grey),
+              SizedBox(height: 12),
+              Text(
+                'Tap to reveal the answer',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -376,6 +380,11 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   Widget _buildActionSection(BuildContext context) {
     final hasAnswered = widget.answerState == AnswerState.answered;
+    
+    // For reading recognition, the tap-to-reveal is on the card itself
+    if (!hasAnswered && widget.exerciseType == ExerciseType.readingRecognition) {
+      return const SizedBox.shrink();
+    }
     
     if (!hasAnswered) {
       return _buildCheckAnswerButton(context);

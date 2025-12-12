@@ -30,31 +30,12 @@ class SupabaseAuthService {
         authOptions: FlutterAuthClientOptions(
           // Use implicit flow for web (handles URL fragments with tokens)
           authFlowType: kIsWeb ? AuthFlowType.implicit : AuthFlowType.pkce,
-          // Don't auto-refresh on init - we'll handle it manually to avoid exceptions
-          autoRefreshToken: false,
         ),
         debug: kDebugMode,
       );
 
       _client = Supabase.instance.client;
       _initialized = true;
-      
-      // Try to recover session manually - this way we catch the exception
-      final refreshToken = _client!.auth.currentSession?.refreshToken;
-      if (refreshToken != null && refreshToken.isNotEmpty) {
-        try {
-          await _client!.auth.recoverSession(refreshToken);
-        } on AuthException catch (e) {
-          if (e.message.contains('Refresh Token')) {
-            LoggerService.debug('Stale session cleared on startup');
-            await _client!.auth.signOut();
-          }
-        } catch (e) {
-          // JSON parsing error or other issue - clear the corrupt session
-          LoggerService.debug('Corrupt session data, signing out: $e');
-          await _client!.auth.signOut();
-        }
-      }
       
       // Log current auth state
       final user = _client!.auth.currentUser;
