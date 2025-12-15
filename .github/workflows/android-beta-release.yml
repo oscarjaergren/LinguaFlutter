@@ -64,7 +64,7 @@ jobs:
         status: completed
         
     - name: Upload AAB artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: android-beta-aab
         path: build/app/outputs/bundle/release/app-release.aab
