@@ -201,13 +201,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
 
   Future<void> _selectIcon() async {
     context.read<IconProvider>().clearSelection();
-    final frontText = _frontTextController.text.trim();
+    // Use English translation (back) for icon search since Iconify uses English keywords
+    final searchQuery = _getIconSearchQuery();
     
     final selectedIcon = await Navigator.push<IconModel>(
       context,
       MaterialPageRoute(
         builder: (context) => IconSearchScreen(
-          initialSearchQuery: frontText.isNotEmpty ? frontText : null,
+          initialSearchQuery: searchQuery,
         ),
       ),
     );
@@ -215,6 +216,44 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     if (selectedIcon != null) {
       setState(() => _selectedIcon = selectedIcon);
     }
+  }
+
+  /// Gets the best search query for icon search.
+  /// Prefers English translation, falls back to front text with articles stripped.
+  String? _getIconSearchQuery() {
+    final backText = _backTextController.text.trim();
+    if (backText.isNotEmpty) {
+      return _stripArticles(backText);
+    }
+    
+    final frontText = _frontTextController.text.trim();
+    if (frontText.isNotEmpty) {
+      return _stripArticles(frontText);
+    }
+    
+    return null;
+  }
+
+  // This is a really dumb way of doing this. 
+  /// Strips common article prefixes from search terms
+  String _stripArticles(String text) {
+    // German articles
+    const articles = ['der ', 'die ', 'das ', 'ein ', 'eine ', 'einen ', 'einem ', 'einer ',
+      // Spanish articles
+      'el ', 'la ', 'los ', 'las ', 'un ', 'una ', 'unos ', 'unas ',
+      // French articles  
+      'le ', 'la ', 'les ', 'un ', 'une ', 'des ',
+      // English articles
+      'the ', 'a ', 'an '];
+    
+    var result = text.toLowerCase();
+    for (final article in articles) {
+      if (result.startsWith(article)) {
+        result = result.substring(article.length);
+        break;
+      }
+    }
+    return result.trim();
   }
 
   void _addExample() {
@@ -332,51 +371,74 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     final keyController = TextEditingController();
     final aiProvider = context.read<CardEnrichmentProvider>();
     var selectedProvider = AiProvider.gemini; // Default to Gemini (free tier)
+    var selectedModel = selectedProvider.defaultModel;
     
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: const Text('AI Configuration'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Select a provider and enter your API key.\n'
-                'Gemini offers a free tier - get a key at ai.google.dev',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<AiProvider>(
-                value: selectedProvider,
-                decoration: const InputDecoration(
-                  labelText: 'Provider',
-                  border: OutlineInputBorder(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select a provider and enter your API key.\n'
+                  'Gemini offers a free tier - get a key at ai.google.dev',
+                  style: TextStyle(fontSize: 14),
                 ),
-                items: AiProvider.values.map((p) => DropdownMenuItem(
-                  value: p,
-                  child: Text(p.displayName),
-                )).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() => selectedProvider = value);
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: keyController,
-                decoration: InputDecoration(
-                  labelText: 'API Key',
-                  hintText: selectedProvider == AiProvider.gemini 
-                      ? 'AIza...' 
-                      : 'sk-...',
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<AiProvider>(
+                  value: selectedProvider,
+                  decoration: const InputDecoration(
+                    labelText: 'Provider',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: AiProvider.values.map((p) => DropdownMenuItem(
+                    value: p,
+                    child: Text(p.displayName),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() {
+                        selectedProvider = value;
+                        selectedModel = value.defaultModel;
+                      });
+                    }
+                  },
                 ),
-                obscureText: true,
-              ),
-            ],
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: selectedModel,
+                  decoration: const InputDecoration(
+                    labelText: 'Model',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: selectedProvider.availableModels.map((m) => DropdownMenuItem(
+                    value: m,
+                    child: Text(m, style: const TextStyle(fontSize: 13)),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setDialogState(() => selectedModel = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: keyController,
+                  decoration: InputDecoration(
+                    labelText: 'API Key',
+                    hintText: selectedProvider == AiProvider.gemini 
+                        ? 'AIza...' 
+                        : 'sk-...',
+                    border: const OutlineInputBorder(),
+                  ),
+                  obscureText: true,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -387,6 +449,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
               onPressed: () async {
                 if (keyController.text.trim().isNotEmpty) {
                   await aiProvider.setProvider(selectedProvider);
+                  await aiProvider.setModel(selectedModel);
                   await aiProvider.setApiKey(keyController.text.trim());
                   if (dialogContext.mounted) {
                     Navigator.pop(dialogContext);

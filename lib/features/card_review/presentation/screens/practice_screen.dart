@@ -60,19 +60,69 @@ class _PracticeScreenState extends State<PracticeScreen> {
       
       // Allow swiping only when answer has been checked
       if (provider.canSwipe) {
+        // Arrow keys or Enter to confirm answer
         if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           _cardKey.currentState?.triggerSwipe(false);
           return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          _cardKey.currentState?.triggerSwipe(true);
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
+                   event.logicalKey == LogicalKeyboardKey.enter ||
+                   event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+          // Enter confirms with current answer correctness
+          final isCorrect = provider.currentAnswerCorrect ?? true;
+          _cardKey.currentState?.triggerSwipe(isCorrect);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.space) {
+          // Space also advances (uses current answer)
+          final isCorrect = provider.currentAnswerCorrect ?? true;
+          _cardKey.currentState?.triggerSwipe(isCorrect);
+          return KeyEventResult.handled;
+        }
+      } else {
+        // Before answer checked - number keys for multiple choice
+        if (event.logicalKey == LogicalKeyboardKey.digit1 ||
+            event.logicalKey == LogicalKeyboardKey.numpad1) {
+          _selectMultipleChoiceOption(provider, 0);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.digit2 ||
+                   event.logicalKey == LogicalKeyboardKey.numpad2) {
+          _selectMultipleChoiceOption(provider, 1);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.digit3 ||
+                   event.logicalKey == LogicalKeyboardKey.numpad3) {
+          _selectMultipleChoiceOption(provider, 2);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.digit4 ||
+                   event.logicalKey == LogicalKeyboardKey.numpad4) {
+          _selectMultipleChoiceOption(provider, 3);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.space ||
+                   event.logicalKey == LogicalKeyboardKey.enter ||
+                   event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+          // Space/Enter reveals answer for reading recognition
+          _revealAnswer(provider);
           return KeyEventResult.handled;
         }
       }
-      
-      // Space/Enter to check answer (handled by exercise widgets)
     }
     
     return KeyEventResult.ignored;
+  }
+
+  void _selectMultipleChoiceOption(PracticeSessionProvider provider, int index) {
+    final options = provider.multipleChoiceOptions;
+    if (options == null || index >= options.length) return;
+    
+    final selectedOption = options[index];
+    final correctAnswer = provider.currentCard?.backText;
+    final isCorrect = selectedOption == correctAnswer;
+    provider.checkAnswer(isCorrect: isCorrect);
+  }
+
+  void _revealAnswer(PracticeSessionProvider provider) {
+    // For reading recognition - reveal the answer
+    if (provider.answerState == AnswerState.pending) {
+      provider.checkAnswer(isCorrect: true);
+    }
   }
 
   @override
@@ -144,20 +194,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   ),
                 ),
                 
-                // Swipe hint (when answer is checked)
-                if (provider.canSwipe) ...[
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                    child: const Text(
-                      'Swipe or use ← → arrow keys\nLeft = Incorrect • Right = Correct',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
+                // Keyboard hints
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  child: Text(
+                    provider.canSwipe
+                        ? 'Enter/Space = Confirm • ← = Wrong • → = Correct'
+                        : '1-4 = Select option • Space/Enter = Reveal',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 13,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                ],
+                ),
                 
                 const SizedBox(height: 16),
               ],

@@ -98,81 +98,38 @@ void main() {
         expect(find.text('Goodbye'), findsOneWidget);
       });
 
-      testWidgets('should have Check Answer button', (tester) async {
+      testWidgets('should not show Check Answer button (auto-checks on selection)', (tester) async {
         await tester.pumpWidget(buildTestWidget(
           exerciseType: ExerciseType.multipleChoiceText,
           multipleChoiceOptions: ['Hello', 'World', 'Thanks', 'Goodbye'],
         ));
 
-        expect(find.text('Check Answer'), findsOneWidget);
+        // Multiple choice auto-checks on selection, no button needed
+        expect(find.text('Check Answer'), findsNothing);
       });
 
-      testWidgets('should disable Check Answer when no option selected', (tester) async {
+      testWidgets('should auto-check correct answer on selection', (tester) async {
         await tester.pumpWidget(buildTestWidget(
           exerciseType: ExerciseType.multipleChoiceText,
           multipleChoiceOptions: ['Hello', 'World', 'Thanks', 'Goodbye'],
         ));
 
-        // Verify the button text exists
-        expect(find.text('Check Answer'), findsOneWidget);
-        
-        // The button should be disabled (no option selected)
-        // Tap the button and verify callback wasn't called
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-        
-        // Since no option was selected, onCheckAnswer should not have been called
-        expect(checkAnswerCalled, false);
-      });
-
-      testWidgets('should enable Check Answer after selecting option', (tester) async {
-        await tester.pumpWidget(buildTestWidget(
-          exerciseType: ExerciseType.multipleChoiceText,
-          multipleChoiceOptions: ['Hello', 'World', 'Thanks', 'Goodbye'],
-        ));
-
-        // Tap an option
+        // Tap correct answer - should immediately check
         await tester.tap(find.text('Hello'));
-        await tester.pump();
-
-        // Now tap Check Answer - it should work
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-        
-        // Callback should have been called
-        expect(checkAnswerCalled, true);
-      });
-
-      testWidgets('should call onCheckAnswer with true for correct answer', (tester) async {
-        await tester.pumpWidget(buildTestWidget(
-          exerciseType: ExerciseType.multipleChoiceText,
-          multipleChoiceOptions: ['Hello', 'World', 'Thanks', 'Goodbye'],
-        ));
-
-        // Select correct answer
-        await tester.tap(find.text('Hello'));
-        await tester.pump();
-
-        // Check answer
-        await tester.tap(find.text('Check Answer'));
         await tester.pump();
 
         expect(checkAnswerCalled, true);
         expect(lastCheckAnswerValue, true);
       });
 
-      testWidgets('should call onCheckAnswer with false for incorrect answer', (tester) async {
+      testWidgets('should auto-check incorrect answer on selection', (tester) async {
         await tester.pumpWidget(buildTestWidget(
           exerciseType: ExerciseType.multipleChoiceText,
           multipleChoiceOptions: ['Hello', 'World', 'Thanks', 'Goodbye'],
         ));
 
-        // Select incorrect answer
+        // Tap incorrect answer - should immediately check
         await tester.tap(find.text('World'));
-        await tester.pump();
-
-        // Check answer
-        await tester.tap(find.text('Check Answer'));
         await tester.pump();
 
         expect(checkAnswerCalled, true);
@@ -231,20 +188,12 @@ void main() {
         expect(find.text('What does this word mean?'), findsOneWidget);
       });
 
-      testWidgets('should have Reveal Answer button', (tester) async {
+      testWidgets('should show tap-to-reveal card before answer', (tester) async {
         await tester.pumpWidget(buildTestWidget(
           exerciseType: ExerciseType.readingRecognition,
         ));
 
-        expect(find.text('Reveal Answer'), findsOneWidget);
-      });
-
-      testWidgets('should show hidden answer placeholder before reveal', (tester) async {
-        await tester.pumpWidget(buildTestWidget(
-          exerciseType: ExerciseType.readingRecognition,
-        ));
-
-        expect(find.text('Tap "Reveal Answer" to see the translation'), findsOneWidget);
+        expect(find.text('Tap to reveal the answer'), findsOneWidget);
         expect(find.byIcon(Icons.visibility_off), findsOneWidget);
       });
 
@@ -421,13 +370,13 @@ void main() {
 
     group('State Reset', () {
       testWidgets('should reset state when card changes', (tester) async {
+        // Use writing exercise to test state reset (has Check Answer button)
         await tester.pumpWidget(buildTestWidget(
-          exerciseType: ExerciseType.multipleChoiceText,
-          multipleChoiceOptions: ['Hello', 'World', 'Thanks', 'Goodbye'],
+          exerciseType: ExerciseType.writingTranslation,
         ));
 
-        // Select an option
-        await tester.tap(find.text('Hello'));
+        // Type something
+        await tester.enterText(find.byType(TextField), 'test input');
         await tester.pump();
 
         // Rebuild with different card
@@ -442,16 +391,12 @@ void main() {
         );
 
         await tester.pumpWidget(buildTestWidget(
-          exerciseType: ExerciseType.multipleChoiceText,
-          multipleChoiceOptions: ['World', 'Hello', 'Thanks', 'Goodbye'],
+          exerciseType: ExerciseType.writingTranslation,
           card: newCard,
         ));
 
-        // Check Answer should be disabled (no selection)
-        // Tap Check Answer - it should not trigger callback
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-        expect(checkAnswerCalled, false);
+        // Text field should be cleared after card change
+        expect(find.text('test input'), findsNothing);
       });
     });
   });

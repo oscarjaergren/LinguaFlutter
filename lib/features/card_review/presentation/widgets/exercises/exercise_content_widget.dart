@@ -133,6 +133,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
               text: promptText,
               languageCode: promptLanguage,
               size: 28,
+              autoPlay: !isReverse, // Only auto-play for foreign language prompts
             ),
           ],
         ),
@@ -216,7 +217,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: InkWell(
-            onTap: hasAnswered ? null : () => setState(() => _selectedAnswer = option),
+            onTap: hasAnswered ? null : () => _selectAndCheckAnswer(option, correctAnswer),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -386,6 +387,12 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       return const SizedBox.shrink();
     }
     
+    // For multiple choice, answer is checked on selection - no button needed
+    if (!hasAnswered && (widget.exerciseType == ExerciseType.multipleChoiceText ||
+        widget.exerciseType == ExerciseType.multipleChoiceIcon)) {
+      return const SizedBox.shrink();
+    }
+    
     if (!hasAnswered) {
       return _buildCheckAnswerButton(context);
     }
@@ -469,6 +476,13 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     final userAnswer = _textController.text.trim().toLowerCase();
     final correctAnswer = widget.card.frontText.trim().toLowerCase();
     return userAnswer == correctAnswer;
+  }
+
+  /// For multiple choice: select answer and immediately check it
+  void _selectAndCheckAnswer(String option, String correctAnswer) {
+    setState(() => _selectedAnswer = option);
+    final isCorrect = option == correctAnswer;
+    widget.onCheckAnswer(isCorrect);
   }
 
   Widget _buildOverrideButtons(BuildContext context) {

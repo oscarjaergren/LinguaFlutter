@@ -35,10 +35,15 @@ abstract class BaseAiProviderClient implements AiProviderClient {
     );
 
     if (response.statusCode != 200) {
-      throw AiProviderException(
-        'API error: ${response.statusCode}',
-        response.body,
-      );
+      final errorMessage = switch (response.statusCode) {
+        429 => 'Rate limit exceeded. Please wait a moment and try again.',
+        401 => 'Invalid API key. Please check your credentials.',
+        403 => 'Access denied. Your API key may not have access to this model.',
+        404 => 'Model not found. Please check the model name.',
+        500 || 502 || 503 => 'AI service temporarily unavailable. Please try again.',
+        _ => 'API error: ${response.statusCode}',
+      };
+      throw AiProviderException(errorMessage, response.body);
     }
 
     return response;

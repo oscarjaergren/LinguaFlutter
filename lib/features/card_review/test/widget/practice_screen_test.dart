@@ -102,20 +102,20 @@ void main() {
         final initialCorrectCount = provider.correctCount;
         final initialIndex = provider.currentIndex;
 
-        // Check answer (works for all exercise types)
+        // Check answer - handle different exercise types
+        final tapToReveal = find.text('Tap to reveal the answer');
         final checkButton = find.text('Check Answer');
-        final revealButton = find.text('Reveal Answer');
         
-        if (revealButton.evaluate().isNotEmpty) {
-          await tester.tap(revealButton);
+        if (tapToReveal.evaluate().isNotEmpty) {
+          // Reading recognition - tap to reveal
+          await tester.tap(tapToReveal);
+          await tester.pump();
+        } else if (provider.multipleChoiceOptions != null) {
+          // Multiple choice - auto-checks on selection
+          await tester.tap(find.text(provider.currentCard!.backText));
           await tester.pump();
         } else if (checkButton.evaluate().isNotEmpty) {
-          // For multiple choice, select an option first
-          if (provider.multipleChoiceOptions != null) {
-            await tester.tap(find.text(provider.currentCard!.backText));
-            await tester.pump();
-          }
-          // For writing, enter text
+          // Writing exercise
           if (find.byType(TextField).evaluate().isNotEmpty) {
             await tester.enterText(find.byType(TextField), provider.currentCard!.backText);
             await tester.pump();
@@ -150,18 +150,20 @@ void main() {
 
         expect(updatedCards, isEmpty);
 
-        // Complete one exercise
-        final revealButton = find.text('Reveal Answer');
+        // Complete one exercise - handle different exercise types
+        final tapToReveal = find.text('Tap to reveal the answer');
         final checkButton = find.text('Check Answer');
         
-        if (revealButton.evaluate().isNotEmpty) {
-          await tester.tap(revealButton);
+        if (tapToReveal.evaluate().isNotEmpty) {
+          // Reading recognition - tap to reveal
+          await tester.tap(tapToReveal);
+          await tester.pump();
+        } else if (provider.multipleChoiceOptions != null) {
+          // Multiple choice - auto-checks on selection
+          await tester.tap(find.text(provider.currentCard!.backText));
           await tester.pump();
         } else if (checkButton.evaluate().isNotEmpty) {
-          if (provider.multipleChoiceOptions != null) {
-            await tester.tap(find.text(provider.currentCard!.backText));
-            await tester.pump();
-          }
+          // Writing exercise
           if (find.byType(TextField).evaluate().isNotEmpty) {
             await tester.enterText(find.byType(TextField), provider.currentCard!.backText);
             await tester.pump();
@@ -187,18 +189,20 @@ void main() {
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
-        // Complete answer check
-        final revealButton = find.text('Reveal Answer');
+        // Complete answer check - handle different exercise types
+        final tapToReveal = find.text('Tap to reveal the answer');
         final checkButton = find.text('Check Answer');
         
-        if (revealButton.evaluate().isNotEmpty) {
-          await tester.tap(revealButton);
+        if (tapToReveal.evaluate().isNotEmpty) {
+          // Reading recognition - tap to reveal
+          await tester.tap(tapToReveal);
+          await tester.pump();
+        } else if (provider.multipleChoiceOptions != null) {
+          // Multiple choice - auto-checks on selection
+          await tester.tap(find.text(provider.currentCard!.backText));
           await tester.pump();
         } else if (checkButton.evaluate().isNotEmpty) {
-          if (provider.multipleChoiceOptions != null) {
-            await tester.tap(find.text(provider.currentCard!.backText));
-            await tester.pump();
-          }
+          // Writing exercise
           if (find.byType(TextField).evaluate().isNotEmpty) {
             await tester.enterText(find.byType(TextField), provider.currentCard!.backText);
             await tester.pump();

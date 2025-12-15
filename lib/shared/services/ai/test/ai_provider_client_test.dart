@@ -118,14 +118,14 @@ void main() {
   group('GeminiClient', () {
     test('has correct default model', () {
       final client = GeminiClient();
-      expect(client.defaultModel, 'gemini-1.5-flash');
+      expect(client.defaultModel, 'gemini-2.5-flash-lite');
     });
 
     test('complete sends correct request with key in URL', () async {
       final mockClient = MockClient((request) async {
         expect(
           request.url.toString(),
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=test-key',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=test-key',
         );
         expect(request.headers['Authorization'], isNull);
         

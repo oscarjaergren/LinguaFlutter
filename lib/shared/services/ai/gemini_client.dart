@@ -8,7 +8,7 @@ class GeminiClient extends BaseAiProviderClient {
   GeminiClient({super.client});
 
   @override
-  String get defaultModel => 'gemini-1.5-flash';
+  String get defaultModel => 'gemini-2.5-flash-lite';
 
   @override
   Future<String> complete({

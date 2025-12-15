@@ -13,6 +13,10 @@ class SpeakerButton extends StatefulWidget {
   final double size;
   final Color? color;
   final bool showLabel;
+  
+  /// If true, automatically speaks the text when the widget appears
+  /// or when the text changes
+  final bool autoPlay;
 
   const SpeakerButton({
     super.key,
@@ -21,6 +25,7 @@ class SpeakerButton extends StatefulWidget {
     this.size = 40,
     this.color,
     this.showLabel = false,
+    this.autoPlay = false,
   });
 
   @override
@@ -42,6 +47,24 @@ class _SpeakerButtonState extends State<SpeakerButton>
       vsync: this,
     );
     _ttsService.initialize();
+    
+    // Auto-play on first appearance if enabled
+    if (widget.autoPlay) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _speak();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(SpeakerButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Auto-play when text changes if enabled
+    if (widget.autoPlay && oldWidget.text != widget.text) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _speak();
+      });
+    }
   }
 
   @override

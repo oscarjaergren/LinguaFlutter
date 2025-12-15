@@ -112,9 +112,16 @@ void main() {
 
     test('defaultModel returns correct models', () {
       expect(AiProvider.openai.defaultModel, 'gpt-4o-mini');
-      expect(AiProvider.anthropic.defaultModel, 'claude-3-haiku-20240307');
-      expect(AiProvider.gemini.defaultModel, 'gemini-1.5-flash');
+      expect(AiProvider.anthropic.defaultModel, 'claude-3-5-haiku-latest');
+      expect(AiProvider.gemini.defaultModel, 'gemini-2.5-flash-lite');
       expect(AiProvider.openRouter.defaultModel, 'openai/gpt-4o-mini');
+    });
+
+    test('availableModels returns non-empty lists', () {
+      for (final provider in AiProvider.values) {
+        expect(provider.availableModels, isNotEmpty);
+        expect(provider.availableModels.contains(provider.defaultModel), isTrue);
+      }
     });
   });
 }
