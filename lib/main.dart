@@ -33,9 +33,11 @@ void main() async {
     languageProvider: languageProvider,
   );
   final duplicateDetectionProvider = DuplicateDetectionProvider();
+  final cardEnrichmentProvider = CardEnrichmentProvider();
 
   // Initialize providers that need async setup
   await themeProvider.initialize();
+  await cardEnrichmentProvider.initialize();
   
   // Wire up auth state change callback to initialize data providers
   authProvider.onAuthStateChanged = (isAuthenticated) async {
@@ -73,6 +75,7 @@ void main() async {
         // Feature-specific providers (VSA)
         ChangeNotifierProvider.value(value: cardManagementProvider),
         ChangeNotifierProvider.value(value: duplicateDetectionProvider),
+        ChangeNotifierProvider.value(value: cardEnrichmentProvider),
         
         // UI providers
         ChangeNotifierProvider(create: (_) => MascotProvider()),

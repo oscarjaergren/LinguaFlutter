@@ -4,8 +4,10 @@ import '../../../icon_search/icon_search.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../../shared/domain/models/word_data.dart';
+import '../../../../shared/services/ai/ai.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../domain/providers/card_management_provider.dart';
+import '../../domain/providers/card_enrichment_provider.dart';
 
 /// Screen for creating and editing language learning cards with full model support
 class CreationCreationScreen extends StatefulWidget {
@@ -51,6 +53,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   // State
   IconModel? _selectedIcon;
   bool _isLoading = false;
+  bool _isAutoFilling = false;
   WordType _selectedWordType = WordType.other;
   List<String> _examples = [];
   final _exampleController = TextEditingController();
@@ -85,10 +88,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       // Initialize word data
       if (card.wordData != null) {
         _initializeWordData(card.wordData!);
-      } else if (card.germanArticle != null) {
-        // Legacy: convert germanArticle to noun word data
-        _selectedWordType = WordType.noun;
-        _nounGender = card.germanArticle;
       }
       
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -232,6 +231,177 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     setState(() => _examples.removeAt(index));
   }
 
+  Future<void> _autoFillWithAI() async {
+    final frontText = _frontTextController.text.trim();
+    if (frontText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter a word first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final aiProvider = context.read<CardEnrichmentProvider>();
+    if (!aiProvider.isConfigured) {
+      _showApiKeyDialog();
+      return;
+    }
+
+    setState(() => _isAutoFilling = true);
+
+    try {
+      final languageProvider = context.read<LanguageProvider>();
+      final result = await aiProvider.enrichWord(
+        word: frontText,
+        language: languageProvider.activeLanguage,
+      );
+
+      if (result != null && mounted) {
+        setState(() {
+          // Set word type
+          _selectedWordType = result.wordType;
+          
+          // Set translation if back text is empty
+          if (_backTextController.text.isEmpty && result.translation != null) {
+            _backTextController.text = result.translation!;
+          }
+          
+          // Set word-specific data
+          if (result.wordData != null) {
+            _applyWordData(result.wordData!);
+          }
+          
+          // Add examples
+          if (result.examples.isNotEmpty) {
+            _examples = List.from(result.examples);
+          }
+          
+          // Set notes
+          if (result.notes != null && _notesController.text.isEmpty) {
+            _notesController.text = result.notes!;
+          }
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Auto-filled successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else if (aiProvider.error != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('AI Error: ${aiProvider.error}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isAutoFilling = false);
+    }
+  }
+
+  void _applyWordData(WordData wordData) {
+    switch (wordData) {
+      case VerbData():
+        _isRegularVerb = wordData.isRegular;
+        _isSeparableVerb = wordData.isSeparable;
+        _separablePrefixController.text = wordData.separablePrefix ?? '';
+        _auxiliaryVerb = wordData.auxiliary;
+        _presentDuController.text = wordData.presentDu ?? '';
+        _presentErController.text = wordData.presentEr ?? '';
+        _pastSimpleController.text = wordData.pastSimple ?? '';
+        _pastParticipleController.text = wordData.pastParticiple ?? '';
+      case NounData():
+        _nounGender = wordData.gender;
+        _pluralController.text = wordData.plural ?? '';
+        _genitiveController.text = wordData.genitive ?? '';
+      case AdjectiveData():
+        _comparativeController.text = wordData.comparative ?? '';
+        _superlativeController.text = wordData.superlative ?? '';
+      case AdverbData():
+        _usageNoteController.text = wordData.usageNote ?? '';
+    }
+  }
+
+  void _showApiKeyDialog() {
+    final keyController = TextEditingController();
+    final aiProvider = context.read<CardEnrichmentProvider>();
+    var selectedProvider = AiProvider.gemini; // Default to Gemini (free tier)
+    
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('AI Configuration'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select a provider and enter your API key.\n'
+                'Gemini offers a free tier - get a key at ai.google.dev',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<AiProvider>(
+                value: selectedProvider,
+                decoration: const InputDecoration(
+                  labelText: 'Provider',
+                  border: OutlineInputBorder(),
+                ),
+                items: AiProvider.values.map((p) => DropdownMenuItem(
+                  value: p,
+                  child: Text(p.displayName),
+                )).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() => selectedProvider = value);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: keyController,
+                decoration: InputDecoration(
+                  labelText: 'API Key',
+                  hintText: selectedProvider == AiProvider.gemini 
+                      ? 'AIza...' 
+                      : 'sk-...',
+                  border: const OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (keyController.text.trim().isNotEmpty) {
+                  await aiProvider.setProvider(selectedProvider);
+                  await aiProvider.setApiKey(keyController.text.trim());
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                    _autoFillWithAI();
+                  }
+                }
+              },
+              child: const Text('Save & Continue'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveCard() async {
     if (!_formKey.currentState!.validate()) return;
     
@@ -250,11 +420,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       
       final wordData = _buildWordData();
       
-      // For backward compat, also set germanArticle if noun gender selected
-      final germanArticle = (_selectedWordType == WordType.noun && activeLanguage == 'de') 
-          ? _nounGender 
-          : null;
-      
       if (_isEditing) {
         final updatedCard = widget.cardToEdit!.copyWith(
           frontText: _frontTextController.text.trim(),
@@ -263,7 +428,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           language: activeLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          germanArticle: germanArticle,
           wordData: wordData,
           examples: _examples,
           notes: _notesController.text.trim().isNotEmpty 
@@ -280,7 +444,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           language: activeLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          germanArticle: germanArticle,
         ).copyWith(
           wordData: wordData,
           examples: _examples,
@@ -481,20 +644,48 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
             ),
             const SizedBox(height: 16),
             
-            // Front text
+            // Front text with Auto button
             Consumer<LanguageProvider>(
               builder: (context, lp, _) {
                 final details = lp.getLanguageDetails(lp.activeLanguage);
-                return TextFormField(
-                  controller: _frontTextController,
-                  decoration: InputDecoration(
-                    labelText: 'Word/Phrase (${details?['name'] ?? 'Target'})',
-                    hintText: 'Enter the word or phrase to learn',
-                    border: const OutlineInputBorder(),
-                    prefixIcon: const Icon(Icons.translate),
-                  ),
-                  textInputAction: TextInputAction.next,
-                  validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _frontTextController,
+                        decoration: InputDecoration(
+                          labelText: 'Word/Phrase (${details?['name'] ?? 'Target'})',
+                          hintText: 'Enter the word or phrase to learn',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.translate),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: _isAutoFilling
+                          ? const SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                              ),
+                            )
+                          : IconButton.filled(
+                              onPressed: _autoFillWithAI,
+                              icon: const Icon(Icons.auto_awesome),
+                              tooltip: 'Auto-fill with AI',
+                            ),
+                    ),
+                  ],
                 );
               },
             ),

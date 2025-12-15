@@ -310,9 +310,6 @@ class CardCreationViewModel extends ChangeNotifier {
     
     try {
       final wordData = _buildWordData();
-      final germanArticle = (_wordType == WordType.noun && isGermanLanguage) 
-          ? _nounGender 
-          : null;
       
       final CardModel card;
       if (_isEditing) {
@@ -323,7 +320,6 @@ class CardCreationViewModel extends ChangeNotifier {
           language: activeLanguage,
           category: _category,
           tags: _tags,
-          germanArticle: germanArticle,
           wordData: wordData,
           examples: _examples,
           notes: _notes,
@@ -337,7 +333,6 @@ class CardCreationViewModel extends ChangeNotifier {
           language: activeLanguage,
           category: _category,
           tags: _tags,
-          germanArticle: germanArticle,
         ).copyWith(
           wordData: wordData,
           examples: _examples,
@@ -406,10 +401,6 @@ class CardCreationViewModel extends ChangeNotifier {
     // Initialize word data
     if (card.wordData != null) {
       _initializeWordData(card.wordData!);
-    } else if (card.germanArticle != null) {
-      // Legacy support
-      _wordType = WordType.noun;
-      _nounGender = card.germanArticle;
     }
   }
 
