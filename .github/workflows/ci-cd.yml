@@ -91,7 +91,7 @@ jobs:
       run: flutter build web --release
       
     - name: Upload web build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: web-build
         path: build/web/
@@ -121,7 +121,7 @@ jobs:
       run: flutter build windows --release
       
     - name: Upload Windows build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: windows-build
         path: build/windows/x64/runner/Release/
@@ -160,13 +160,13 @@ jobs:
       run: flutter build appbundle --release
       
     - name: Upload Android APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: android-apk
         path: build/app/outputs/flutter-apk/app-release.apk
         
     - name: Upload Android App Bundle
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: android-aab
         path: build/app/outputs/bundle/release/app-release.aab
@@ -196,7 +196,7 @@ jobs:
       run: flutter build ios --release --no-codesign
       
     - name: Upload iOS build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ios-build
         path: build/ios/iphoneos/
