@@ -1,34 +1,56 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
+import '../../../../shared/domain/models/word_data.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../../icon_search/domain/icon_provider.dart';
 import '../../domain/providers/card_management_provider.dart';
 
-/// ViewModel for card creation and editing, handling form state and validation
+/// ViewModel for card creation and editing with full model support
 class CardCreationViewModel extends ChangeNotifier {
   final CardManagementProvider _cardManagement;
   final LanguageProvider _languageProvider;
   final IconProvider _iconProvider;
+  final CardModel? _cardToEdit;
 
-  // Form state
+  // Basic form state
   String _frontText = '';
   String _backText = '';
   String _category = '';
   List<String> _tags = [];
   IconModel? _selectedIcon;
-  String? _germanArticle;
+  String? _notes;
+  List<String> _examples = [];
+  
+  // Word type state
+  WordType _wordType = WordType.other;
+  
+  // Verb-specific state
+  bool _isRegularVerb = true;
+  bool _isSeparableVerb = false;
+  String _auxiliaryVerb = 'haben';
+  String? _separablePrefix;
+  String? _presentDu;
+  String? _presentEr;
+  String? _pastSimple;
+  String? _pastParticiple;
+  
+  // Noun-specific state
+  String? _nounGender;
+  String? _plural;
+  String? _genitive;
+  
+  // Adjective-specific state
+  String? _comparative;
+  String? _superlative;
+  
+  // Adverb-specific state
+  String? _usageNote;
   
   // UI state
   bool _isLoading = false;
   bool _isEditing = false;
   String? _errorMessage;
-  final CardModel? _cardToEdit;
-
-  // Validation state
-  bool _frontTextValid = false;
-  bool _backTextValid = false;
-  bool _categoryValid = false;
 
   CardCreationViewModel({
     required CardManagementProvider cardManagement,
@@ -39,128 +61,242 @@ class CardCreationViewModel extends ChangeNotifier {
         _languageProvider = languageProvider,
         _iconProvider = iconProvider,
         _cardToEdit = cardToEdit {
-    
     _isEditing = cardToEdit != null;
     if (_isEditing) {
       _initializeFromCard(cardToEdit!);
     }
-    
-    // Listen to provider changes
-    _cardManagement.addListener(_onCardProviderChanged);
-    _languageProvider.addListener(_onLanguageProviderChanged);
-    _iconProvider.addListener(_onIconProviderChanged);
+    _cardManagement.addListener(_onProviderChanged);
+    _languageProvider.addListener(_onProviderChanged);
+    _iconProvider.addListener(_onProviderChanged);
   }
 
   @override
   void dispose() {
-    _cardManagement.removeListener(_onCardProviderChanged);
-    _languageProvider.removeListener(_onLanguageProviderChanged);
-    _iconProvider.removeListener(_onIconProviderChanged);
+    _cardManagement.removeListener(_onProviderChanged);
+    _languageProvider.removeListener(_onProviderChanged);
+    _iconProvider.removeListener(_onProviderChanged);
     super.dispose();
   }
 
-  // Getters for UI state
+  // UI state getters
   bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
   String? get errorMessage => _errorMessage;
   
-  // Form field getters
+  // Basic form getters
   String get frontText => _frontText;
   String get backText => _backText;
   String get category => _category;
   List<String> get tags => List.unmodifiable(_tags);
   String get tagsAsString => _tags.join(', ');
   IconModel? get selectedIcon => _selectedIcon;
-  String? get germanArticle => _germanArticle;
+  String? get notes => _notes;
+  List<String> get examples => List.unmodifiable(_examples);
+  
+  // Word type getters
+  WordType get wordType => _wordType;
+  
+  // Verb getters
+  bool get isRegularVerb => _isRegularVerb;
+  bool get isSeparableVerb => _isSeparableVerb;
+  String get auxiliaryVerb => _auxiliaryVerb;
+  String? get separablePrefix => _separablePrefix;
+  String? get presentDu => _presentDu;
+  String? get presentEr => _presentEr;
+  String? get pastSimple => _pastSimple;
+  String? get pastParticiple => _pastParticiple;
+  
+  // Noun getters
+  String? get nounGender => _nounGender;
+  String? get plural => _plural;
+  String? get genitive => _genitive;
+  
+  // Adjective getters
+  String? get comparative => _comparative;
+  String? get superlative => _superlative;
+  
+  // Adverb getters
+  String? get usageNote => _usageNote;
 
-  // Validation getters
-  bool get frontTextValid => _frontTextValid;
-  bool get backTextValid => _backTextValid;
-  bool get categoryValid => _categoryValid;
-  bool get isFormValid => _frontTextValid && _backTextValid && _categoryValid;
+  // Validation
+  bool get isFormValid => 
+      _frontText.isNotEmpty && 
+      _backText.isNotEmpty && 
+      _category.isNotEmpty;
 
-  // Language-related getters
+  // Language getters
   String get activeLanguage => _languageProvider.activeLanguage;
-  Map<String, String> get languageDetails {
-    final details = _languageProvider.getLanguageDetails(activeLanguage);
-    return details != null ? Map<String, String>.from(details) : {};
-  }
   bool get isGermanLanguage => activeLanguage == 'de';
-
-  // Available options
   List<String> get availableCategories => _cardManagement.categories;
   List<String> get availableTags => _cardManagement.availableTags;
-  List<String> get germanArticles => ['der', 'die', 'das'];
 
-  // Form field updates
+  // Basic field updates
   void updateFrontText(String value) {
     _frontText = value.trim();
-    _frontTextValid = _frontText.isNotEmpty;
     _clearError();
     notifyListeners();
   }
 
   void updateBackText(String value) {
     _backText = value.trim();
-    _backTextValid = _backText.isNotEmpty;
     _clearError();
     notifyListeners();
   }
 
   void updateCategory(String value) {
     _category = value.trim();
-    _categoryValid = _category.isNotEmpty;
     _clearError();
     notifyListeners();
   }
 
   void updateTags(String value) {
-    _tags = value
-        .split(',')
-        .map((tag) => tag.trim())
-        .where((tag) => tag.isNotEmpty)
-        .toList();
+    _tags = value.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
     _clearError();
     notifyListeners();
   }
 
-  void updateGermanArticle(String? article) {
-    _germanArticle = article;
-    _clearError();
+  void updateNotes(String? value) {
+    _notes = value?.trim().isNotEmpty == true ? value!.trim() : null;
     notifyListeners();
   }
 
   void selectIcon(IconModel? icon) {
     _selectedIcon = icon;
-    _clearError();
     notifyListeners();
   }
 
-  void clearSelectedIcon() {
+  void clearIcon() {
     _selectedIcon = null;
     notifyListeners();
   }
 
-  // Form validation
-  String? validateFrontText(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Front text is required';
-    }
-    return null;
+  // Word type update
+  void updateWordType(WordType type) {
+    _wordType = type;
+    notifyListeners();
   }
 
-  String? validateBackText(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Back text is required';
-    }
-    return null;
+  // Verb updates
+  void updateIsRegularVerb(bool value) {
+    _isRegularVerb = value;
+    notifyListeners();
   }
 
-  String? validateCategory(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Category is required';
+  void updateIsSeparableVerb(bool value) {
+    _isSeparableVerb = value;
+    notifyListeners();
+  }
+
+  void updateAuxiliaryVerb(String value) {
+    _auxiliaryVerb = value;
+    notifyListeners();
+  }
+
+  void updateSeparablePrefix(String? value) {
+    _separablePrefix = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  void updatePresentDu(String? value) {
+    _presentDu = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  void updatePresentEr(String? value) {
+    _presentEr = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  void updatePastSimple(String? value) {
+    _pastSimple = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  void updatePastParticiple(String? value) {
+    _pastParticiple = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  // Noun updates
+  void updateNounGender(String? value) {
+    _nounGender = value;
+    notifyListeners();
+  }
+
+  void updatePlural(String? value) {
+    _plural = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  void updateGenitive(String? value) {
+    _genitive = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  // Adjective updates
+  void updateComparative(String? value) {
+    _comparative = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  void updateSuperlative(String? value) {
+    _superlative = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  // Adverb updates
+  void updateUsageNote(String? value) {
+    _usageNote = value?.trim().isNotEmpty == true ? value!.trim() : null;
+    notifyListeners();
+  }
+
+  // Examples management
+  void addExample(String example) {
+    if (example.trim().isNotEmpty) {
+      _examples.add(example.trim());
+      notifyListeners();
     }
-    return null;
+  }
+
+  void removeExample(int index) {
+    if (index >= 0 && index < _examples.length) {
+      _examples.removeAt(index);
+      notifyListeners();
+    }
+  }
+
+  // Build WordData from current state
+  WordData? _buildWordData() {
+    switch (_wordType) {
+      case WordType.verb:
+        return WordData.verb(
+          isRegular: _isRegularVerb,
+          isSeparable: _isSeparableVerb,
+          separablePrefix: _separablePrefix,
+          auxiliary: _auxiliaryVerb,
+          presentDu: _presentDu,
+          presentEr: _presentEr,
+          pastSimple: _pastSimple,
+          pastParticiple: _pastParticiple,
+        );
+      case WordType.noun:
+        if (_nounGender == null) return null;
+        return WordData.noun(
+          gender: _nounGender!,
+          plural: _plural,
+          genitive: _genitive,
+        );
+      case WordType.adjective:
+        return WordData.adjective(
+          comparative: _comparative,
+          superlative: _superlative,
+        );
+      case WordType.adverb:
+        return WordData.adverb(usageNote: _usageNote);
+      case WordType.phrase:
+      case WordType.other:
+        return null;
+    }
   }
 
   // Actions
@@ -173,34 +309,61 @@ class CardCreationViewModel extends ChangeNotifier {
     _setLoading(true);
     
     try {
-      final card = _buildCardModel();
+      final wordData = _buildWordData();
+      final germanArticle = (_wordType == WordType.noun && isGermanLanguage) 
+          ? _nounGender 
+          : null;
       
+      final CardModel card;
       if (_isEditing) {
-        await _cardManagement.updateCard(card);
+        card = _cardToEdit!.copyWith(
+          frontText: _frontText,
+          backText: _backText,
+          icon: _selectedIcon,
+          language: activeLanguage,
+          category: _category,
+          tags: _tags,
+          germanArticle: germanArticle,
+          wordData: wordData,
+          examples: _examples,
+          notes: _notes,
+          updatedAt: DateTime.now(),
+        );
       } else {
-        await _cardManagement.saveCard(card);
+        card = CardModel.create(
+          frontText: _frontText,
+          backText: _backText,
+          icon: _selectedIcon,
+          language: activeLanguage,
+          category: _category,
+          tags: _tags,
+          germanArticle: germanArticle,
+        ).copyWith(
+          wordData: wordData,
+          examples: _examples,
+          notes: _notes,
+        );
       }
       
+      await _cardManagement.saveCard(card);
       _setLoading(false);
       return true;
     } catch (e) {
       _setLoading(false);
-      _setError('Failed to save card: ${e.toString()}');
+      _setError('Failed to save card: $e');
       return false;
     }
   }
 
   Future<void> deleteCard() async {
     if (!_isEditing || _cardToEdit == null) return;
-
     _setLoading(true);
-    
     try {
       await _cardManagement.deleteCard(_cardToEdit.id);
       _setLoading(false);
     } catch (e) {
       _setLoading(false);
-      _setError('Failed to delete card: ${e.toString()}');
+      _setError('Failed to delete card: $e');
     }
   }
 
@@ -210,33 +373,25 @@ class CardCreationViewModel extends ChangeNotifier {
     _category = '';
     _tags = [];
     _selectedIcon = null;
-    _germanArticle = null;
-    _frontTextValid = false;
-    _backTextValid = false;
-    _categoryValid = false;
+    _notes = null;
+    _examples = [];
+    _wordType = WordType.other;
+    _isRegularVerb = true;
+    _isSeparableVerb = false;
+    _auxiliaryVerb = 'haben';
+    _separablePrefix = null;
+    _presentDu = null;
+    _presentEr = null;
+    _pastSimple = null;
+    _pastParticiple = null;
+    _nounGender = null;
+    _plural = null;
+    _genitive = null;
+    _comparative = null;
+    _superlative = null;
+    _usageNote = null;
     _clearError();
     notifyListeners();
-  }
-
-  // Helper methods
-  CardModel _buildCardModel() {
-    return CardModel(
-      id: _isEditing ? _cardToEdit!.id : DateTime.now().millisecondsSinceEpoch.toString(),
-      frontText: _frontText,
-      backText: _backText,
-      icon: _selectedIcon,
-      language: activeLanguage,
-      category: _category,
-      tags: _tags,
-      germanArticle: _germanArticle,
-      createdAt: _isEditing ? _cardToEdit!.createdAt : DateTime.now(),
-      updatedAt: DateTime.now(),
-      lastReviewed: _isEditing ? _cardToEdit!.lastReviewed : null,
-      nextReview: _isEditing ? _cardToEdit!.nextReview : DateTime.now(),
-      reviewCount: _isEditing ? _cardToEdit!.reviewCount : 0,
-      correctCount: _isEditing ? _cardToEdit!.correctCount : 0,
-      isFavorite: _isEditing ? _cardToEdit!.isFavorite : false,
-    );
   }
 
   void _initializeFromCard(CardModel card) {
@@ -245,12 +400,44 @@ class CardCreationViewModel extends ChangeNotifier {
     _category = card.category;
     _tags = List.from(card.tags);
     _selectedIcon = card.icon;
-    _germanArticle = card.germanArticle;
+    _notes = card.notes;
+    _examples = List.from(card.examples);
     
-    // Update validation state
-    _frontTextValid = _frontText.isNotEmpty;
-    _backTextValid = _backText.isNotEmpty;
-    _categoryValid = _category.isNotEmpty;
+    // Initialize word data
+    if (card.wordData != null) {
+      _initializeWordData(card.wordData!);
+    } else if (card.germanArticle != null) {
+      // Legacy support
+      _wordType = WordType.noun;
+      _nounGender = card.germanArticle;
+    }
+  }
+
+  void _initializeWordData(WordData wordData) {
+    switch (wordData) {
+      case VerbData():
+        _wordType = WordType.verb;
+        _isRegularVerb = wordData.isRegular;
+        _isSeparableVerb = wordData.isSeparable;
+        _separablePrefix = wordData.separablePrefix;
+        _auxiliaryVerb = wordData.auxiliary;
+        _presentDu = wordData.presentDu;
+        _presentEr = wordData.presentEr;
+        _pastSimple = wordData.pastSimple;
+        _pastParticiple = wordData.pastParticiple;
+      case NounData():
+        _wordType = WordType.noun;
+        _nounGender = wordData.gender;
+        _plural = wordData.plural;
+        _genitive = wordData.genitive;
+      case AdjectiveData():
+        _wordType = WordType.adjective;
+        _comparative = wordData.comparative;
+        _superlative = wordData.superlative;
+      case AdverbData():
+        _wordType = WordType.adverb;
+        _usageNote = wordData.usageNote;
+    }
   }
 
   void _setLoading(bool loading) {
@@ -270,18 +457,5 @@ class CardCreationViewModel extends ChangeNotifier {
     }
   }
 
-  void _onCardProviderChanged() {
-    // Handle any card provider changes if needed
-    notifyListeners();
-  }
-
-  void _onLanguageProviderChanged() {
-    // Handle language changes
-    notifyListeners();
-  }
-
-  void _onIconProviderChanged() {
-    // Handle icon provider changes if needed
-    notifyListeners();
-  }
+  void _onProviderChanged() => notifyListeners();
 }

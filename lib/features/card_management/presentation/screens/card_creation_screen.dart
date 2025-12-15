@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import '../../../icon_search/icon_search.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
+import '../../../../shared/domain/models/word_data.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../domain/providers/card_management_provider.dart';
 
-/// Simple screen for creating and editing language learning cards
+/// Screen for creating and editing language learning cards with full model support
 class CreationCreationScreen extends StatefulWidget {
   final CardModel? cardToEdit;
   
@@ -21,14 +22,48 @@ class CreationCreationScreen extends StatefulWidget {
 
 class _CreationCreationScreenState extends State<CreationCreationScreen> {
   final _formKey = GlobalKey<FormState>();
+  
+  // Basic text controllers
   final _frontTextController = TextEditingController();
   final _backTextController = TextEditingController();
   final _categoryController = TextEditingController();
   final _tagsController = TextEditingController();
+  final _notesController = TextEditingController();
   
+  // Verb-specific controllers
+  final _presentDuController = TextEditingController();
+  final _presentErController = TextEditingController();
+  final _pastSimpleController = TextEditingController();
+  final _pastParticipleController = TextEditingController();
+  final _separablePrefixController = TextEditingController();
+  
+  // Noun-specific controllers
+  final _pluralController = TextEditingController();
+  final _genitiveController = TextEditingController();
+  
+  // Adjective-specific controllers
+  final _comparativeController = TextEditingController();
+  final _superlativeController = TextEditingController();
+  
+  // Adverb-specific controllers
+  final _usageNoteController = TextEditingController();
+  
+  // State
   IconModel? _selectedIcon;
   bool _isLoading = false;
-  String? _germanArticle; // For German nouns: der, die, das
+  WordType _selectedWordType = WordType.other;
+  List<String> _examples = [];
+  final _exampleController = TextEditingController();
+  
+  // Verb state
+  bool _isRegularVerb = true;
+  bool _isSeparableVerb = false;
+  String _auxiliaryVerb = 'haben';
+  
+  // Noun state
+  String? _nounGender;
+
+  bool get _isEditing => widget.cardToEdit != null;
 
   @override
   void initState() {
@@ -44,12 +79,48 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       _categoryController.text = card.category;
       _tagsController.text = card.tags.join(', ');
       _selectedIcon = card.icon;
-      _germanArticle = card.germanArticle;
+      _notesController.text = card.notes ?? '';
+      _examples = List.from(card.examples);
       
-      // Set the language in the provider to match the card being edited
+      // Initialize word data
+      if (card.wordData != null) {
+        _initializeWordData(card.wordData!);
+      } else if (card.germanArticle != null) {
+        // Legacy: convert germanArticle to noun word data
+        _selectedWordType = WordType.noun;
+        _nounGender = card.germanArticle;
+      }
+      
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<LanguageProvider>().setActiveLanguage(card.language);
       });
+    }
+  }
+
+  void _initializeWordData(WordData wordData) {
+    switch (wordData) {
+      case VerbData():
+        _selectedWordType = WordType.verb;
+        _isRegularVerb = wordData.isRegular;
+        _isSeparableVerb = wordData.isSeparable;
+        _separablePrefixController.text = wordData.separablePrefix ?? '';
+        _auxiliaryVerb = wordData.auxiliary;
+        _presentDuController.text = wordData.presentDu ?? '';
+        _presentErController.text = wordData.presentEr ?? '';
+        _pastSimpleController.text = wordData.pastSimple ?? '';
+        _pastParticipleController.text = wordData.pastParticiple ?? '';
+      case NounData():
+        _selectedWordType = WordType.noun;
+        _nounGender = wordData.gender;
+        _pluralController.text = wordData.plural ?? '';
+        _genitiveController.text = wordData.genitive ?? '';
+      case AdjectiveData():
+        _selectedWordType = WordType.adjective;
+        _comparativeController.text = wordData.comparative ?? '';
+        _superlativeController.text = wordData.superlative ?? '';
+      case AdverbData():
+        _selectedWordType = WordType.adverb;
+        _usageNoteController.text = wordData.usageNote ?? '';
     }
   }
 
@@ -59,17 +130,80 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     _backTextController.dispose();
     _categoryController.dispose();
     _tagsController.dispose();
+    _notesController.dispose();
+    _presentDuController.dispose();
+    _presentErController.dispose();
+    _pastSimpleController.dispose();
+    _pastParticipleController.dispose();
+    _separablePrefixController.dispose();
+    _pluralController.dispose();
+    _genitiveController.dispose();
+    _comparativeController.dispose();
+    _superlativeController.dispose();
+    _usageNoteController.dispose();
+    _exampleController.dispose();
     super.dispose();
   }
 
+  WordData? _buildWordData() {
+    switch (_selectedWordType) {
+      case WordType.verb:
+        return WordData.verb(
+          isRegular: _isRegularVerb,
+          isSeparable: _isSeparableVerb,
+          separablePrefix: _separablePrefixController.text.trim().isNotEmpty 
+              ? _separablePrefixController.text.trim() 
+              : null,
+          auxiliary: _auxiliaryVerb,
+          presentDu: _presentDuController.text.trim().isNotEmpty 
+              ? _presentDuController.text.trim() 
+              : null,
+          presentEr: _presentErController.text.trim().isNotEmpty 
+              ? _presentErController.text.trim() 
+              : null,
+          pastSimple: _pastSimpleController.text.trim().isNotEmpty 
+              ? _pastSimpleController.text.trim() 
+              : null,
+          pastParticiple: _pastParticipleController.text.trim().isNotEmpty 
+              ? _pastParticipleController.text.trim() 
+              : null,
+        );
+      case WordType.noun:
+        if (_nounGender == null) return null;
+        return WordData.noun(
+          gender: _nounGender!,
+          plural: _pluralController.text.trim().isNotEmpty 
+              ? _pluralController.text.trim() 
+              : null,
+          genitive: _genitiveController.text.trim().isNotEmpty 
+              ? _genitiveController.text.trim() 
+              : null,
+        );
+      case WordType.adjective:
+        return WordData.adjective(
+          comparative: _comparativeController.text.trim().isNotEmpty 
+              ? _comparativeController.text.trim() 
+              : null,
+          superlative: _superlativeController.text.trim().isNotEmpty 
+              ? _superlativeController.text.trim() 
+              : null,
+        );
+      case WordType.adverb:
+        return WordData.adverb(
+          usageNote: _usageNoteController.text.trim().isNotEmpty 
+              ? _usageNoteController.text.trim() 
+              : null,
+        );
+      case WordType.phrase:
+      case WordType.other:
+        return null;
+    }
+  }
+
   Future<void> _selectIcon() async {
-    // Clear any previous selection
     context.read<IconProvider>().clearSelection();
-    
-    // Get the front text to use as initial search query
     final frontText = _frontTextController.text.trim();
     
-    // Navigate to icon search screen with auto-search
     final selectedIcon = await Navigator.push<IconModel>(
       context,
       MaterialPageRoute(
@@ -79,43 +213,49 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       ),
     );
     
-    // Set the returned icon if one was selected
     if (selectedIcon != null) {
+      setState(() => _selectedIcon = selectedIcon);
+    }
+  }
+
+  void _addExample() {
+    final example = _exampleController.text.trim();
+    if (example.isNotEmpty) {
       setState(() {
-        _selectedIcon = selectedIcon;
+        _examples.add(example);
+        _exampleController.clear();
       });
     }
   }
 
-  void _removeIcon() {
-    setState(() {
-      _selectedIcon = null;
-    });
+  void _removeExample(int index) {
+    setState(() => _examples.removeAt(index));
   }
 
   Future<void> _saveCard() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
     
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
     
     try {
       final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
       final activeLanguage = languageProvider.activeLanguage;
       
-      // Parse tags
       final tags = _tagsController.text
           .split(',')
           .map((tag) => tag.trim())
           .where((tag) => tag.isNotEmpty)
           .toList();
       
-      if (widget.cardToEdit != null) {
-        // Update existing card
+      final wordData = _buildWordData();
+      
+      // For backward compat, also set germanArticle if noun gender selected
+      final germanArticle = (_selectedWordType == WordType.noun && activeLanguage == 'de') 
+          ? _nounGender 
+          : null;
+      
+      if (_isEditing) {
         final updatedCard = widget.cardToEdit!.copyWith(
           frontText: _frontTextController.text.trim(),
           backText: _backTextController.text.trim(),
@@ -123,12 +263,16 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           language: activeLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          germanArticle: activeLanguage == 'de' ? _germanArticle : null,
+          germanArticle: germanArticle,
+          wordData: wordData,
+          examples: _examples,
+          notes: _notesController.text.trim().isNotEmpty 
+              ? _notesController.text.trim() 
+              : null,
           updatedAt: DateTime.now(),
         );
-                await cardManagement.saveCard(updatedCard);
+        await cardManagement.saveCard(updatedCard);
       } else {
-        // Create new card
         final newCard = CardModel.create(
           frontText: _frontTextController.text.trim(),
           backText: _backTextController.text.trim(),
@@ -136,7 +280,13 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           language: activeLanguage,
           category: _categoryController.text.trim(),
           tags: tags,
-          germanArticle: activeLanguage == 'de' ? _germanArticle : null,
+          germanArticle: germanArticle,
+        ).copyWith(
+          wordData: wordData,
+          examples: _examples,
+          notes: _notesController.text.trim().isNotEmpty 
+              ? _notesController.text.trim() 
+              : null,
         );
         
         await cardManagement.saveCard(newCard);
@@ -145,30 +295,20 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.cardToEdit != null 
-                ? 'Card updated successfully' 
-                : 'Card created successfully'),
+            content: Text(_isEditing ? 'Card updated' : 'Card created'),
             backgroundColor: Colors.green,
           ),
         );
-        
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error saving card: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -176,11 +316,11 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.cardToEdit != null ? 'Edit Card' : 'Create Card'),
+        title: Text(_isEditing ? 'Edit Card' : 'Create Card'),
         actions: [
           if (_isLoading)
             const Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16),
               child: SizedBox(
                 width: 20,
                 height: 20,
@@ -188,291 +328,614 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
               ),
             )
           else
-            TextButton(
+            FilledButton(
               onPressed: _saveCard,
-              child: Text(
-                widget.cardToEdit != null ? 'UPDATE' : 'CREATE',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Text(_isEditing ? 'Save' : 'Create'),
             ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           children: [
-            // Language display (read-only, determined by active language)
-            Consumer<LanguageProvider>(
-              builder: (context, languageProvider, child) {
-                final activeLanguage = languageProvider.activeLanguage;
-                final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
-                
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+            // Language indicator
+            _buildLanguageCard(context),
+            const SizedBox(height: 16),
+            
+            // Basic info section
+            _buildSectionHeader(context, 'Basic Information', Icons.info_outline),
+            const SizedBox(height: 8),
+            _buildBasicInfoSection(context),
+            const SizedBox(height: 24),
+            
+            // Word type and grammar section
+            _buildSectionHeader(context, 'Word Type & Grammar', Icons.school),
+            const SizedBox(height: 8),
+            _buildWordTypeSelector(context),
+            const SizedBox(height: 12),
+            _buildGrammarSection(context),
+            const SizedBox(height: 24),
+            
+            // Examples section
+            _buildSectionHeader(context, 'Examples', Icons.format_quote),
+            const SizedBox(height: 8),
+            _buildExamplesSection(context),
+            const SizedBox(height: 24),
+            
+            // Organization section
+            _buildSectionHeader(context, 'Organization', Icons.folder_outlined),
+            const SizedBox(height: 8),
+            _buildOrganizationSection(context),
+            const SizedBox(height: 24),
+            
+            // Notes section
+            _buildSectionHeader(context, 'Notes', Icons.notes),
+            const SizedBox(height: 8),
+            _buildNotesSection(context),
+            
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: theme.colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLanguageCard(BuildContext context) {
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, child) {
+        final activeLanguage = languageProvider.activeLanguage;
+        final languageDetails = languageProvider.getLanguageDetails(activeLanguage);
+        if (languageDetails == null) return const SizedBox.shrink();
+        
+        final color = languageProvider.getLanguageColor(activeLanguage);
+        
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            children: [
+              Text(languageDetails['flag'] ?? '', style: const TextStyle(fontSize: 24)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  languageDetails['name'] ?? activeLanguage,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Icon(Icons.lock_outline, size: 16, color: color.withValues(alpha: 0.6)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBasicInfoSection(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Icon selector
+            Row(
+              children: [
+                if (_selectedIcon != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconifyIcon(icon: _selectedIcon!, size: 40),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Language',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: languageProvider.getLanguageColor(activeLanguage).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: languageProvider.getLanguageColor(activeLanguage),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Text(
-                                languageDetails['flag'],
-                                style: const TextStyle(fontSize: 24),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    languageDetails['name'],
-                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      color: languageProvider.getLanguageColor(activeLanguage),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Set from home screen',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.info_outline,
-                                color: languageProvider.getLanguageColor(activeLanguage).withValues(alpha: 0.6),
-                              ),
-                            ],
-                          ),
-                        ),
+                        Text(_selectedIcon!.name, style: Theme.of(context).textTheme.titleSmall),
+                        Text('From ${_selectedIcon!.set}', style: Theme.of(context).textTheme.bodySmall),
                       ],
                     ),
                   ),
-                );
-              },
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Icon selection
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Icon (Optional)',
-                      style: Theme.of(context).textTheme.titleMedium,
+                  IconButton(
+                    onPressed: () => setState(() => _selectedIcon = null),
+                    icon: const Icon(Icons.close),
+                  ),
+                ] else ...[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _selectIcon,
+                      icon: const Icon(Icons.image_search),
+                      label: const Text('Add Icon (Optional)'),
                     ),
-                    const SizedBox(height: 12),
-                    if (_selectedIcon != null) ...[
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: IconifyIcon(
-                              icon: _selectedIcon!,
-                              size: 32,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _selectedIcon!.name,
-                                  style: Theme.of(context).textTheme.titleSmall,
-                                ),
-                                Text(
-                                  'From ${_selectedIcon!.set}',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _removeIcon,
-                            icon: const Icon(Icons.close),
-                            tooltip: 'Remove icon',
-                          ),
-                        ],
-                      ),
-                    ] else ...[
-                      OutlinedButton.icon(
-                        onPressed: _selectIcon,
-                        icon: const Icon(Icons.add_photo_alternate),
-                        label: const Text('Select Icon'),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+                  ),
+                ],
+              ],
             ),
-            
             const SizedBox(height: 16),
             
             // Front text
             Consumer<LanguageProvider>(
-              builder: (context, languageProvider, child) {
-                final activeLanguage = languageProvider.activeLanguage;
-                final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
-                
+              builder: (context, lp, _) {
+                final details = lp.getLanguageDetails(lp.activeLanguage);
                 return TextFormField(
                   controller: _frontTextController,
                   decoration: InputDecoration(
-                    labelText: 'Front Text (${languageDetails['name']})',
+                    labelText: 'Word/Phrase (${details?['name'] ?? 'Target'})',
                     hintText: 'Enter the word or phrase to learn',
                     border: const OutlineInputBorder(),
                     prefixIcon: const Icon(Icons.translate),
                   ),
-                  maxLines: 2,
                   textInputAction: TextInputAction.next,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter front text';
-                    }
-                    return null;
-                  },
+                  validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
                 );
               },
             ),
-            
             const SizedBox(height: 16),
             
-            // German article selection (only show for German)
-            Consumer<LanguageProvider>(
-              builder: (context, languageProvider, child) {
-                if (languageProvider.activeLanguage == 'de') {
-                  final articles = languageProvider.getLanguageArticles('de');
-                  return Column(
-                    children: [
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'German Article (Optional)',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Select the article for German nouns',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: articles.map((article) {
-                                  final isSelected = _germanArticle == article;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: FilterChip(
-                                      label: Text(article),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        setState(() {
-                                          _germanArticle = selected ? article : null;
-                                        });
-                                      },
-                                      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-                                      checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            
-            // Back text (always English)
+            // Back text
             TextFormField(
               controller: _backTextController,
               decoration: const InputDecoration(
-                labelText: 'Back Text (English)',
+                labelText: 'Translation (English)',
                 hintText: 'Enter the translation or definition',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.translate),
+                prefixIcon: Icon(Icons.abc),
               ),
-              maxLines: 2,
               textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter back text';
-                }
-                return null;
+              validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWordTypeSelector(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: WordType.values.map((type) {
+          final isSelected = _selectedWordType == type;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(_wordTypeLabel(type)),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) setState(() => _selectedWordType = type);
               },
+              avatar: Icon(_wordTypeIcon(type), size: 18),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  String _wordTypeLabel(WordType type) {
+    return switch (type) {
+      WordType.verb => 'Verb',
+      WordType.noun => 'Noun',
+      WordType.adjective => 'Adjective',
+      WordType.adverb => 'Adverb',
+      WordType.phrase => 'Phrase',
+      WordType.other => 'Other',
+    };
+  }
+
+  IconData _wordTypeIcon(WordType type) {
+    return switch (type) {
+      WordType.verb => Icons.directions_run,
+      WordType.noun => Icons.category,
+      WordType.adjective => Icons.color_lens,
+      WordType.adverb => Icons.speed,
+      WordType.phrase => Icons.short_text,
+      WordType.other => Icons.more_horiz,
+    };
+  }
+
+  Widget _buildGrammarSection(BuildContext context) {
+    return switch (_selectedWordType) {
+      WordType.verb => _buildVerbGrammar(context),
+      WordType.noun => _buildNounGrammar(context),
+      WordType.adjective => _buildAdjectiveGrammar(context),
+      WordType.adverb => _buildAdverbGrammar(context),
+      WordType.phrase || WordType.other => const SizedBox.shrink(),
+    };
+  }
+
+  Widget _buildVerbGrammar(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Verb properties row
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilterChip(
+                  label: const Text('Regular'),
+                  selected: _isRegularVerb,
+                  onSelected: (v) => setState(() => _isRegularVerb = v),
+                ),
+                FilterChip(
+                  label: const Text('Separable'),
+                  selected: _isSeparableVerb,
+                  onSelected: (v) => setState(() => _isSeparableVerb = v),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // Auxiliary selector
+            Row(
+              children: [
+                Text('Auxiliary:', style: theme.textTheme.bodyMedium),
+                const SizedBox(width: 12),
+                ChoiceChip(
+                  label: const Text('haben'),
+                  selected: _auxiliaryVerb == 'haben',
+                  onSelected: (v) => setState(() => _auxiliaryVerb = 'haben'),
+                ),
+                const SizedBox(width: 8),
+                ChoiceChip(
+                  label: const Text('sein'),
+                  selected: _auxiliaryVerb == 'sein',
+                  onSelected: (v) => setState(() => _auxiliaryVerb = 'sein'),
+                ),
+              ],
             ),
             
-            const SizedBox(height: 16),
+            if (_isSeparableVerb) ...[
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _separablePrefixController,
+                decoration: const InputDecoration(
+                  labelText: 'Separable Prefix',
+                  hintText: 'e.g., auf, an, aus',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ],
             
-            // Category
+            if (!_isRegularVerb) ...[
+              const SizedBox(height: 16),
+              Text('Irregular Forms', style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _presentDuController,
+                      decoration: const InputDecoration(
+                        labelText: 'du (present)',
+                        hintText: 'e.g., sprichst',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _presentErController,
+                      decoration: const InputDecoration(
+                        labelText: 'er/sie/es (present)',
+                        hintText: 'e.g., spricht',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _pastSimpleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Präteritum',
+                        hintText: 'e.g., sprach',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _pastParticipleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Partizip II',
+                        hintText: 'e.g., gesprochen',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNounGrammar(BuildContext context) {
+    return Consumer<LanguageProvider>(
+      builder: (context, languageProvider, _) {
+        final isGerman = languageProvider.activeLanguage == 'de';
+        final articles = isGerman ? ['der', 'die', 'das'] : ['masculine', 'feminine', 'neuter'];
+        
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Gender/Article', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: articles.map((article) {
+                    return ChoiceChip(
+                      label: Text(article),
+                      selected: _nounGender == article,
+                      onSelected: (v) => setState(() => _nounGender = v ? article : null),
+                      selectedColor: _getGenderColor(article).withValues(alpha: 0.3),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _pluralController,
+                        decoration: const InputDecoration(
+                          labelText: 'Plural Form',
+                          hintText: 'e.g., Bücher',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _genitiveController,
+                        decoration: const InputDecoration(
+                          labelText: 'Genitive',
+                          hintText: 'e.g., des Buches',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Color _getGenderColor(String gender) {
+    return switch (gender) {
+      'der' || 'masculine' => Colors.blue,
+      'die' || 'feminine' => Colors.pink,
+      'das' || 'neuter' => Colors.green,
+      _ => Colors.grey,
+    };
+  }
+
+  Widget _buildAdjectiveGrammar(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Comparison Forms', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _comparativeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Comparative',
+                      hintText: 'e.g., größer',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _superlativeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Superlative',
+                      hintText: 'e.g., größten',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdverbGrammar(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: TextFormField(
+          controller: _usageNoteController,
+          decoration: const InputDecoration(
+            labelText: 'Usage Note',
+            hintText: 'Any special usage information',
+            border: OutlineInputBorder(),
+          ),
+          maxLines: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExamplesSection(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _exampleController,
+                    decoration: const InputDecoration(
+                      labelText: 'Add Example Sentence',
+                      hintText: 'Type an example sentence',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onFieldSubmitted: (_) => _addExample(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  onPressed: _addExample,
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ),
+            if (_examples.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const Divider(),
+              const SizedBox(height: 8),
+              ..._examples.asMap().entries.map((entry) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.format_quote, size: 16, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          entry.value,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => _removeExample(entry.key),
+                        icon: const Icon(Icons.close, size: 18),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrganizationSection(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
             TextFormField(
               controller: _categoryController,
               decoration: const InputDecoration(
                 labelText: 'Category',
-                hintText: 'e.g., Vocabulary, Phrases, Grammar',
+                hintText: 'e.g., Vocabulary, Grammar, A1',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.category),
+                prefixIcon: Icon(Icons.folder),
               ),
-              textInputAction: TextInputAction.next,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a category';
-                }
-                return null;
-              },
+              validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
             ),
-            
             const SizedBox(height: 16),
-            
-            // Tags
             TextFormField(
               controller: _tagsController,
               decoration: const InputDecoration(
                 labelText: 'Tags (Optional)',
-                hintText: 'Separate tags with commas',
+                hintText: 'Separate with commas',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.tag),
               ),
-              textInputAction: TextInputAction.done,
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotesSection(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: TextFormField(
+          controller: _notesController,
+          decoration: const InputDecoration(
+            labelText: 'Notes (Optional)',
+            hintText: 'Usage tips, grammar notes, mnemonics...',
+            border: OutlineInputBorder(),
+            alignLabelWithHint: true,
+          ),
+          maxLines: 4,
         ),
       ),
     );
