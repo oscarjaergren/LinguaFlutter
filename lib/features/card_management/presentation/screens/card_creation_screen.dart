@@ -302,8 +302,8 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           // Set word type
           _selectedWordType = result.wordType;
           
-          // Set translation if back text is empty
-          if (_backTextController.text.isEmpty && result.translation != null) {
+          // Set translation from AI result (override existing)
+          if (result.translation != null) {
             _backTextController.text = result.translation!;
           }
           
