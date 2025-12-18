@@ -223,15 +223,28 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   String? _getIconSearchQuery() {
     final backText = _backTextController.text.trim();
     if (backText.isNotEmpty) {
-      return _stripArticles(backText);
+      final keyword = _extractFirstKeyword(backText);
+      return keyword != null ? _stripArticles(keyword) : null;
     }
     
     final frontText = _frontTextController.text.trim();
     if (frontText.isNotEmpty) {
-      return _stripArticles(frontText);
+      final keyword = _extractFirstKeyword(frontText);
+      return keyword != null ? _stripArticles(keyword) : null;
     }
     
     return null;
+  }
+
+  /// Extracts the first meaningful keyword (before commas/slashes) for icon search.
+  String? _extractFirstKeyword(String text) {
+    final normalized = text.trim();
+    if (normalized.isEmpty) return null;
+
+    final primarySegment = normalized.split(RegExp(r'[,;/\n]')).first;
+    final words = primarySegment.trim().split(RegExp(r'\s+'));
+    if (words.isEmpty) return null;
+    return words.first.trim();
   }
 
   // This is a really dumb way of doing this. 
