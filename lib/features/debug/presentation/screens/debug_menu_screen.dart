@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lingua_flutter/features/tts/tts.dart';
+import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import '../../../card_management/card_management.dart';
 import '../../../debug/data/debug_service.dart';
 import '../../../language/language.dart';
@@ -231,6 +235,55 @@ class DebugMenuScreen extends StatelessWidget {
                         side: BorderSide(color: Colors.orange.shade700),
                         foregroundColor: Colors.orange.shade700,
                         alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Import Sample Cards with AI Autofill
+          Card(
+            color: Colors.green.shade50,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: Colors.green.shade700),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Import Sample Cards',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Import curated German vocabulary and auto-fill with AI (Magic button).',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: () => _importSampleCards(context),
+                      icon: const Icon(Icons.download),
+                      label: const Text('Import 20 Sample Cards with AI Autofill'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.green.shade700,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                     ),
@@ -698,6 +751,151 @@ class DebugMenuScreen extends StatelessWidget {
           SnackBar(
             content: Text('Error: $e'),
             backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _importSampleCards(BuildContext context) async {
+    // Get all providers before any async operations to avoid BuildContext across async gaps
+    final aiProvider = context.read<CardEnrichmentProvider>();
+    final cardManagement = context.read<CardManagementProvider>();
+    final languageProvider = context.read<LanguageProvider>();
+    
+    // Check if AI is configured
+    if (!aiProvider.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please configure AI API key first (Settings → AI Provider)'),
+          backgroundColor: Colors.orange,
+          duration: Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Text('Loading sample cards and enriching with AI...'),
+              ],
+            ),
+            duration: const Duration(seconds: 60),
+          ),
+        );
+      }
+
+      // Load sample cards from JSON
+      final jsonString = await rootBundle.loadString('assets/data/sample_import_cards.json');
+      final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
+      final cardsList = (jsonData['cards'] as List).cast<Map<String, dynamic>>();
+      
+      // Set active language to German
+      languageProvider.setActiveLanguage('de');
+
+      int successCount = 0;
+      int errorCount = 0;
+      final uuid = const Uuid();
+
+      for (final cardData in cardsList) {
+        final frontText = cardData['front'] as String;
+        
+        try {
+          // Use AI to enrich the word
+          final enrichResult = await aiProvider.enrichWord(
+            word: frontText,
+            language: 'de',
+          );
+
+          final now = DateTime.now();
+          
+          if (enrichResult != null) {
+            // Create the card with enriched data
+            final card = CardModel(
+              id: uuid.v4(),
+              frontText: frontText,
+              backText: enrichResult.translation ?? '',
+              language: 'de',
+              category: 'Imported',
+              examples: enrichResult.examples,
+              notes: enrichResult.notes,
+              wordData: enrichResult.wordData,
+              createdAt: now,
+              updatedAt: now,
+              nextReview: now,
+            );
+
+            await cardManagement.addCard(card);
+            successCount++;
+            LoggerService.debug('Imported with enrichment: $frontText');
+          } else {
+            // Still create the card without enrichment - user can enrich manually later
+            final card = CardModel(
+              id: uuid.v4(),
+              frontText: frontText,
+              backText: '(needs translation)',
+              language: 'de',
+              category: 'Imported',
+              notes: 'AI enrichment failed - please use Magic button to fill in details',
+              createdAt: now,
+              updatedAt: now,
+              nextReview: now,
+            );
+
+            await cardManagement.addCard(card);
+            errorCount++;
+            LoggerService.warning('Imported without enrichment: $frontText (AI error: ${aiProvider.error})');
+          }
+        } catch (e) {
+          errorCount++;
+          LoggerService.error('Error importing $frontText', e);
+        }
+        
+        // Small delay to avoid rate limiting
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        final totalImported = successCount + errorCount;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '✅ Imported $totalImported cards ($successCount enriched, $errorCount need manual enrichment)',
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'VIEW',
+              textColor: Colors.white,
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      LoggerService.error('Error in _importSampleCards', e, stackTrace);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error importing cards: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }

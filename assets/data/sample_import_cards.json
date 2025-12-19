@@ -1,21 +1,29 @@
 {
-  "description": "Curated sample German vocabulary cards for import testing",
+  "description": "Golden sample of German vocabulary - all word types for comprehensive testing",
   "cards": [
-    {"front": "die Sehnsucht"},
-    {"front": "gelassen"},
-    {"front": "verfahren"},
-    {"front": "das Gebiet"},
-    {"front": "anvertrauen"},
-    {"front": "demzufolge"},
-    {"front": "vor Ort"},
-    {"front": "der Verzicht"},
-    {"front": "aufmuntern"},
-    {"front": "begründen"},
-    {"front": "die Zustellung"},
-    {"front": "gewappnet"},
-    {"front": "einerseits"},
-    {"front": "freigeben"},
-    {"front": "das Seil"},
-    {"front": "zustimmen"}
+    {"front": "der Schaden", "type": "noun", "note": "masculine noun"},
+    {"front": "die Brieftasche", "type": "noun", "note": "feminine noun"},
+    {"front": "das Kunstwerk", "type": "noun", "note": "neuter noun"},
+    {"front": "die Sehnsucht", "type": "noun", "note": "abstract feminine noun"},
+    
+    {"front": "verfahren", "type": "verb", "note": "regular verb"},
+    {"front": "anvertrauen", "type": "verb", "note": "separable verb with prefix"},
+    {"front": "aufmuntern", "type": "verb", "note": "separable verb"},
+    {"front": "freigeben", "type": "verb", "note": "separable verb with irregular conjugation"},
+    {"front": "misslingen", "type": "verb", "note": "verb with sein auxiliary"},
+    
+    {"front": "gelassen", "type": "adjective", "note": "adjective from past participle"},
+    {"front": "gewappnet", "type": "adjective", "note": "adjective meaning prepared"},
+    {"front": "gehaltvoll", "type": "adjective", "note": "compound adjective"},
+    {"front": "unwirksam", "type": "adjective", "note": "adjective with un- prefix"},
+    
+    {"front": "demzufolge", "type": "adverb", "note": "consequential adverb"},
+    {"front": "einerseits", "type": "adverb", "note": "contrastive adverb"},
+    {"front": "ausgerechnet", "type": "adverb", "note": "emphatic adverb"},
+    
+    {"front": "vor Ort", "type": "phrase", "note": "locational phrase"},
+    {"front": "auf jemanden hören", "type": "phrase", "note": "verb phrase with preposition"},
+    {"front": "die erforderlichen Mittel", "type": "phrase", "note": "noun phrase"},
+    {"front": "Es ist wichtig, dass...", "type": "phrase", "note": "sentence starter"}
   ]
 }

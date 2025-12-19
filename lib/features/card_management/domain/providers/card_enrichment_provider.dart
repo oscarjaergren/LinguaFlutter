@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../shared/services/ai/ai.dart';
 import '../models/word_enrichment_result.dart';
@@ -45,7 +46,7 @@ class CardEnrichmentProvider extends ChangeNotifier {
   bool get isInitialized => _isInitialized;
   bool get isConfigured => _config.isConfigured;
 
-  /// Initialize by loading saved configuration
+  /// Initialize by loading saved configuration or from .env
   Future<void> initialize() async {
     try {
       final jsonStr = await _storage.getString(configKey);
@@ -56,6 +57,19 @@ class CardEnrichmentProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Failed to load AI config: $e');
     }
+    
+    // Auto-load from .env if not configured (for easier debugging)
+    if (!_config.isConfigured) {
+      final envKey = dotenv.env['GEMINI_API_KEY'];
+      if (envKey != null && envKey.isNotEmpty) {
+        _config = _config.copyWith(
+          apiKey: envKey,
+          provider: AiProvider.gemini,
+        );
+        debugPrint('Loaded Gemini API key from .env');
+      }
+    }
+    
     _isInitialized = true;
     notifyListeners();
   }
@@ -105,18 +119,22 @@ class CardEnrichmentProvider extends ChangeNotifier {
 
     try {
       final prompt = _buildPrompt(word, language);
+      debugPrint('Enriching word: $word');
       final response = await _service.complete(
         prompt: prompt,
         config: _config,
       );
+      debugPrint('AI response for $word: ${response.substring(0, response.length.clamp(0, 200))}...');
       
       final result = _parseResponse(response);
       _isLoading = false;
       notifyListeners();
       return result;
-    } catch (e) {
+    } catch (e, stackTrace) {
       _isLoading = false;
       _error = e.toString();
+      debugPrint('Error enriching $word: $e');
+      debugPrint('Stack trace: $stackTrace');
       notifyListeners();
       return null;
     }

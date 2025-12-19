@@ -551,12 +551,63 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     }
   }
 
+  Future<void> _showDeleteConfirmation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Card'),
+        content: Text(
+          'Are you sure you want to delete "${widget.cardToEdit!.frontText}"?\n\nThis action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await context.read<CardManagementProvider>().deleteCard(widget.cardToEdit!.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Card deleted'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting card: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditing ? 'Edit Card' : 'Create Card'),
         actions: [
+          if (_isEditing)
+            IconButton(
+              onPressed: _showDeleteConfirmation,
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Delete card',
+              color: Colors.red,
+            ),
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.all(16),
