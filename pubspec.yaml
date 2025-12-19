@@ -56,9 +56,6 @@ dependencies:
   # Logging and error handling
   talker_flutter: ^5.0.1
   
-  # Text-to-speech for pronunciation
-  flutter_tts: ^4.0.2
-  
   # UUID generation for unique IDs
   uuid: ^4.5.1
   
@@ -110,6 +107,7 @@ flutter:
     - lingualabs_mascot_manual_crop-removebg-preview.png
     - assets/data/german_words.json
     - assets/data/seed_cards.json
+    - assets/data/sample_import_cards.json
     - assets/google_tts_api_key.txt
 
   # An image asset can refer to one or more resolution-specific "variants", see

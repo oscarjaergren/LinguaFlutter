@@ -1,0 +1,21 @@
+{
+  "description": "Curated sample German vocabulary cards for import testing",
+  "cards": [
+    {"front": "die Sehnsucht"},
+    {"front": "gelassen"},
+    {"front": "verfahren"},
+    {"front": "das Gebiet"},
+    {"front": "anvertrauen"},
+    {"front": "demzufolge"},
+    {"front": "vor Ort"},
+    {"front": "der Verzicht"},
+    {"front": "aufmuntern"},
+    {"front": "begründen"},
+    {"front": "die Zustellung"},
+    {"front": "gewappnet"},
+    {"front": "einerseits"},
+    {"front": "freigeben"},
+    {"front": "das Seil"},
+    {"front": "zustimmen"}
+  ]
+}

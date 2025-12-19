@@ -333,44 +333,21 @@ class DebugMenuScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Current: ${ttsService.isGoogleTtsEnabled ? "Google Cloud Neural2 ⭐⭐⭐⭐⭐" : "Native Platform TTS ⭐⭐"}',
+                            'Current: ${ttsService.isEnabled ? "Google Cloud Neural2 ⭐⭐⭐⭐⭐" : "Not configured"}',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: ttsService.isGoogleTtsEnabled ? Colors.green : Colors.orange,
+                              color: ttsService.isEnabled ? Colors.green : Colors.red,
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            'Test different TTS engines:',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _testTts(context, TtsProviderType.native),
-                                  icon: const Icon(Icons.volume_up_outlined),
-                                  label: const Text('Native'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.orange,
-                                    side: const BorderSide(color: Colors.orange),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _testTts(context, TtsProviderType.google),
-                                  icon: const Icon(Icons.volume_up),
-                                  label: const Text('Google'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.green,
-                                    side: const BorderSide(color: Colors.green),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          OutlinedButton.icon(
+                            onPressed: () => _testTts(context),
+                            icon: const Icon(Icons.volume_up),
+                            label: const Text('Test TTS'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.green,
+                              side: const BorderSide(color: Colors.green),
+                            ),
                           ),
                         ],
                       );
@@ -696,44 +673,23 @@ class DebugMenuScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _testTts(BuildContext context, TtsProviderType provider) async {
+  Future<void> _testTts(BuildContext context) async {
     final testPhrase = 'Guten Tag! Das ist ein Test.';
     
     try {
-      switch (provider) {
-        case TtsProviderType.native:
-          LoggerService.debug('Testing Native TTS...');
-          final nativeTts = NativeTtsService();
-          await nativeTts.initialize();
-          await nativeTts.speak(testPhrase, 'de');
+      LoggerService.debug('Testing Google Cloud TTS...');
+      final googleTts = GoogleCloudTtsService();
+      await googleTts.initialize();
+      await googleTts.speak(testPhrase, 'de');
 
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🔊 Playing Native platform TTS'),
-                backgroundColor: Colors.orange,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-          break;
-
-        case TtsProviderType.google:
-          LoggerService.debug('Testing Google Cloud TTS...');
-          final googleTts = GoogleCloudTtsService();
-          await googleTts.initialize();
-          await googleTts.speak(testPhrase, 'de');
-
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🎙️ Playing Google Cloud Neural2 voice'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 2),
-              ),
-            );
-          }
-          break;
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('🎙️ Playing Google Cloud Neural2 voice'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
       }
     } catch (e, stack) {
       LoggerService.error('TTS test error', e, stack);
@@ -747,9 +703,4 @@ class DebugMenuScreen extends StatelessWidget {
       }
     }
   }
-}
-
-enum TtsProviderType {
-  native,
-  google,
 }

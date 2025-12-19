@@ -7,7 +7,8 @@
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "debug",
-      "deviceId": "windows"
+      "deviceId": "windows",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Windows (Release)",

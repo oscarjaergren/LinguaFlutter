@@ -95,7 +95,7 @@ class _SpeakerButtonState extends State<SpeakerButton>
 
   @override
   Widget build(BuildContext context) {
-    final buttonColor = widget.color ?? Theme.of(context).primaryColor;
+    final buttonColor = widget.color ?? Theme.of(context).colorScheme.onSurface;
 
     if (widget.showLabel) {
       return OutlinedButton.icon(
