@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/navigation/app_router.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
+import '../../domain/providers/card_management_provider.dart';
 import '../view_models/card_list_view_model.dart';
 import 'card_item_widget.dart';
 import 'search_bar_widget.dart';
@@ -18,15 +19,20 @@ class CardListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Watch CardManagementProvider directly to ensure rebuild on changes
+    final cardProvider = context.watch<CardManagementProvider>();
+    
     return Consumer<CardListViewModel>(
-      builder: (context, viewModel, child) {
-        if (viewModel.isLoading) {
+      builder: (context, vm, child) {
+        // Use cardProvider.filteredCards to get fresh data
+        final cards = cardProvider.filteredCards;
+        if (cardProvider.isLoading) {
           return const Center(
             child: CircularProgressIndicator(),
           );
         }
 
-        if (viewModel.errorMessage != null) {
+        if (vm.errorMessage != null) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -38,13 +44,13 @@ class CardListView extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Error: ${viewModel.errorMessage}',
+                  'Error: ${vm.errorMessage}',
                   style: Theme.of(context).textTheme.titleMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => viewModel.refreshCards(),
+                  onPressed: () => vm.refreshCards(),
                   child: const Text('Retry'),
                 ),
               ],
@@ -55,29 +61,29 @@ class CardListView extends StatelessWidget {
         return Column(
           children: [
             // Search bar
-            if (viewModel.isSearching)
+            if (vm.isSearching)
               SearchBarWidget(
-                onSearchChanged: viewModel.updateSearchQuery,
-                onSearchClosed: viewModel.stopSearch,
-                initialQuery: viewModel.searchQuery,
+                onSearchChanged: vm.updateSearchQuery,
+                onSearchClosed: vm.stopSearch,
+                initialQuery: vm.searchQuery,
               ),
 
             // Filter chips
-            if (viewModel.selectedCategory.isNotEmpty ||
-                viewModel.selectedTags.isNotEmpty ||
-                viewModel.showOnlyDue ||
-                viewModel.showOnlyFavorites ||
-                viewModel.showOnlyDuplicates)
-              _buildFilterChips(context, viewModel),
+            if (vm.selectedCategory.isNotEmpty ||
+                vm.selectedTags.isNotEmpty ||
+                vm.showOnlyDue ||
+                vm.showOnlyFavorites ||
+                vm.showOnlyDuplicates)
+              _buildFilterChips(context, vm),
 
             // Cards count and stats
-            _buildStatsRow(context, viewModel),
+            _buildStatsRow(context, vm),
 
-            // Card list
+            // Card list - use cards from cardProvider for fresh data
             Expanded(
-              child: viewModel.displayCards.isEmpty
-                  ? _buildEmptyState(context, viewModel)
-                  : _buildCardList(context, viewModel),
+              child: cards.isEmpty
+                  ? _buildEmptyState(context, vm)
+                  : _buildCardListDirect(context, vm, cards),
             ),
           ],
         );
@@ -201,14 +207,16 @@ class CardListView extends StatelessWidget {
     );
   }
 
-  Widget _buildCardList(BuildContext context, CardListViewModel viewModel) {
+  Widget _buildCardListDirect(BuildContext context, CardListViewModel viewModel, List<CardModel> cards) {
     return ListView.builder(
+      key: ValueKey(cards.length), // Force rebuild when card count changes
       padding: const EdgeInsets.all(16),
-      itemCount: viewModel.displayCards.length,
+      itemCount: cards.length,
       itemBuilder: (context, index) {
-        final card = viewModel.displayCards[index];
+        final card = cards[index];
         final duplicates = viewModel.getDuplicatesForCard(card.id);
         return CardItemWidget(
+          key: ValueKey(card.id), // Unique key per card
           card: card,
           onTap: () => _onCardTap(context, card),
           onEdit: () => _onCardEdit(context, card),

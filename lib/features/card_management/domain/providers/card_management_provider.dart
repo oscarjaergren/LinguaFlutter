@@ -164,10 +164,19 @@ class CardManagementProvider extends ChangeNotifier {
   /// Delete a card by ID
   Future<void> deleteCard(String cardId) async {
     try {
+      // Remove from local state immediately for responsive UI
+      _allCards.removeWhere((c) => c.id == cardId);
+      _applyFilters();
+      notifyListeners();
+      
+      // Then delete from backend
       await _repository.deleteCard(cardId);
+      
+      // Refresh to ensure sync
       await loadCards();
     } catch (e) {
       _setError('Failed to delete card: $e');
+      rethrow;
     }
   }
 

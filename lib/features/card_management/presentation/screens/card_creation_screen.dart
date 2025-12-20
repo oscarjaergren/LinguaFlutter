@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../card_review/domain/providers/practice_session_provider.dart';
 import '../../../icon_search/icon_search.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
@@ -575,7 +576,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
 
     if (confirmed == true && mounted) {
       try {
-        await context.read<CardManagementProvider>().deleteCard(widget.cardToEdit!.id);
+        final cardId = widget.cardToEdit!.id;
+        
+        // Remove from practice session first (if active)
+        context.read<PracticeSessionProvider>().removeCardFromQueue(cardId);
+        
+        // Then delete from storage
+        await context.read<CardManagementProvider>().deleteCard(cardId);
+        
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

@@ -219,6 +219,45 @@ class PracticeSessionProvider extends ChangeNotifier {
     _multipleChoiceOptions = options;
   }
   
+  /// Remove a deleted card from the queue and skip if it's the current card
+  void removeCardFromQueue(String cardId) {
+    if (!_isSessionActive) return;
+    
+    final currentCardId = currentCard?.id;
+    final wasCurrentCard = currentCardId == cardId;
+    
+    // Remove all practice items for this card
+    _sessionQueue.removeWhere((item) => item.card.id == cardId);
+    
+    // If we removed the current card, adjust index and prepare next exercise
+    if (wasCurrentCard) {
+      // Clamp index to valid range
+      if (_currentIndex >= _sessionQueue.length) {
+        _currentIndex = _sessionQueue.isEmpty ? 0 : _sessionQueue.length - 1;
+      }
+      
+      // Reset answer state for new card
+      _answerState = AnswerState.pending;
+      _currentAnswerCorrect = null;
+      _userInput = null;
+      
+      // Check if session is now complete
+      if (_sessionQueue.isEmpty) {
+        _isSessionActive = false;
+      } else {
+        _prepareCurrentExercise();
+      }
+    } else if (_currentIndex > 0) {
+      // Adjust index if we removed a card before the current one
+      final removedBeforeCurrent = _sessionQueue.length < _currentIndex;
+      if (removedBeforeCurrent && _sessionQueue.isNotEmpty) {
+        _currentIndex = _sessionQueue.length - 1;
+      }
+    }
+    
+    notifyListeners();
+  }
+  
   /// End the current session
   void endSession() {
     _isSessionActive = false;
