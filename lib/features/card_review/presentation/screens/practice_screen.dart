@@ -71,11 +71,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
           final isCorrect = provider.currentAnswerCorrect ?? true;
           _cardKey.currentState?.triggerSwipe(isCorrect);
           return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.space) {
-          // Space also advances (uses current answer)
-          final isCorrect = provider.currentAnswerCorrect ?? true;
-          _cardKey.currentState?.triggerSwipe(isCorrect);
-          return KeyEventResult.handled;
         }
       } else {
         // Before answer checked - number keys for multiple choice
@@ -95,10 +90,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                    event.logicalKey == LogicalKeyboardKey.numpad4) {
           _selectMultipleChoiceOption(provider, 3);
           return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.space ||
-                   event.logicalKey == LogicalKeyboardKey.enter ||
+        } else if (event.logicalKey == LogicalKeyboardKey.enter ||
                    event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-          // Space/Enter reveals answer for reading recognition
+          // Enter reveals answer for reading recognition
           _revealAnswer(provider);
           return KeyEventResult.handled;
         }
@@ -199,8 +193,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                   child: Text(
                     provider.canSwipe
-                        ? 'Enter/Space = Confirm • ← = Wrong • → = Correct'
-                        : '1-4 = Select option • Space/Enter = Reveal',
+                        ? 'Enter = Confirm • ← = Wrong • → = Correct'
+                        : '1-4 = Select option • Enter = Reveal',
                     style: const TextStyle(
                       color: Colors.grey,
                       fontSize: 13,
@@ -317,6 +311,8 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
             },
             onOverrideAnswer: (isCorrect) {
               widget.provider.overrideAnswer(isCorrect: isCorrect);
+              // Trigger swipe animation when user marks answer
+              triggerSwipe(isCorrect);
             },
           ),
           // Edit button in top-right corner of card
