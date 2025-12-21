@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/domain/models/card_model.dart';
 import '../../../../../shared/domain/models/exercise_type.dart';
+import '../../../../../shared/domain/models/word_data.dart';
 import '../../../../tts/presentation/widgets/speaker_button.dart';
 import '../../../domain/providers/practice_session_provider.dart';
 
@@ -32,6 +33,7 @@ class ExerciseContentWidget extends StatefulWidget {
 
 class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
   String? _selectedAnswer;
+  String? _selectedGender;
   final TextEditingController _textController = TextEditingController();
   final FocusNode _textFocusNode = FocusNode();
 
@@ -259,8 +261,18 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         ? widget.card.frontText
         : widget.card.backText;
     
+    // Check if this is a noun to show gender selector
+    final isNoun = widget.card.wordData is NounData;
+    final nounData = isNoun ? widget.card.wordData as NounData : null;
+    
     return Column(
       children: [
+        // Gender selector for nouns (only when translating to German)
+        if (isNoun && widget.exerciseType == ExerciseType.reverseTranslation) ...[
+          _buildGenderSelector(context, hasAnswered, nounData?.gender),
+          const SizedBox(height: 12),
+        ],
+        
         TextField(
           controller: _textController,
           focusNode: _textFocusNode,
@@ -474,7 +486,21 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   bool _checkReverseAnswer() {
     final userAnswer = _textController.text.trim().toLowerCase();
-    final correctAnswer = widget.card.frontText.trim().toLowerCase();
+    var correctAnswer = widget.card.frontText.trim().toLowerCase();
+    
+    // For nouns, strip the article from correct answer since user selects it separately
+    if (widget.card.wordData is NounData) {
+      final nounData = widget.card.wordData as NounData;
+      
+      // Remove article prefix (der/die/das) from correct answer
+      correctAnswer = correctAnswer.replaceFirst(RegExp(r'^(der|die|das)\s+'), '');
+      
+      final genderCorrect = _selectedGender == nounData.gender;
+      final textCorrect = userAnswer == correctAnswer;
+      
+      return textCorrect && genderCorrect;
+    }
+    
     return userAnswer == correctAnswer;
   }
 
@@ -483,6 +509,68 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     setState(() => _selectedAnswer = option);
     final isCorrect = option == correctAnswer;
     widget.onCheckAnswer(isCorrect);
+  }
+
+  Widget _buildGenderSelector(BuildContext context, bool hasAnswered, String? correctGender) {
+    const genders = ['der', 'die', 'das'];
+    
+    return Row(
+      children: genders.map((gender) {
+        final isSelected = _selectedGender == gender;
+        final isCorrect = gender == correctGender;
+        
+        Color? backgroundColor;
+        Color? borderColor;
+        
+        if (hasAnswered) {
+          if (isCorrect) {
+            backgroundColor = Colors.green.withValues(alpha: 0.1);
+            borderColor = Colors.green;
+          } else if (isSelected && !isCorrect) {
+            backgroundColor = Colors.red.withValues(alpha: 0.1);
+            borderColor = Colors.red;
+          }
+        } else if (isSelected) {
+          backgroundColor = _getGenderColor(gender).withValues(alpha: 0.2);
+          borderColor = _getGenderColor(gender);
+        }
+        
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ChoiceChip(
+              label: Text(
+                gender,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: borderColor ?? Colors.grey[700],
+                ),
+              ),
+              selected: isSelected,
+              onSelected: hasAnswered ? null : (selected) {
+                setState(() => _selectedGender = selected ? gender : null);
+              },
+              selectedColor: backgroundColor,
+              backgroundColor: Colors.grey[100],
+              side: BorderSide(
+                color: borderColor ?? Colors.grey[300]!,
+                width: 2,
+              ),
+              showCheckmark: hasAnswered && isCorrect,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+  
+  Color _getGenderColor(String gender) {
+    return switch (gender) {
+      'der' => Colors.blue,
+      'die' => Colors.pink,
+      'das' => Colors.green,
+      _ => Colors.grey,
+    };
   }
 
   Widget _buildOverrideButtons(BuildContext context) {

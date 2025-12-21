@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../data/repositories/card_management_repository.dart';
+import '../../../../shared/utils/rate_limiter.dart';
+import '../../../auth/data/services/supabase_auth_service.dart';
 
 /// Provider for managing card data, filtering, and CRUD operations.
 /// 
@@ -10,6 +12,7 @@ import '../../data/repositories/card_management_repository.dart';
 class CardManagementProvider extends ChangeNotifier {
   final LanguageProvider _languageProvider;
   final CardManagementRepository _repository;
+  final RateLimiter _rateLimiter = RateLimiter();
 
   // Core card data
   List<CardModel> _allCards = [];
@@ -131,23 +134,52 @@ class CardManagementProvider extends ChangeNotifier {
   /// Save a card (create or update)
   Future<void> saveCard(CardModel card) async {
     try {
-      await _repository.saveCard(card);
+      // Sanitize and validate card data
+      final sanitizedCard = _sanitizeCard(card);
+      _validateCard(sanitizedCard);
+      
+      await _repository.saveCard(sanitizedCard);
       await loadCards();
     } catch (e) {
       _setError('Failed to save card: $e');
+      rethrow;
     }
   }
 
   /// Add a new card
   Future<void> addCard(CardModel card) async {
+    // Check rate limit
+    final userId = SupabaseAuthService.currentUserId;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    if (!_rateLimiter.isAllowed(userId: userId, action: 'card_creation')) {
+      final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_creation');
+      throw RateLimitException(errorMsg);
+    }
+    
     await saveCard(card);
   }
 
   /// Add multiple cards in batch
   Future<void> addMultipleCards(List<CardModel> cards) async {
     try {
+      // Check rate limit for bulk operations
+      final userId = SupabaseAuthService.currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      if (!_rateLimiter.isAllowed(userId: userId, action: 'card_bulk_create')) {
+        final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_bulk_create');
+        throw RateLimitException(errorMsg);
+      }
+      
       for (final card in cards) {
-        await _repository.saveCard(card);
+        final sanitizedCard = _sanitizeCard(card);
+        _validateCard(sanitizedCard);
+        await _repository.saveCard(sanitizedCard);
       }
       await loadCards();
     } catch (e) {
@@ -158,12 +190,34 @@ class CardManagementProvider extends ChangeNotifier {
 
   /// Update an existing card
   Future<void> updateCard(CardModel card) async {
+    // Check rate limit
+    final userId = SupabaseAuthService.currentUserId;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+    
+    if (!_rateLimiter.isAllowed(userId: userId, action: 'card_update')) {
+      final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_update');
+      throw RateLimitException(errorMsg);
+    }
+    
     await saveCard(card);
   }
 
   /// Delete a card by ID
   Future<void> deleteCard(String cardId) async {
     try {
+      // Check rate limit
+      final userId = SupabaseAuthService.currentUserId;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      if (!_rateLimiter.isAllowed(userId: userId, action: 'card_delete')) {
+        final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_delete');
+        throw RateLimitException(errorMsg);
+      }
+      
       // Remove from local state immediately for responsive UI
       _allCards.removeWhere((c) => c.id == cardId);
       _applyFilters();
@@ -358,4 +412,185 @@ class CardManagementProvider extends ChangeNotifier {
   void _clearError() {
     _errorMessage = null;
   }
+
+  // ============================================================
+  // Sanitization & Validation (Private Business Logic)
+  // ============================================================
+
+  /// Sanitize card data before saving
+  CardModel _sanitizeCard(CardModel card) {
+    return card.copyWith(
+      frontText: _sanitizeCardText(card.frontText),
+      backText: _sanitizeCardText(card.backText),
+      notes: card.notes != null ? _sanitizeNotes(card.notes) : null,
+      examples: _sanitizeExamples(card.examples),
+      tags: _sanitizeTags(card.tags),
+      language: _sanitizeLanguageCode(card.language) ?? 'de',
+      category: _sanitizeCategory(card.category) ?? 'vocabulary',
+    );
+  }
+
+  /// Validate card data
+  void _validateCard(CardModel card) {
+    if (!_isValidCardText(card.frontText)) {
+      throw Exception('Front text is required');
+    }
+    if (!_isValidCardText(card.backText)) {
+      throw Exception('Back text is required');
+    }
+    if (!_isValidLanguageCode(card.language)) {
+      throw Exception('Invalid language code: ${card.language}');
+    }
+    if (!_isValidCategory(card.category)) {
+      throw Exception('Invalid category: ${card.category}');
+    }
+  }
+
+  // Sanitization constants
+  static const int _maxTextLength = 500;
+  static const int _maxNotesLength = 2000;
+  static const int _maxExampleLength = 300;
+  static const int _maxTagLength = 50;
+
+  // Validation constants
+  static const List<String> _supportedLanguages = [
+    'de', 'es', 'fr', 'it', 'pt', 'nl', 'sv', 'ja', 'zh', 'ko',
+  ];
+  static const List<String> _allowedCategories = [
+    'vocabulary', 'grammar', 'phrase', 'idiom', 'other',
+  ];
+
+  /// Sanitize card text (functional pipeline)
+  String _sanitizeCardText(String? input) {
+    if (input == null || input.isEmpty) return '';
+    return _applySanitizationPipeline(
+      input,
+      maxLength: _maxTextLength,
+      preserveNewlines: false,
+    );
+  }
+
+  /// Sanitize notes (allows more length, preserves newlines)
+  String _sanitizeNotes(String? input) {
+    if (input == null || input.isEmpty) return '';
+    return _applySanitizationPipeline(
+      input,
+      maxLength: _maxNotesLength,
+      preserveNewlines: true,
+    );
+  }
+
+  /// Sanitize example sentence
+  String _sanitizeExample(String? input) {
+    if (input == null || input.isEmpty) return '';
+    return _applySanitizationPipeline(
+      input,
+      maxLength: _maxExampleLength,
+      preserveNewlines: false,
+    );
+  }
+
+  /// Sanitize list of examples
+  List<String> _sanitizeExamples(List<String>? examples) =>
+      examples
+          ?.map(_sanitizeExample)
+          .where((e) => e.isNotEmpty)
+          .toList() ??
+      [];
+
+  /// Sanitize list of tags (LINQ-style functional)
+  List<String> _sanitizeTags(List<String>? tags) =>
+      tags
+          ?.map((tag) => tag.trim().toLowerCase())
+          .where((tag) => tag.isNotEmpty && tag.length <= _maxTagLength)
+          .map(_removeSpecialCharacters)
+          .where((tag) => tag.isNotEmpty)
+          .toSet()
+          .toList() ??
+      [];
+
+  /// Apply sanitization pipeline in functional style
+  String _applySanitizationPipeline(
+    String input, {
+    required int maxLength,
+    required bool preserveNewlines,
+  }) {
+    return input
+        .trim()
+        .let(_removeScriptContent)
+        .let(_removeHtmlTags)
+        .let((s) => preserveNewlines
+            ? _normalizeWhitespacePreserveNewlines(s)
+            : _normalizeWhitespace(s))
+        .let((s) => s.length > maxLength ? s.substring(0, maxLength) : s);
+  }
+
+  /// Remove HTML tags
+  String _removeHtmlTags(String input) =>
+      input.replaceAll(RegExp(r'<[^>]*>'), '');
+
+  /// Remove script-like content
+  String _removeScriptContent(String input) {
+    return input
+        .replaceAll(
+            RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false, dotAll: true),
+            '')
+        .replaceAll(RegExp(r'javascript:', caseSensitive: false), '')
+        .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false), '');
+  }
+
+  /// Normalize whitespace (collapse multiple spaces)
+  String _normalizeWhitespace(String input) =>
+      input.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+  /// Normalize whitespace but preserve newlines
+  String _normalizeWhitespacePreserveNewlines(String input) {
+    return input
+        .split('\n')
+        .map((line) => line.replaceAll(RegExp(r'[ \t]+'), ' ').trim())
+        .join('\n')
+        .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+        .trim();
+  }
+
+  /// Remove special characters (for tags)
+  String _removeSpecialCharacters(String input) =>
+      input.replaceAll(RegExp(r'[^a-zA-Z0-9\-_]'), '');
+
+  /// Sanitize and validate language code
+  String? _sanitizeLanguageCode(String? code) {
+    if (code == null || code.isEmpty) return null;
+    final sanitized = code.trim().toLowerCase();
+    return _isValidLanguageCode(sanitized) ? sanitized : null;
+  }
+
+  /// Sanitize and validate category
+  String? _sanitizeCategory(String? category) {
+    if (category == null || category.isEmpty) return null;
+    final sanitized = category.trim().toLowerCase();
+    return _isValidCategory(sanitized) ? sanitized : null;
+  }
+
+  /// Validate language code
+  bool _isValidLanguageCode(String? code) {
+    if (code == null || code.isEmpty) return false;
+    return _supportedLanguages.contains(code.toLowerCase());
+  }
+
+  /// Validate category
+  bool _isValidCategory(String? category) {
+    if (category == null || category.isEmpty) return false;
+    return _allowedCategories.contains(category.toLowerCase());
+  }
+
+  /// Validate card text is not empty
+  bool _isValidCardText(String? text) {
+    if (text == null) return false;
+    return text.trim().isNotEmpty;
+  }
+}
+
+/// Extension to enable LINQ-like .let() method for functional pipelines
+extension _FunctionalStringExtension on String {
+  String let(String Function(String) transform) => transform(this);
 }
