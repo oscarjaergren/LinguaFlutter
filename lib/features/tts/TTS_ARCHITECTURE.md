@@ -43,9 +43,6 @@ services/
 
 - **`NativeTtsService`**: Platform TTS (iOS/Android/Web)
 - **`GoogleCloudTtsService`**: Google Cloud TTS API
-- **`ElevenLabsTtsService`**: ElevenLabs API
-- **`AzureTtsService`**: Azure Cognitive Services
-- **`AwsPollyt TtsService`**: Amazon Polly
 
 ## Quality Comparison
 
@@ -53,9 +50,4 @@ services/
 |---------|---------|------|---------|-------|
 | Native | ⭐⭐ | Free | ✅ | None |
 | Google Cloud | ⭐⭐⭐⭐⭐ | ~$16/1M | ❌ | API key |
-| ElevenLabs | ⭐⭐⭐⭐⭐ | $5-22/mo | ❌ | API key |
-| Azure | ⭐⭐⭐⭐⭐ | ~$16/1M | ❌ | API key |
 
----
-
-**Note**: File `enhanced_tts_service.dart` should be renamed to `google_cloud_tts_service.dart` for clarity.

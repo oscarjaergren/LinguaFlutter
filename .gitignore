@@ -18,6 +18,13 @@ migrate_working_dir/
 *.iws
 .idea/
 
+# Temporary/unused files
+*.png
+!web/icons/*.png
+!android/app/src/main/res/**/*.png
+!ios/Runner/Assets.xcassets/**/*.png
+docker-compose.test.yml
+
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
 # is commented out by default.
