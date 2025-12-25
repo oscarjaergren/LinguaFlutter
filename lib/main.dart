@@ -27,6 +27,7 @@ void main() async {
   final languageProvider = LanguageProvider();
   final streakProvider = StreakProvider();
   final themeProvider = ThemeProvider();
+  final exercisePreferencesProvider = ExercisePreferencesProvider();
   
   // Create feature-specific providers (VSA architecture)
   final cardManagementProvider = CardManagementProvider(
@@ -38,6 +39,7 @@ void main() async {
   // Initialize providers that need async setup
   await themeProvider.initialize();
   await cardEnrichmentProvider.initialize();
+  await exercisePreferencesProvider.initialize();
   
   // Wire up auth state change callback to initialize data providers
   authProvider.onAuthStateChanged = (isAuthenticated) async {
@@ -80,6 +82,9 @@ void main() async {
         // UI providers
         ChangeNotifierProvider(create: (_) => MascotProvider()),
         ChangeNotifierProvider(create: (_) => IconProvider()),
+        
+        // Exercise preferences provider
+        ChangeNotifierProvider.value(value: exercisePreferencesProvider),
         
         // Practice session provider
         ChangeNotifierProxyProvider<CardManagementProvider, PracticeSessionProvider>(

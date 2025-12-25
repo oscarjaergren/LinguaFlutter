@@ -4,6 +4,9 @@ import '../../../../../shared/domain/models/exercise_type.dart';
 import '../../../../../shared/domain/models/word_data.dart';
 import '../../../../tts/presentation/widgets/speaker_button.dart';
 import '../../../domain/providers/practice_session_provider.dart';
+import 'sentence_building_exercise.dart';
+import 'conjugation_practice_exercise.dart';
+import 'article_selection_exercise.dart';
 
 /// Unified exercise content widget that renders the appropriate exercise
 /// based on the exercise type. This is the content inside the swipeable card.
@@ -96,6 +99,13 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
   Widget _buildPromptSection(BuildContext context) {
     final card = widget.card;
     
+    // New exercise types handle their own prompts
+    if (widget.exerciseType == ExerciseType.sentenceBuilding ||
+        widget.exerciseType == ExerciseType.conjugationPractice ||
+        widget.exerciseType == ExerciseType.articleSelection) {
+      return const SizedBox.shrink();
+    }
+    
     // Determine what to show based on exercise type
     final isReverse = widget.exerciseType == ExerciseType.reverseTranslation;
     final promptText = isReverse ? card.backText : card.frontText;
@@ -181,6 +191,27 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
         return _buildWritingSection(context);
+      case ExerciseType.sentenceBuilding:
+        return SentenceBuildingExercise(
+          card: widget.card,
+          answerState: widget.answerState,
+          currentAnswerCorrect: widget.currentAnswerCorrect,
+          onCheckAnswer: widget.onCheckAnswer,
+        );
+      case ExerciseType.conjugationPractice:
+        return ConjugationPracticeExercise(
+          card: widget.card,
+          answerState: widget.answerState,
+          currentAnswerCorrect: widget.currentAnswerCorrect,
+          onCheckAnswer: widget.onCheckAnswer,
+        );
+      case ExerciseType.articleSelection:
+        return ArticleSelectionExercise(
+          card: widget.card,
+          answerState: widget.answerState,
+          currentAnswerCorrect: widget.currentAnswerCorrect,
+          onCheckAnswer: widget.onCheckAnswer,
+        );
       case ExerciseType.readingRecognition:
       default:
         return _buildReadingSection(context);
@@ -393,6 +424,13 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   Widget _buildActionSection(BuildContext context) {
     final hasAnswered = widget.answerState == AnswerState.answered;
+    
+    // New exercise types handle their own action buttons
+    if (widget.exerciseType == ExerciseType.sentenceBuilding ||
+        widget.exerciseType == ExerciseType.conjugationPractice ||
+        widget.exerciseType == ExerciseType.articleSelection) {
+      return const SizedBox.shrink();
+    }
     
     // For reading recognition, the tap-to-reveal is on the card itself
     if (!hasAnswered && widget.exerciseType == ExerciseType.readingRecognition) {

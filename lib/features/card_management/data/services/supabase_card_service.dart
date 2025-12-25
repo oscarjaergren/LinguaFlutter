@@ -185,9 +185,23 @@ class SupabaseCardService {
       'interval_days': _calculateIntervalDays(card),
       'is_archived': card.isArchived,
       'is_favorite': card.isFavorite,
+      'exercise_scores': _exerciseScoresToJson(card.exerciseScores),
       'created_at': card.createdAt.toIso8601String(),
       'updated_at': card.updatedAt.toIso8601String(),
     };
+  }
+
+  /// Convert exercise scores map to JSON for storage
+  /// Uses exercise type's JSON value as key for consistency
+  Map<String, dynamic> _exerciseScoresToJson(
+      Map<ExerciseType, ExerciseScore> scores) {
+    final json = <String, dynamic>{};
+    for (final entry in scores.entries) {
+      // Use the JsonValue annotation value as key
+      final key = entry.key.name;
+      json[key] = entry.value.toJson();
+    }
+    return json;
   }
 
   /// Convert Supabase row to CardModel
@@ -208,6 +222,11 @@ class SupabaseCardService {
         ?.map((e) => e as String)
         .toList() ?? [];
 
+    // Parse exercise scores from JSONB
+    final exerciseScores = _exerciseScoresFromJson(
+      json['exercise_scores'] as Map<String, dynamic>?,
+    );
+
     return CardModel(
       id: json['id'] as String,
       frontText: json['front_text'] as String,
@@ -227,8 +246,46 @@ class SupabaseCardService {
       isFavorite: json['is_favorite'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      exerciseScores: _defaultExerciseScores(),
+      exerciseScores: exerciseScores,
     );
+  }
+
+  /// Parse exercise scores from JSON, falling back to defaults for missing types
+  Map<ExerciseType, ExerciseScore> _exerciseScoresFromJson(
+      Map<String, dynamic>? json) {
+    final scores = <ExerciseType, ExerciseScore>{};
+    
+    // Initialize all implemented types with defaults first
+    for (final type in ExerciseType.values) {
+      if (type.isImplemented) {
+        scores[type] = ExerciseScore.initial(type);
+      }
+    }
+    
+    // Override with persisted scores if available
+    if (json != null && json.isNotEmpty) {
+      for (final entry in json.entries) {
+        try {
+          // Find matching ExerciseType by name
+          final type = ExerciseType.values.firstWhere(
+            (t) => t.name == entry.key,
+            orElse: () => throw StateError('Unknown type: ${entry.key}'),
+          );
+          
+          if (entry.value is Map<String, dynamic>) {
+            scores[type] = ExerciseScore.fromJson(
+              entry.value as Map<String, dynamic>,
+            );
+          }
+        } catch (e) {
+          LoggerService.warning(
+            'Failed to parse exercise score for ${entry.key}: $e',
+          );
+        }
+      }
+    }
+    
+    return scores;
   }
 
   /// Calculate interval days from card data
@@ -237,14 +294,4 @@ class SupabaseCardService {
     return card.nextReview!.difference(card.lastReviewed!).inDays;
   }
 
-  /// Create default exercise scores
-  Map<ExerciseType, ExerciseScore> _defaultExerciseScores() {
-    final scores = <ExerciseType, ExerciseScore>{};
-    for (final type in ExerciseType.values) {
-      if (type.isImplemented) {
-        scores[type] = ExerciseScore.initial(type);
-      }
-    }
-    return scores;
-  }
 }

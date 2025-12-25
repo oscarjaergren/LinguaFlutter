@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../../../shared/domain/models/exercise_type.dart';
+import '../../../../shared/domain/models/exercise_score.dart';
 import '../../../card_management/presentation/screens/card_creation_screen.dart';
 import '../../domain/providers/practice_session_provider.dart';
+import '../../domain/providers/exercise_preferences_provider.dart';
 import '../widgets/swipeable_exercise_card.dart';
 import '../widgets/exercises/exercise_content_widget.dart';
 import '../widgets/practice_completion_screen.dart';
 import '../widgets/practice_progress_bar.dart';
+import '../widgets/exercise_filter_sheet.dart';
 
 /// Unified practice screen with swipeable exercise cards
 class PracticeScreen extends StatefulWidget {
@@ -37,8 +41,27 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   void _startSession() {
     final provider = Provider.of<PracticeSessionProvider>(context, listen: false);
+    final prefsProvider = Provider.of<ExercisePreferencesProvider>(context, listen: false);
+    
     if (!provider.isSessionActive) {
-      provider.startSession();
+      // Start session with current exercise preferences
+      provider.startSession(preferences: prefsProvider.preferences);
+    }
+  }
+
+  Future<void> _showFilterSheet() async {
+    final provider = Provider.of<PracticeSessionProvider>(context, listen: false);
+    final prefsProvider = Provider.of<ExercisePreferencesProvider>(context, listen: false);
+    
+    final newPrefs = await ExerciseFilterSheet.show(
+      context,
+      currentPreferences: provider.exercisePreferences,
+    );
+    
+    if (newPrefs != null && mounted) {
+      // Update both providers
+      await prefsProvider.updatePreferences(newPrefs);
+      provider.updateExercisePreferences(newPrefs);
     }
   }
 
@@ -133,10 +156,17 @@ class _PracticeScreenState extends State<PracticeScreen> {
             onPressed: () => Navigator.of(context).pop(),
           ),
           actions: [
+            // Filter button
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              tooltip: 'Filter exercise types',
+              onPressed: _showFilterSheet,
+            ),
+            // Progress counter
             Consumer<PracticeSessionProvider>(
               builder: (context, provider, child) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.only(right: 16.0),
                   child: Center(
                     child: Text(
                       '${provider.currentIndex + 1}/${provider.totalCount}',
@@ -175,9 +205,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   incorrectCount: provider.incorrectCount,
                 ),
                 
-                // Stats display (above the card)
-                const SizedBox(height: 8),
-                _buildStatsRow(context, provider),
+                const SizedBox(height: 16),
                 
                 // Swipeable card with exercise content
                 Expanded(
@@ -211,57 +239,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
       ),
     );
   }
-
-  Widget _buildStatsRow(BuildContext context, PracticeSessionProvider provider) {
-    final card = provider.currentCard!;
-    final exerciseType = provider.currentExerciseType!;
-    final score = card.getExerciseScore(exerciseType);
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _buildStatChip(
-            context,
-            Icons.school,
-            'Overall: ${card.overallMasteryLevel}',
-          ),
-          const SizedBox(width: 12),
-          if (score != null)
-            _buildStatChip(
-              context,
-              Icons.check_circle_outline,
-              '${score.correctCount}/${score.totalAttempts}',
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatChip(BuildContext context, IconData icon, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// Wrapper widget to handle swipeable card with state
@@ -289,6 +266,14 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
 
   @override
   Widget build(BuildContext context) {
+    final card = widget.provider.currentCard!;
+    final exerciseType = widget.provider.currentExerciseType!;
+    final score = card.getExerciseScore(exerciseType);
+    final masteryLevel = score?.masteryLevel ?? "New";
+    final currentStreak = score?.currentStreak ?? 0;
+    final masteryProgress = score?.masteryProgress ?? 0.0;
+    final color = _getMasteryColor(masteryLevel);
+    
     return SwipeableExerciseCard(
       key: _swipeCardKey,
       canSwipe: widget.provider.canSwipe,
@@ -300,20 +285,28 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
       },
       child: Stack(
         children: [
-          ExerciseContentWidget(
-            card: widget.provider.currentCard!,
-            exerciseType: widget.provider.currentExerciseType!,
-            multipleChoiceOptions: widget.provider.multipleChoiceOptions,
-            answerState: widget.provider.answerState,
-            currentAnswerCorrect: widget.provider.currentAnswerCorrect,
-            onCheckAnswer: (isCorrect) {
-              widget.provider.checkAnswer(isCorrect: isCorrect);
-            },
-            onOverrideAnswer: (isCorrect) {
-              widget.provider.overrideAnswer(isCorrect: isCorrect);
-              // Trigger swipe animation when user marks answer
-              triggerSwipe(isCorrect);
-            },
+          Column(
+            children: [
+              Expanded(
+                child: ExerciseContentWidget(
+                  card: card,
+                  exerciseType: exerciseType,
+                  multipleChoiceOptions: widget.provider.multipleChoiceOptions,
+                  answerState: widget.provider.answerState,
+                  currentAnswerCorrect: widget.provider.currentAnswerCorrect,
+                  onCheckAnswer: (isCorrect) {
+                    widget.provider.checkAnswer(isCorrect: isCorrect);
+                  },
+                  onOverrideAnswer: (isCorrect) {
+                    widget.provider.overrideAnswer(isCorrect: isCorrect);
+                    // Trigger swipe animation when user marks answer
+                    triggerSwipe(isCorrect);
+                  },
+                ),
+              ),
+              // Mastery info bar at bottom of card
+              _buildMasteryBar(context, exerciseType, masteryLevel, currentStreak, masteryProgress, color, score),
+            ],
           ),
           // Edit button in top-right corner of card
           Positioned(
@@ -331,5 +324,143 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
         ],
       ),
     );
+  }
+  
+  Widget _buildMasteryBar(BuildContext context, ExerciseType exerciseType, String masteryLevel, 
+      int currentStreak, double masteryProgress, Color color, ExerciseScore? score) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        border: Border(
+          top: BorderSide(
+            color: color.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Exercise type icon and name
+          Icon(exerciseType.icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            _getExerciseShortName(exerciseType),
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Streak with progress bar
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.local_fire_department, size: 12, color: color),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$currentStreak/5',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: masteryProgress,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: color,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Mastery level badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: color.withValues(alpha: 0.4),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              masteryLevel,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Color _getMasteryColor(String masteryLevel) {
+    switch (masteryLevel) {
+      case 'Mastered':
+        return Colors.green;
+      case 'Good':
+        return Colors.blue;
+      case 'Learning':
+        return Colors.orange;
+      case 'Difficult':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+  
+  String _getExerciseShortName(ExerciseType type) {
+    switch (type) {
+      case ExerciseType.readingRecognition:
+        return 'Reading';
+      case ExerciseType.writingTranslation:
+        return 'Writing';
+      case ExerciseType.multipleChoiceText:
+        return 'Multiple Choice';
+      case ExerciseType.multipleChoiceIcon:
+        return 'Icon Choice';
+      case ExerciseType.reverseTranslation:
+        return 'Reverse';
+      case ExerciseType.listeningRecognition:
+        return 'Listening';
+      case ExerciseType.speakingPronunciation:
+        return 'Speaking';
+      case ExerciseType.sentenceFill:
+        return 'Fill Blank';
+      case ExerciseType.sentenceBuilding:
+        return 'Sentence';
+      case ExerciseType.conjugationPractice:
+        return 'Conjugation';
+      case ExerciseType.articleSelection:
+        return 'Article';
+    }
   }
 }

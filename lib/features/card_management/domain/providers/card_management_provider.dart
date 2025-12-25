@@ -226,10 +226,10 @@ class CardManagementProvider extends ChangeNotifier {
       // Then delete from backend
       await _repository.deleteCard(cardId);
       
-      // Refresh to ensure sync
-      await loadCards();
     } catch (e) {
       _setError('Failed to delete card: $e');
+      // On error, reload to restore correct state
+      await loadCards();
       rethrow;
     }
   }

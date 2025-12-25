@@ -209,20 +209,20 @@ class CardListView extends StatelessWidget {
 
   Widget _buildCardListDirect(BuildContext context, CardListViewModel viewModel, List<CardModel> cards) {
     return ListView.builder(
-      key: ValueKey(cards.length), // Force rebuild when card count changes
+      key: ValueKey(cards.length),
       padding: const EdgeInsets.all(16),
       itemCount: cards.length,
       itemBuilder: (context, index) {
         final card = cards[index];
         final duplicates = viewModel.getDuplicatesForCard(card.id);
-        return CardItemWidget(
-          key: ValueKey(card.id), // Unique key per card
+        return _AnimatedCardItem(
+          key: ValueKey(card.id),
           card: card,
+          duplicates: duplicates,
+          viewModel: viewModel,
           onTap: () => _onCardTap(context, card),
           onEdit: () => _onCardEdit(context, card),
           onDelete: () => _onCardDelete(context, viewModel, card),
-          onToggleFavorite: () => viewModel.toggleCardFavorite(card.id),
-          duplicates: duplicates.isNotEmpty ? duplicates : null,
           onDuplicateTap: duplicates.isNotEmpty 
               ? () => _showDuplicatesDialog(context, card, duplicates, viewModel)
               : null,
@@ -291,6 +291,136 @@ class CardListView extends StatelessWidget {
       card: card,
       duplicates: duplicates,
       onDeleteCard: (cardToDelete) => _onCardDelete(context, viewModel, cardToDelete),
+    );
+  }
+}
+
+class _AnimatedCardItem extends StatefulWidget {
+  final CardModel card;
+  final List<DuplicateMatch> duplicates;
+  final CardListViewModel viewModel;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback? onDuplicateTap;
+
+  const _AnimatedCardItem({
+    super.key,
+    required this.card,
+    required this.duplicates,
+    required this.viewModel,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+    this.onDuplicateTap,
+  });
+
+  @override
+  State<_AnimatedCardItem> createState() => _AnimatedCardItemState();
+}
+
+class _AnimatedCardItemState extends State<_AnimatedCardItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.3, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Dismissible(
+          key: ValueKey(widget.card.id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.error,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.delete,
+              color: Theme.of(context).colorScheme.onError,
+            ),
+          ),
+          confirmDismiss: (direction) async {
+            return await showDialog<bool>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Delete Card'),
+                content: Text('Are you sure you want to delete "${widget.card.frontText}"?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              ),
+            );
+          },
+          onDismissed: (direction) {
+            widget.viewModel.deleteCard(widget.card.id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${widget.card.frontText} deleted'),
+                action: SnackBarAction(
+                  label: 'Undo',
+                  onPressed: () {
+                    // TODO: Implement undo functionality
+                  },
+                ),
+              ),
+            );
+          },
+          child: CardItemWidget(
+            card: widget.card,
+            onTap: widget.onTap,
+            onEdit: widget.onEdit,
+            onDelete: widget.onDelete,
+            onToggleFavorite: () => widget.viewModel.toggleCardFavorite(widget.card.id),
+            duplicates: widget.duplicates.isNotEmpty ? widget.duplicates : null,
+            onDuplicateTap: widget.onDuplicateTap,
+          ),
+        ),
+      ),
     );
   }
 }

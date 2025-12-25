@@ -43,6 +43,21 @@ enum ExerciseType {
   /// Tests: Context usage, grammar
   @JsonValue('sentence_fill')
   sentenceFill,
+  
+  /// Arrange scrambled words into correct sentence order
+  /// Tests: Grammar, word order, sentence structure
+  @JsonValue('sentence_building')
+  sentenceBuilding,
+  
+  /// Provide correct conjugation/declension for given context
+  /// Tests: Grammar rules, conjugation patterns
+  @JsonValue('conjugation_practice')
+  conjugationPractice,
+  
+  /// Select correct article for German nouns (der/die/das)
+  /// Tests: Gender memorization
+  @JsonValue('article_selection')
+  articleSelection,
 }
 
 /// Extension methods for ExerciseType
@@ -66,6 +81,12 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'Speaking Pronunciation';
       case ExerciseType.sentenceFill:
         return 'Sentence Fill';
+      case ExerciseType.sentenceBuilding:
+        return 'Sentence Building';
+      case ExerciseType.conjugationPractice:
+        return 'Conjugation Practice';
+      case ExerciseType.articleSelection:
+        return 'Article Selection';
     }
   }
   
@@ -88,6 +109,12 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'Speak the word correctly';
       case ExerciseType.sentenceFill:
         return 'Complete the sentence with the word';
+      case ExerciseType.sentenceBuilding:
+        return 'Arrange words in correct order';
+      case ExerciseType.conjugationPractice:
+        return 'Provide the correct form';
+      case ExerciseType.articleSelection:
+        return 'Choose the correct article';
     }
   }
   
@@ -104,6 +131,10 @@ extension ExerciseTypeExtension on ExerciseType {
       case ExerciseType.speakingPronunciation:
       case ExerciseType.sentenceFill:
         return false;
+      case ExerciseType.sentenceBuilding:
+      case ExerciseType.conjugationPractice:
+      case ExerciseType.articleSelection:
+        return true;
     }
   }
   
@@ -136,6 +167,12 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'mdi:microphone';
       case ExerciseType.sentenceFill:
         return 'mdi:text-box';
+      case ExerciseType.sentenceBuilding:
+        return 'mdi:reorder-horizontal';
+      case ExerciseType.conjugationPractice:
+        return 'mdi:transform';
+      case ExerciseType.articleSelection:
+        return 'mdi:label';
     }
   }
   
@@ -158,6 +195,12 @@ extension ExerciseTypeExtension on ExerciseType {
         return Icons.mic;
       case ExerciseType.sentenceFill:
         return Icons.short_text;
+      case ExerciseType.sentenceBuilding:
+        return Icons.reorder;
+      case ExerciseType.conjugationPractice:
+        return Icons.transform;
+      case ExerciseType.articleSelection:
+        return Icons.label;
     }
   }
 }

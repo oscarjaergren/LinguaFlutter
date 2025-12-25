@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../card_review/domain/providers/practice_session_provider.dart';
+import '../../../card_review/presentation/widgets/exercise_mastery_widget.dart';
 import '../../../icon_search/icon_search.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
@@ -513,6 +514,11 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           updatedAt: DateTime.now(),
         );
         await cardManagement.saveCard(updatedCard);
+        
+        // Update the card in the practice session if one is active
+        if (mounted) {
+          context.read<PracticeSessionProvider>().updateCardInQueue(updatedCard);
+        }
       } else {
         final newCard = CardModel.create(
           frontText: _frontTextController.text.trim(),
@@ -672,6 +678,12 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
             _buildSectionHeader(context, 'Notes', Icons.notes),
             const SizedBox(height: 8),
             _buildNotesSection(context),
+            
+            // Exercise mastery section (only when editing)
+            if (_isEditing) ...[  
+              const SizedBox(height: 24),
+              ExerciseMasteryWidget(card: widget.cardToEdit!),
+            ],
             
             const SizedBox(height: 32),
           ],

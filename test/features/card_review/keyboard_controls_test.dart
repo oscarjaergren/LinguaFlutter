@@ -6,18 +6,28 @@ import 'package:mockito/mockito.dart';
 import 'package:provider/provider.dart';
 import 'package:lingua_flutter/features/card_review/presentation/screens/practice_screen.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_provider.dart';
+import 'package:lingua_flutter/features/card_review/domain/models/exercise_preferences.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 
-@GenerateMocks([PracticeSessionProvider])
+@GenerateMocks([PracticeSessionProvider, ExercisePreferencesProvider])
 import 'keyboard_controls_test.mocks.dart';
 
 void main() {
   group('PracticeScreen Keyboard Controls', () {
     late MockPracticeSessionProvider mockProvider;
+    late MockExercisePreferencesProvider mockPrefsProvider;
 
     setUp(() {
       mockProvider = MockPracticeSessionProvider();
+      mockPrefsProvider = MockExercisePreferencesProvider();
+      
+      // Setup preferences provider mock
+      when(mockPrefsProvider.preferences).thenReturn(ExercisePreferences.defaults());
+      when(mockPrefsProvider.addListener(any)).thenReturn(null);
+      when(mockPrefsProvider.removeListener(any)).thenReturn(null);
+      when(mockPrefsProvider.updatePreferences(any)).thenAnswer((_) async {});
       
       // Default mock setup
       when(mockProvider.isSessionActive).thenReturn(true);
@@ -53,14 +63,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Simulate Space key press
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -76,14 +90,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Simulate Space key press
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -100,14 +118,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Simulate Enter key press - should be handled
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -124,14 +146,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Simulate Enter key press - reveals answer for reading recognition
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
@@ -148,14 +174,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Test right arrow - should be handled by keyboard handler
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
@@ -172,14 +202,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Send left arrow key event
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
@@ -208,14 +242,18 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-            value: mockProvider,
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+            ],
             child: const PracticeScreen(),
           ),
         ),
       );
 
       await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Send number key 1 - should trigger checkAnswer
       await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
@@ -234,14 +272,18 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-              value: mockProvider,
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+                ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ],
               child: const PracticeScreen(),
             ),
           ),
         );
 
         await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
 
         // Simulate Space key press - should be ignored by keyboard handler
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
@@ -260,14 +302,18 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-              value: mockProvider,
+            home: MultiProvider(
+              providers: [
+                ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
+                ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ],
               child: const PracticeScreen(),
             ),
           ),
         );
 
         await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
 
         // Send Space key - should be completely ignored
         await tester.sendKeyEvent(LogicalKeyboardKey.space);

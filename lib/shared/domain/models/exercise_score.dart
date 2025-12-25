@@ -15,6 +15,12 @@ class ExerciseScore {
   /// Number of incorrect answers for this exercise type
   final int incorrectCount;
   
+  /// Current streak of consecutive correct answers
+  final int currentStreak;
+  
+  /// Best streak achieved for this exercise
+  final int bestStreak;
+  
   /// Last time this exercise was practiced
   final DateTime? lastPracticed;
   
@@ -25,6 +31,8 @@ class ExerciseScore {
     required this.type,
     this.correctCount = 0,
     this.incorrectCount = 0,
+    this.currentStreak = 0,
+    this.bestStreak = 0,
     this.lastPracticed,
     this.nextReview,
   });
@@ -50,14 +58,24 @@ class ExerciseScore {
   }
   
   /// Mastery level for this specific exercise type
+  /// Based on current streak: 5+ correct in a row = Mastered
   String get masteryLevel {
-    if (totalAttempts < 3) return 'New';
-    
-    final rate = successRate;
-    if (rate >= 90) return 'Mastered';
-    if (rate >= 70) return 'Good';
-    if (rate >= 50) return 'Learning';
+    if (currentStreak >= 5) return 'Mastered';
+    if (totalAttempts == 0) return 'New';
+    if (currentStreak >= 3) return 'Good';
+    if (currentStreak >= 1) return 'Learning';
     return 'Difficult';
+  }
+  
+  /// Progress toward mastery (0.0 to 1.0)
+  /// Shows how close to achieving 5-streak mastery
+  double get masteryProgress {
+    return (currentStreak / 5.0).clamp(0.0, 1.0);
+  }
+  
+  /// Number of correct answers needed to reach mastery
+  int get answersToMastery {
+    return (5 - currentStreak).clamp(0, 5);
   }
   
   /// Net score (correct - incorrect)
@@ -66,6 +84,8 @@ class ExerciseScore {
   /// Record a correct answer and return updated score
   ExerciseScore recordCorrect() {
     final now = DateTime.now();
+    final newStreak = currentStreak + 1;
+    final newBestStreak = newStreak > bestStreak ? newStreak : bestStreak;
     
     // Calculate next review using spaced repetition
     final multiplier = (correctCount + 1) / (totalAttempts + 1);
@@ -75,12 +95,15 @@ class ExerciseScore {
     
     return copyWith(
       correctCount: correctCount + 1,
+      currentStreak: newStreak,
+      bestStreak: newBestStreak,
       lastPracticed: now,
       nextReview: nextReviewDate,
     );
   }
 
   /// Record an incorrect answer and return updated score
+  /// Wrong answer decreases streak by 1 (minimum 0)
   ExerciseScore recordIncorrect() {
     final now = DateTime.now();
     
@@ -89,23 +112,31 @@ class ExerciseScore {
     
     return copyWith(
       incorrectCount: incorrectCount + 1,
+      currentStreak: currentStreak - 1,
       lastPracticed: now,
       nextReview: nextReviewDate,
     );
   }
 
   /// Create a copy with updated fields
+  /// Ensures currentStreak never goes below 0
+  /// bestStreak has no upper limit and can grow indefinitely
   ExerciseScore copyWith({
     ExerciseType? type,
     int? correctCount,
     int? incorrectCount,
+    int? currentStreak,
+    int? bestStreak,
     DateTime? lastPracticed,
     DateTime? nextReview,
   }) {
+    final newStreak = currentStreak ?? this.currentStreak;
     return ExerciseScore(
       type: type ?? this.type,
       correctCount: correctCount ?? this.correctCount,
       incorrectCount: incorrectCount ?? this.incorrectCount,
+      currentStreak: newStreak < 0 ? 0 : newStreak,
+      bestStreak: bestStreak ?? this.bestStreak,
       lastPracticed: lastPracticed ?? this.lastPracticed,
       nextReview: nextReview ?? this.nextReview,
     );
@@ -129,6 +160,6 @@ class ExerciseScore {
 
   @override
   String toString() {
-    return 'ExerciseScore(type: ${type.displayName}, correct: $correctCount, incorrect: $incorrectCount, rate: ${successRate.toStringAsFixed(1)}%)';
+    return 'ExerciseScore(type: ${type.displayName}, correct: $correctCount, incorrect: $incorrectCount, streak: $currentStreak/$bestStreak, rate: ${successRate.toStringAsFixed(1)}%)';
   }
 }

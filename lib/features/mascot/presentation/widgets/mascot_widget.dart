@@ -304,7 +304,7 @@ class _MascotWidgetState extends State<MascotWidget>
         animation: _blinkAnimation,
         builder: (context, child) {
           return Image.asset(
-            'lingualabs_mascot_manual_crop-removebg-preview.png',
+            'assets/lingualabs_mascot_manual_crop-removebg-preview.png',
             width: widget.size,
             height: widget.size,
             fit: BoxFit.contain,

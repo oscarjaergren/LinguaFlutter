@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
+import '../models/exercise_preferences.dart';
 
 /// Function type for persisting card updates
 typedef UpdateCardCallback = Future<void> Function(CardModel card);
@@ -51,6 +52,9 @@ class PracticeSessionProvider extends ChangeNotifier {
   bool _isSessionActive = false;
   DateTime? _sessionStartTime;
   
+  // Exercise filtering
+  ExercisePreferences _exercisePreferences = ExercisePreferences.defaults();
+  
   // Statistics
   int _correctCount = 0;
   int _incorrectCount = 0;
@@ -60,6 +64,9 @@ class PracticeSessionProvider extends ChangeNotifier {
   bool? _currentAnswerCorrect;
   List<String>? _multipleChoiceOptions;
   String? _userInput;
+  
+  // Minimum cards required for multiple choice exercises
+  static const int _minCardsForMultipleChoice = 4;
   
   PracticeSessionProvider({
     required GetCardsCallback getReviewCards,
@@ -105,6 +112,8 @@ class PracticeSessionProvider extends ChangeNotifier {
   
   bool get canSwipe => _answerState == AnswerState.answered;
   
+  ExercisePreferences get exercisePreferences => _exercisePreferences;
+  
   Duration get sessionDuration {
     if (_sessionStartTime == null) return Duration.zero;
     return DateTime.now().difference(_sessionStartTime!);
@@ -112,8 +121,38 @@ class PracticeSessionProvider extends ChangeNotifier {
   
   // === Session Management ===
   
+  /// Update exercise preferences and optionally rebuild the queue
+  void updateExercisePreferences(ExercisePreferences preferences, {bool rebuildQueue = true}) {
+    _exercisePreferences = preferences;
+    
+    if (rebuildQueue && _isSessionActive) {
+      // Rebuild the queue with new preferences, keeping current progress
+      final remainingCards = _sessionQueue
+          .skip(_currentIndex)
+          .map((item) => item.card)
+          .toSet()
+          .toList();
+      
+      if (remainingCards.isNotEmpty) {
+        final newQueue = _buildPracticeQueue(remainingCards);
+        if (newQueue.isNotEmpty) {
+          _sessionQueue = [
+            ..._sessionQueue.take(_currentIndex),
+            ...newQueue,
+          ];
+        }
+      }
+    }
+    
+    notifyListeners();
+  }
+  
   /// Start a new practice session
-  void startSession({List<CardModel>? cards}) {
+  void startSession({List<CardModel>? cards, ExercisePreferences? preferences}) {
+    if (preferences != null) {
+      _exercisePreferences = preferences;
+    }
+    
     final cardsToUse = cards ?? _getReviewCards();
     
     if (cardsToUse.isEmpty) {
@@ -142,42 +181,107 @@ class PracticeSessionProvider extends ChangeNotifier {
   /// Build a queue of practice items from cards
   List<PracticeItem> _buildPracticeQueue(List<CardModel> cards) {
     final queue = <PracticeItem>[];
+    final allCards = _getAllCards();
+    final hasEnoughCardsForMultipleChoice = allCards.length >= _minCardsForMultipleChoice;
     
     for (final card in cards) {
-      // Get due exercise types for this card
-      final dueTypes = card.dueExerciseTypes;
+      // Get due exercise types for this card, filtered by preferences
+      final dueTypes = card.dueExerciseTypes
+          .where((t) => _exercisePreferences.isEnabled(t))
+          .where((t) => _canDoExercise(card, t, hasEnoughCardsForMultipleChoice))
+          .toList();
       
       if (dueTypes.isEmpty) {
-        // If no specific exercise is due, pick one random implemented type
-        final implementedTypes = ExerciseType.values
-            .where((t) => t.isImplemented && _canDoExercise(card, t))
+        // If no specific exercise is due, pick from enabled types
+        final availableTypes = ExerciseType.values
+            .where((t) => t.isImplemented)
+            .where((t) => _exercisePreferences.isEnabled(t))
+            .where((t) => _canDoExercise(card, t, hasEnoughCardsForMultipleChoice))
             .toList();
         
-        if (implementedTypes.isNotEmpty) {
-          implementedTypes.shuffle();
-          queue.add(PracticeItem(card: card, exerciseType: implementedTypes.first));
+        if (availableTypes.isNotEmpty) {
+          // If prioritizing weaknesses, sort by weakness
+          if (_exercisePreferences.prioritizeWeaknesses) {
+            availableTypes.sort((a, b) => _compareByWeakness(card, a, b));
+            // Take the weakest exercise type
+            queue.add(PracticeItem(card: card, exerciseType: availableTypes.first));
+          } else {
+            availableTypes.shuffle();
+            queue.add(PracticeItem(card: card, exerciseType: availableTypes.first));
+          }
         }
       } else {
         // Add only due exercises that can be performed
-        for (final type in dueTypes) {
-          if (_canDoExercise(card, type)) {
+        if (_exercisePreferences.prioritizeWeaknesses) {
+          // Sort due types by weakness and add the weakest
+          dueTypes.sort((a, b) => _compareByWeakness(card, a, b));
+          queue.add(PracticeItem(card: card, exerciseType: dueTypes.first));
+        } else {
+          // Add all due exercises
+          for (final type in dueTypes) {
             queue.add(PracticeItem(card: card, exerciseType: type));
           }
         }
       }
     }
     
-    // Shuffle for variety
-    queue.shuffle();
+    // Shuffle for variety, but if prioritizing weaknesses, sort globally by weakness
+    if (_exercisePreferences.prioritizeWeaknesses) {
+      queue.sort((a, b) => _compareByWeakness(a.card, a.exerciseType, b.exerciseType));
+    } else {
+      queue.shuffle();
+    }
     
     return queue;
   }
   
+  /// Compare two exercise types by weakness (lower success rate = weaker = should come first)
+  int _compareByWeakness(CardModel card, ExerciseType a, ExerciseType b) {
+    final scoreA = card.getExerciseScore(a);
+    final scoreB = card.getExerciseScore(b);
+    
+    // New exercises (no attempts) should be prioritized
+    final rateA = scoreA?.totalAttempts == 0 ? -1.0 : (scoreA?.successRate ?? 0.0);
+    final rateB = scoreB?.totalAttempts == 0 ? -1.0 : (scoreB?.successRate ?? 0.0);
+    
+    // Lower success rate = weaker = comes first
+    return rateA.compareTo(rateB);
+  }
+  
   /// Check if an exercise can be performed on a card
-  bool _canDoExercise(CardModel card, ExerciseType type) {
+  bool _canDoExercise(CardModel card, ExerciseType type, bool hasEnoughCardsForMultipleChoice) {
+    // Check icon requirement
     if (type.requiresIcon && card.icon == null) {
       return false;
     }
+    
+    // Check multiple choice card requirement
+    if ((type == ExerciseType.multipleChoiceText || 
+         type == ExerciseType.multipleChoiceIcon) && 
+        !hasEnoughCardsForMultipleChoice) {
+      return false;
+    }
+    
+    // Sentence building requires examples
+    if (type == ExerciseType.sentenceBuilding) {
+      return card.examples.isNotEmpty;
+    }
+    
+    // Conjugation practice requires word data
+    if (type == ExerciseType.conjugationPractice) {
+      return card.wordData != null;
+    }
+    
+    // Article selection requires German article or article in front text
+    if (type == ExerciseType.articleSelection) {
+      if (card.germanArticle != null) return true;
+      // Check if front text starts with an article
+      final frontText = card.frontText.toLowerCase().trim();
+      return frontText.startsWith('der ') || 
+             frontText.startsWith('die ') || 
+             frontText.startsWith('das ');
+    }
+    
     return true;
   }
   
@@ -217,6 +321,28 @@ class PracticeSessionProvider extends ChangeNotifier {
     // Combine and shuffle
     final options = [correctAnswer, ...wrongAnswers]..shuffle();
     _multipleChoiceOptions = options;
+  }
+  
+  /// Update a card in the session queue when it's edited externally
+  void updateCardInQueue(CardModel updatedCard) {
+    if (!_isSessionActive) return;
+    
+    // Update all practice items for this card
+    for (int i = 0; i < _sessionQueue.length; i++) {
+      if (_sessionQueue[i].card.id == updatedCard.id) {
+        _sessionQueue[i] = PracticeItem(
+          card: updatedCard,
+          exerciseType: _sessionQueue[i].exerciseType,
+        );
+      }
+    }
+    
+    // If current card was updated, regenerate options if needed
+    if (currentCard?.id == updatedCard.id) {
+      _prepareCurrentExercise();
+    }
+    
+    notifyListeners();
   }
   
   /// Remove a deleted card from the queue and skip if it's the current card
@@ -315,6 +441,12 @@ class PracticeSessionProvider extends ChangeNotifier {
     
     // Save updated card
     await _updateCard(updatedCard);
+    
+    // Update the card reference in the session queue so UI shows updated scores
+    _sessionQueue[_currentIndex] = PracticeItem(
+      card: updatedCard,
+      exerciseType: currentExerciseType!,
+    );
     
     // Update session stats
     if (markedCorrect) {
