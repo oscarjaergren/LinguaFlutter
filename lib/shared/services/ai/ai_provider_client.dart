@@ -49,8 +49,56 @@ abstract class BaseAiProviderClient implements AiProviderClient {
     return response;
   }
 
+  /// Helper method to decode JSON response body
+  Map<String, dynamic> decodeResponseBody(http.Response response) {
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
   void dispose() {
     _client.close();
+  }
+}
+
+/// Base class for OpenAI-compatible API clients (OpenAI, OpenRouter, etc.)
+abstract class OpenAiCompatibleClient extends BaseAiProviderClient {
+  /// The base URL for the API endpoint
+  String get baseUrl;
+
+  OpenAiCompatibleClient({super.client});
+
+  @override
+  Future<String> complete({
+    required String prompt,
+    required String apiKey,
+    String? model,
+  }) async {
+    final uri = Uri.parse('$baseUrl/chat/completions');
+
+    final response = await post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
+      },
+      body: {
+        'model': model ?? defaultModel,
+        'messages': [
+          {'role': 'user', 'content': prompt}
+        ],
+        'temperature': 0.3,
+        'max_tokens': 1000,
+      },
+    );
+
+    final data = decodeResponseBody(response);
+    return parseResponse(data);
+  }
+
+  @override
+  String parseResponse(Map<String, dynamic> data) {
+    final choices = data['choices'] as List<dynamic>;
+    final message = choices.first['message'] as Map<String, dynamic>;
+    return message['content'] as String;
   }
 }
 

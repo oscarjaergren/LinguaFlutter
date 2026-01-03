@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'ai_provider_client.dart';
 
 /// Anthropic Claude API client implementation
@@ -34,7 +33,7 @@ class AnthropicClient extends BaseAiProviderClient {
       },
     );
 
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decodeResponseBody(response);
     return parseResponse(data);
   }
 
