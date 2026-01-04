@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_provider.dart';
 import 'package:lingua_flutter/features/card_review/presentation/screens/practice_screen.dart';
 import 'package:lingua_flutter/features/card_review/presentation/widgets/swipeable_exercise_card.dart';
 
@@ -52,8 +53,15 @@ void main() {
 
     Widget buildTestApp() {
       return MaterialApp(
-        home: ChangeNotifierProvider<PracticeSessionProvider>.value(
-          value: provider,
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PracticeSessionProvider>.value(
+              value: provider,
+            ),
+            ChangeNotifierProvider<ExercisePreferencesProvider>(
+              create: (_) => ExercisePreferencesProvider(),
+            ),
+          ],
           child: const PracticeScreen(),
         ),
       );

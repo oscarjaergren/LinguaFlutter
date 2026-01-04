@@ -118,51 +118,56 @@ void main() {
     });
 
     group('masteryLevel', () {
-      test('should return New when less than 3 attempts', () {
+      test('should return New when no attempts', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
-          correctCount: 2,
+          correctCount: 0,
           incorrectCount: 0,
+          currentStreak: 0,
         );
 
         expect(score.masteryLevel, 'New');
       });
 
-      test('should return Difficult when success rate < 50%', () {
+      test('should return Difficult when streak is 0 with attempts', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 2,
           incorrectCount: 8,
+          currentStreak: 0,
         );
 
         expect(score.masteryLevel, 'Difficult');
       });
 
-      test('should return Learning when success rate 50-69%', () {
+      test('should return Learning when streak is 1-2', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 6,
           incorrectCount: 4,
+          currentStreak: 2,
         );
 
         expect(score.masteryLevel, 'Learning');
       });
 
-      test('should return Good when success rate 70-89%', () {
+      test('should return Good when streak is 3-4', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 8,
           incorrectCount: 2,
+          currentStreak: 3,
         );
 
         expect(score.masteryLevel, 'Good');
       });
 
-      test('should return Mastered when success rate >= 90%', () {
+      test('should return Mastered when streak is 5+', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 9,
           incorrectCount: 1,
+          currentStreak: 5,
         );
 
         expect(score.masteryLevel, 'Mastered');
@@ -276,14 +281,14 @@ void main() {
       });
 
       test('should set nextReview to tomorrow', () {
+        final now = DateTime.now();
         final score = ExerciseScore.initial(ExerciseType.readingRecognition);
         final updated = score.recordIncorrect();
 
         expect(updated.nextReview, isNotNull);
-        final daysDifference = updated.nextReview!
-            .difference(DateTime.now())
-            .inDays;
-        expect(daysDifference, 1);
+        final hoursDifference = updated.nextReview!.difference(now).inHours;
+        expect(hoursDifference, greaterThanOrEqualTo(23));
+        expect(hoursDifference, lessThanOrEqualTo(25));
       });
     });
 

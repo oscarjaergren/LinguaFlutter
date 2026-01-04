@@ -15,13 +15,22 @@ class SupabaseAuthService {
     if (_initialized) return;
 
     try {
-      await dotenv.load(fileName: '.env');
+      // Try to load .env file (will fail silently in web/production)
+      try {
+        await dotenv.load(fileName: '.env');
+      } catch (e) {
+        // .env file not found - this is expected in web builds
+        LoggerService.info('.env file not found, using environment variables');
+      }
 
-      final url = dotenv.env['SUPABASE_URL'];
-      final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
+      // Get credentials from .env or environment variables
+      final url = dotenv.env['SUPABASE_URL'] ?? 
+                  const String.fromEnvironment('SUPABASE_URL');
+      final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? 
+                      const String.fromEnvironment('SUPABASE_ANON_KEY');
 
-      if (url == null || anonKey == null) {
-        throw Exception('Missing Supabase configuration in .env file');
+      if (url.isEmpty || anonKey.isEmpty) {
+        throw Exception('Missing Supabase configuration. Set SUPABASE_URL and SUPABASE_ANON_KEY environment variables.');
       }
 
       await Supabase.initialize(

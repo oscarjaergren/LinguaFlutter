@@ -5,7 +5,7 @@ import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 void main() {
   group('ExerciseType', () {
     test('should have all expected values', () {
-      expect(ExerciseType.values.length, 8);
+      expect(ExerciseType.values.length, 11);
       expect(ExerciseType.values, contains(ExerciseType.readingRecognition));
       expect(ExerciseType.values, contains(ExerciseType.writingTranslation));
       expect(ExerciseType.values, contains(ExerciseType.multipleChoiceText));
@@ -14,6 +14,9 @@ void main() {
       expect(ExerciseType.values, contains(ExerciseType.listeningRecognition));
       expect(ExerciseType.values, contains(ExerciseType.speakingPronunciation));
       expect(ExerciseType.values, contains(ExerciseType.sentenceFill));
+      expect(ExerciseType.values, contains(ExerciseType.sentenceBuilding));
+      expect(ExerciseType.values, contains(ExerciseType.conjugationPractice));
+      expect(ExerciseType.values, contains(ExerciseType.articleSelection));
     });
   });
 
@@ -104,11 +107,17 @@ void main() {
         expect(ExerciseType.sentenceFill.isImplemented, false);
       });
 
-      test('should have exactly 5 implemented types', () {
+      test('should return true for new exercise types', () {
+        expect(ExerciseType.sentenceBuilding.isImplemented, true);
+        expect(ExerciseType.conjugationPractice.isImplemented, true);
+        expect(ExerciseType.articleSelection.isImplemented, true);
+      });
+
+      test('should have exactly 8 implemented types', () {
         final implementedCount = ExerciseType.values
             .where((t) => t.isImplemented)
             .length;
-        expect(implementedCount, 5);
+        expect(implementedCount, 8);
       });
     });
 
