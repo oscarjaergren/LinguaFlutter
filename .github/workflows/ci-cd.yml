@@ -16,6 +16,7 @@
 # ============================================================================
 
 name: CI/CD Pipeline
+run-name: CI/CD Pipeline - ${{ github.event.head_commit.message || github.ref_name }}
 
 on:
   push:

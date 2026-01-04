@@ -19,6 +19,7 @@
 # ============================================================================
 
 name: Android Beta Release
+run-name: Android Beta Release - ${{ github.event.head_commit.message || github.ref_name }}
 
 on:
   push:
