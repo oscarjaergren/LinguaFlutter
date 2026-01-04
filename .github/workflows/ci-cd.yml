@@ -19,9 +19,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ master, develop ]  # Triggers on push to master or develop
+    branches: [ master, develop ]
   pull_request:
-    branches: [ master ]  # Triggers on PRs targeting master
+    branches: [ master ]
 
 jobs:
   analyze:
@@ -31,11 +31,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
@@ -60,11 +59,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
@@ -91,11 +89,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
@@ -121,11 +118,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
@@ -151,7 +147,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
@@ -161,7 +157,6 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
@@ -197,11 +192,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
@@ -232,7 +226,6 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
 
     - name: Get dependencies
@@ -276,11 +269,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies

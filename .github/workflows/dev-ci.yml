@@ -18,9 +18,9 @@ name: Development CI
 
 on:
   push:
-    branches: [ develop, feature/* ]  # Triggers on dev and feature branches
+    branches: [ develop, feature/* ]
   pull_request:
-    branches: [ develop ]  # Triggers on PRs to develop
+    branches: [ develop ]
 
 jobs:
   quick-check:
@@ -34,7 +34,6 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.32.5'
         channel: 'stable'
         
     - name: Get dependencies
