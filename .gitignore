@@ -23,6 +23,7 @@ migrate_working_dir/
 !web/icons/*.png
 !android/app/src/main/res/**/*.png
 !ios/Runner/Assets.xcassets/**/*.png
+!assets/**/*.png
 docker-compose.test.yml
 
 # The .vscode folder contains launch configuration and tasks you configure in
