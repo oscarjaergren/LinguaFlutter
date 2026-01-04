@@ -6,7 +6,7 @@ import '../../../../shared/utils/rate_limiter.dart';
 import '../../../auth/data/services/supabase_auth_service.dart';
 
 /// Provider for managing card data, filtering, and CRUD operations.
-/// 
+///
 /// This is the primary provider for card management within the card_management feature.
 /// Assumes user is authenticated - callers must ensure this.
 class CardManagementProvider extends ChangeNotifier {
@@ -17,7 +17,7 @@ class CardManagementProvider extends ChangeNotifier {
   // Core card data
   List<CardModel> _allCards = [];
   List<CardModel> _filteredCards = [];
-  
+
   // Filter and search state
   String _searchQuery = '';
   String _selectedCategory = '';
@@ -26,20 +26,20 @@ class CardManagementProvider extends ChangeNotifier {
   bool _showOnlyFavorites = false;
   bool _showOnlyDuplicates = false;
   Set<String> _duplicateCardIds = {};
-  
+
   // UI state
   bool _isLoading = false;
   String? _errorMessage;
 
   /// Create a CardManagementProvider with optional repository injection for testing.
-  /// 
+  ///
   /// By default uses [SupabaseCardManagementRepository]. Pass a mock implementation
   /// for unit testing.
   CardManagementProvider({
     required LanguageProvider languageProvider,
     CardManagementRepository? repository,
-  })  : _languageProvider = languageProvider,
-        _repository = repository ?? SupabaseCardManagementRepository() {
+  }) : _languageProvider = languageProvider,
+       _repository = repository ?? SupabaseCardManagementRepository() {
     _languageProvider.addListener(_onLanguageChanged);
   }
 
@@ -55,17 +55,19 @@ class CardManagementProvider extends ChangeNotifier {
 
   /// All cards in storage (unfiltered)
   List<CardModel> get allCards => List.unmodifiable(_allCards);
-  
+
   /// Cards after applying current filters
   List<CardModel> get filteredCards => List.unmodifiable(_filteredCards);
-  
+
   /// Cards that are due for review (filtered by active language)
   List<CardModel> get reviewCards => _allCards
-      .where((card) => 
-          card.isDue && 
-          !card.isArchived &&
-          (_languageProvider.activeLanguage.isEmpty || 
-           card.language == _languageProvider.activeLanguage))
+      .where(
+        (card) =>
+            card.isDue &&
+            !card.isArchived &&
+            (_languageProvider.activeLanguage.isEmpty ||
+                card.language == _languageProvider.activeLanguage),
+      )
       .toList();
 
   // Filter state getters
@@ -75,28 +77,28 @@ class CardManagementProvider extends ChangeNotifier {
   bool get showOnlyDue => _showOnlyDue;
   bool get showOnlyFavorites => _showOnlyFavorites;
   bool get showOnlyDuplicates => _showOnlyDuplicates;
-  
+
   // UI state getters
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  
+
   // Computed properties
-  List<String> get categories => _allCards
-      .map((card) => card.category)
-      .where((category) => category.isNotEmpty)
-      .toSet()
-      .toList()..sort();
-      
-  List<String> get availableTags => _allCards
-      .expand((card) => card.tags)
-      .toSet()
-      .toList()..sort();
+  List<String> get categories =>
+      _allCards
+          .map((card) => card.category)
+          .where((category) => category.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+
+  List<String> get availableTags =>
+      _allCards.expand((card) => card.tags).toSet().toList()..sort();
 
   /// Statistics for the current language filter
   Map<String, dynamic> get stats {
     final languageFilteredCards = _allCards.where((card) {
-      return _languageProvider.activeLanguage.isEmpty || 
-             card.language == _languageProvider.activeLanguage;
+      return _languageProvider.activeLanguage.isEmpty ||
+          card.language == _languageProvider.activeLanguage;
     }).toList();
 
     return {
@@ -104,7 +106,9 @@ class CardManagementProvider extends ChangeNotifier {
       'dueCards': reviewCards.length,
       'favoriteCards': languageFilteredCards.where((c) => c.isFavorite).length,
       'archivedCards': languageFilteredCards.where((c) => c.isArchived).length,
-      'duplicateCards': languageFilteredCards.where((c) => _duplicateCardIds.contains(c.id)).length,
+      'duplicateCards': languageFilteredCards
+          .where((c) => _duplicateCardIds.contains(c.id))
+          .length,
     };
   }
 
@@ -137,7 +141,7 @@ class CardManagementProvider extends ChangeNotifier {
       // Sanitize and validate card data
       final sanitizedCard = _sanitizeCard(card);
       _validateCard(sanitizedCard);
-      
+
       await _repository.saveCard(sanitizedCard);
       await loadCards();
     } catch (e) {
@@ -153,12 +157,15 @@ class CardManagementProvider extends ChangeNotifier {
     if (userId == null) {
       throw Exception('User not authenticated');
     }
-    
+
     if (!_rateLimiter.isAllowed(userId: userId, action: 'card_creation')) {
-      final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_creation');
+      final errorMsg = _rateLimiter.getErrorMessage(
+        userId: userId,
+        action: 'card_creation',
+      );
       throw RateLimitException(errorMsg);
     }
-    
+
     await saveCard(card);
   }
 
@@ -170,12 +177,15 @@ class CardManagementProvider extends ChangeNotifier {
       if (userId == null) {
         throw Exception('User not authenticated');
       }
-      
+
       if (!_rateLimiter.isAllowed(userId: userId, action: 'card_bulk_create')) {
-        final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_bulk_create');
+        final errorMsg = _rateLimiter.getErrorMessage(
+          userId: userId,
+          action: 'card_bulk_create',
+        );
         throw RateLimitException(errorMsg);
       }
-      
+
       for (final card in cards) {
         final sanitizedCard = _sanitizeCard(card);
         _validateCard(sanitizedCard);
@@ -195,12 +205,15 @@ class CardManagementProvider extends ChangeNotifier {
     if (userId == null) {
       throw Exception('User not authenticated');
     }
-    
+
     if (!_rateLimiter.isAllowed(userId: userId, action: 'card_update')) {
-      final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_update');
+      final errorMsg = _rateLimiter.getErrorMessage(
+        userId: userId,
+        action: 'card_update',
+      );
       throw RateLimitException(errorMsg);
     }
-    
+
     await saveCard(card);
   }
 
@@ -212,20 +225,22 @@ class CardManagementProvider extends ChangeNotifier {
       if (userId == null) {
         throw Exception('User not authenticated');
       }
-      
+
       if (!_rateLimiter.isAllowed(userId: userId, action: 'card_delete')) {
-        final errorMsg = _rateLimiter.getErrorMessage(userId: userId, action: 'card_delete');
+        final errorMsg = _rateLimiter.getErrorMessage(
+          userId: userId,
+          action: 'card_delete',
+        );
         throw RateLimitException(errorMsg);
       }
-      
+
       // Remove from local state immediately for responsive UI
       _allCards.removeWhere((c) => c.id == cardId);
       _applyFilters();
       notifyListeners();
-      
+
       // Then delete from backend
       await _repository.deleteCard(cardId);
-      
     } catch (e) {
       _setError('Failed to delete card: $e');
       // On error, reload to restore correct state
@@ -343,7 +358,7 @@ class CardManagementProvider extends ChangeNotifier {
   void _applyFilters() {
     _filteredCards = _allCards.where((card) {
       // Language filter
-      if (_languageProvider.activeLanguage.isNotEmpty && 
+      if (_languageProvider.activeLanguage.isNotEmpty &&
           card.language != _languageProvider.activeLanguage) {
         return false;
       }
@@ -365,7 +380,7 @@ class CardManagementProvider extends ChangeNotifier {
       }
 
       // Tags filter
-      if (_selectedTags.isNotEmpty && 
+      if (_selectedTags.isNotEmpty &&
           !_selectedTags.every((tag) => card.tags.contains(tag))) {
         return false;
       }
@@ -379,7 +394,7 @@ class CardManagementProvider extends ChangeNotifier {
       if (_showOnlyFavorites && !card.isFavorite) {
         return false;
       }
-      
+
       // Duplicates filter
       if (_showOnlyDuplicates && !_duplicateCardIds.contains(card.id)) {
         return false;
@@ -454,10 +469,23 @@ class CardManagementProvider extends ChangeNotifier {
 
   // Validation constants
   static const List<String> _supportedLanguages = [
-    'de', 'es', 'fr', 'it', 'pt', 'nl', 'sv', 'ja', 'zh', 'ko',
+    'de',
+    'es',
+    'fr',
+    'it',
+    'pt',
+    'nl',
+    'sv',
+    'ja',
+    'zh',
+    'ko',
   ];
   static const List<String> _allowedCategories = [
-    'vocabulary', 'grammar', 'phrase', 'idiom', 'other',
+    'vocabulary',
+    'grammar',
+    'phrase',
+    'idiom',
+    'other',
   ];
 
   /// Sanitize card text (functional pipeline)
@@ -492,11 +520,7 @@ class CardManagementProvider extends ChangeNotifier {
 
   /// Sanitize list of examples
   List<String> _sanitizeExamples(List<String>? examples) =>
-      examples
-          ?.map(_sanitizeExample)
-          .where((e) => e.isNotEmpty)
-          .toList() ??
-      [];
+      examples?.map(_sanitizeExample).where((e) => e.isNotEmpty).toList() ?? [];
 
   /// Sanitize list of tags (LINQ-style functional)
   List<String> _sanitizeTags(List<String>? tags) =>
@@ -519,9 +543,11 @@ class CardManagementProvider extends ChangeNotifier {
         .trim()
         .let(_removeScriptContent)
         .let(_removeHtmlTags)
-        .let((s) => preserveNewlines
-            ? _normalizeWhitespacePreserveNewlines(s)
-            : _normalizeWhitespace(s))
+        .let(
+          (s) => preserveNewlines
+              ? _normalizeWhitespacePreserveNewlines(s)
+              : _normalizeWhitespace(s),
+        )
         .let((s) => s.length > maxLength ? s.substring(0, maxLength) : s);
   }
 
@@ -533,8 +559,13 @@ class CardManagementProvider extends ChangeNotifier {
   String _removeScriptContent(String input) {
     return input
         .replaceAll(
-            RegExp(r'<script[^>]*>.*?</script>', caseSensitive: false, dotAll: true),
-            '')
+          RegExp(
+            r'<script[^>]*>.*?</script>',
+            caseSensitive: false,
+            dotAll: true,
+          ),
+          '',
+        )
         .replaceAll(RegExp(r'javascript:', caseSensitive: false), '')
         .replaceAll(RegExp(r'on\w+\s*=', caseSensitive: false), '');
   }

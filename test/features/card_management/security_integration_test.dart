@@ -19,11 +19,11 @@ void main() {
     setUp(() {
       mockRepository = MockCardManagementRepository();
       mockLanguageProvider = MockLanguageProvider();
-      
+
       when(mockLanguageProvider.activeLanguage).thenReturn('de');
       when(mockLanguageProvider.addListener(any)).thenReturn(null);
       when(mockLanguageProvider.removeListener(any)).thenReturn(null);
-      
+
       provider = CardManagementProvider(
         languageProvider: mockLanguageProvider,
         repository: mockRepository,
@@ -47,7 +47,9 @@ void main() {
           category: 'vocabulary',
         );
 
-        when(mockRepository.saveCard(any)).thenAnswer((_) async => maliciousCard);
+        when(
+          mockRepository.saveCard(any),
+        ).thenAnswer((_) async => maliciousCard);
         when(mockRepository.getAllCards()).thenAnswer((_) async => []);
 
         await provider.saveCard(maliciousCard);
@@ -70,7 +72,9 @@ void main() {
           notes: 'javascript:alert("xss")',
         );
 
-        when(mockRepository.saveCard(any)).thenAnswer((_) async => maliciousCard);
+        when(
+          mockRepository.saveCard(any),
+        ).thenAnswer((_) async => maliciousCard);
         when(mockRepository.getAllCards()).thenAnswer((_) async => []);
 
         await provider.saveCard(maliciousCard);
@@ -159,10 +163,10 @@ void main() {
 
         // Invalid language code gets sanitized to 'de', so no exception
         await provider.saveCard(invalidCard);
-        
+
         final captured = verify(mockRepository.saveCard(captureAny)).captured;
         final sanitizedCard = captured.first as CardModel;
-        
+
         // Should be sanitized to default 'de'
         expect(sanitizedCard.language, 'de');
       });
@@ -180,10 +184,10 @@ void main() {
 
         // Invalid category gets sanitized to 'vocabulary', so no exception
         await provider.saveCard(invalidCard);
-        
+
         final captured = verify(mockRepository.saveCard(captureAny)).captured;
         final sanitizedCard = captured.first as CardModel;
-        
+
         // Should be sanitized to default 'vocabulary'
         expect(sanitizedCard.category, 'vocabulary');
       });
@@ -199,10 +203,7 @@ void main() {
         when(mockRepository.saveCard(any)).thenAnswer((_) async => invalidCard);
         when(mockRepository.getAllCards()).thenAnswer((_) async => []);
 
-        expect(
-          () => provider.saveCard(invalidCard),
-          throwsA(isA<Exception>()),
-        );
+        expect(() => provider.saveCard(invalidCard), throwsA(isA<Exception>()));
       });
 
       test('validates back text is not empty', () async {
@@ -216,10 +217,7 @@ void main() {
         when(mockRepository.saveCard(any)).thenAnswer((_) async => invalidCard);
         when(mockRepository.getAllCards()).thenAnswer((_) async => []);
 
-        expect(
-          () => provider.saveCard(invalidCard),
-          throwsA(isA<Exception>()),
-        );
+        expect(() => provider.saveCard(invalidCard), throwsA(isA<Exception>()));
       });
 
       test('sanitizes invalid language code to default', () async {
@@ -256,7 +254,7 @@ void main() {
         // Note: Rate limiting requires authenticated user
         // In a real scenario, we'd need to mock SupabaseAuthService
         // For now, this test documents the expected behavior
-        
+
         // This test would need proper auth mocking to work correctly
         // Skipping actual execution but documenting the pattern
       });
@@ -307,7 +305,9 @@ void main() {
           examples: ['<b onclick="alert()">Example</b>'],
         );
 
-        when(mockRepository.saveCard(any)).thenAnswer((_) async => maliciousCard);
+        when(
+          mockRepository.saveCard(any),
+        ).thenAnswer((_) async => maliciousCard);
         when(mockRepository.getAllCards()).thenAnswer((_) async => []);
 
         await provider.saveCard(maliciousCard);

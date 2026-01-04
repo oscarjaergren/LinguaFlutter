@@ -23,18 +23,18 @@ class CardItemWidget extends StatelessWidget {
     this.duplicates,
     this.onDuplicateTap,
   });
-  
+
   bool get hasDuplicates => duplicates != null && duplicates!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       // Add a subtle border for cards with duplicates
-      shape: hasDuplicates 
+      shape: hasDuplicates
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
@@ -56,13 +56,10 @@ class CardItemWidget extends StatelessWidget {
                 children: [
                   // Icon if available
                   if (card.icon != null) ...[
-                    IconDisplayWidget(
-                      iconPath: card.icon!.svgUrl,
-                      size: 24,
-                    ),
+                    IconDisplayWidget(iconPath: card.icon!.svgUrl, size: 24),
                     const SizedBox(width: 12),
                   ],
-                  
+
                   // Front text
                   Expanded(
                     child: Column(
@@ -100,7 +97,7 @@ class CardItemWidget extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Favorite button
                   IconButton(
                     onPressed: onToggleFavorite,
@@ -109,7 +106,7 @@ class CardItemWidget extends StatelessWidget {
                       color: card.isFavorite ? Colors.red : null,
                     ),
                   ),
-                  
+
                   // More actions menu
                   PopupMenuButton<String>(
                     onSelected: (value) {
@@ -147,7 +144,7 @@ class CardItemWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // Card metadata
               const SizedBox(height: 12),
               Wrap(
@@ -161,10 +158,10 @@ class CardItemWidget extends StatelessWidget {
                     colorScheme.primaryContainer,
                     colorScheme.onPrimaryContainer,
                   ),
-                  
+
                   // Mastery level indicator
                   _buildMasteryChip(context, card.masteryLevel),
-                  
+
                   // Tags
                   ...card.tags.map(
                     (tag) => _buildChip(
@@ -176,13 +173,13 @@ class CardItemWidget extends StatelessWidget {
                   ),
                 ],
               ),
-              
+
               // Duplicate indicator
-              if (hasDuplicates) ...[  
+              if (hasDuplicates) ...[
                 const SizedBox(height: 8),
                 _buildDuplicateIndicator(context),
               ],
-              
+
               // Review status
               if (card.nextReview != null) ...[
                 const SizedBox(height: 8),
@@ -195,7 +192,12 @@ class CardItemWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildChip(BuildContext context, String label, Color backgroundColor, Color textColor) {
+  Widget _buildChip(
+    BuildContext context,
+    String label,
+    Color backgroundColor,
+    Color textColor,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -216,7 +218,7 @@ class CardItemWidget extends StatelessWidget {
     Color backgroundColor;
     Color textColor;
     IconData icon;
-    
+
     switch (masteryLevel) {
       case 'Mastered':
         backgroundColor = Colors.green.withValues(alpha: 0.2);
@@ -253,11 +255,7 @@ class CardItemWidget extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 12,
-            color: textColor,
-          ),
+          Icon(icon, size: 12, color: textColor),
           const SizedBox(width: 4),
           Text(
             masteryLevel,
@@ -283,12 +281,12 @@ class CardItemWidget extends StatelessWidget {
     final now = DateTime.now();
     final nextReview = card.nextReview!;
     final isDue = nextReview.isBefore(now);
-    
-    final statusText = isDue 
+
+    final statusText = isDue
         ? 'Due for review'
         : 'Next review: ${_formatDate(nextReview)}';
-    
-    final statusColor = isDue 
+
+    final statusColor = isDue
         ? theme.colorScheme.error
         : theme.colorScheme.onSurface.withValues(alpha: 0.6);
 
@@ -302,9 +300,7 @@ class CardItemWidget extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           statusText,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: statusColor,
-          ),
+          style: theme.textTheme.bodySmall?.copyWith(color: statusColor),
         ),
         if (card.reviewCount > 0) ...[
           const SizedBox(width: 16),
@@ -328,7 +324,7 @@ class CardItemWidget extends StatelessWidget {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final difference = date.difference(now);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}d';
     } else if (difference.inHours > 0) {

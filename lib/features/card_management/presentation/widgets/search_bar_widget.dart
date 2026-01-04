@@ -26,7 +26,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
     super.initState();
     _controller = TextEditingController(text: widget.initialQuery);
     _focusNode = FocusNode();
-    
+
     // Auto-focus when the search bar appears
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
@@ -67,9 +67,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
               ),
             ],
           ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
         ),

@@ -11,41 +11,26 @@ class Result<T> {
   final String? error;
   final bool isSuccess;
 
-  const Result._({
-    this.data,
-    this.error,
-    required this.isSuccess,
-  });
+  const Result._({this.data, this.error, required this.isSuccess});
 
   /// Create a successful result
   factory Result.success(T data) {
-    return Result._(
-      data: data,
-      isSuccess: true,
-    );
+    return Result._(data: data, isSuccess: true);
   }
 
   /// Create a successful result with no data
   factory Result.successEmpty() {
-    return const Result._(
-      isSuccess: true,
-    );
+    return const Result._(isSuccess: true);
   }
 
   /// Create a failure result
   factory Result.failure(String error) {
-    return Result._(
-      error: error,
-      isSuccess: false,
-    );
+    return Result._(error: error, isSuccess: false);
   }
 
   /// Create a failure result from an exception
   factory Result.fromException(Exception exception) {
-    return Result._(
-      error: exception.toString(),
-      isSuccess: false,
-    );
+    return Result._(error: exception.toString(), isSuccess: false);
   }
 
   /// Whether the command failed

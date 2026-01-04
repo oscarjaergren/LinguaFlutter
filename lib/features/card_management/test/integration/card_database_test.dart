@@ -73,10 +73,7 @@ void main() {
       // Update
       await SupabaseTestHelper.client
           .from('cards')
-          .update({
-            'front_text': 'Updated',
-            'back_text': 'Updated',
-          })
+          .update({'front_text': 'Updated', 'back_text': 'Updated'})
           .eq('id', card['id']);
 
       // Verify

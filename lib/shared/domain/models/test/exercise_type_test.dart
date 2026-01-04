@@ -20,13 +20,34 @@ void main() {
   group('ExerciseTypeExtension', () {
     group('displayName', () {
       test('should return correct display names', () {
-        expect(ExerciseType.readingRecognition.displayName, 'Reading Recognition');
-        expect(ExerciseType.writingTranslation.displayName, 'Writing Translation');
-        expect(ExerciseType.multipleChoiceText.displayName, 'Multiple Choice (Text)');
-        expect(ExerciseType.multipleChoiceIcon.displayName, 'Multiple Choice (Icon)');
-        expect(ExerciseType.reverseTranslation.displayName, 'Reverse Translation');
-        expect(ExerciseType.listeningRecognition.displayName, 'Listening Recognition');
-        expect(ExerciseType.speakingPronunciation.displayName, 'Speaking Pronunciation');
+        expect(
+          ExerciseType.readingRecognition.displayName,
+          'Reading Recognition',
+        );
+        expect(
+          ExerciseType.writingTranslation.displayName,
+          'Writing Translation',
+        );
+        expect(
+          ExerciseType.multipleChoiceText.displayName,
+          'Multiple Choice (Text)',
+        );
+        expect(
+          ExerciseType.multipleChoiceIcon.displayName,
+          'Multiple Choice (Icon)',
+        );
+        expect(
+          ExerciseType.reverseTranslation.displayName,
+          'Reverse Translation',
+        );
+        expect(
+          ExerciseType.listeningRecognition.displayName,
+          'Listening Recognition',
+        );
+        expect(
+          ExerciseType.speakingPronunciation.displayName,
+          'Speaking Pronunciation',
+        );
         expect(ExerciseType.sentenceFill.displayName, 'Sentence Fill');
       });
 
@@ -84,7 +105,9 @@ void main() {
       });
 
       test('should have exactly 5 implemented types', () {
-        final implementedCount = ExerciseType.values.where((t) => t.isImplemented).length;
+        final implementedCount = ExerciseType.values
+            .where((t) => t.isImplemented)
+            .length;
         expect(implementedCount, 5);
       });
     });
@@ -95,7 +118,11 @@ void main() {
 
         for (final type in ExerciseType.values) {
           if (type != ExerciseType.multipleChoiceIcon) {
-            expect(type.requiresIcon, false, reason: '${type.name} should not require icon');
+            expect(
+              type.requiresIcon,
+              false,
+              reason: '${type.name} should not require icon',
+            );
           }
         }
       });
@@ -107,7 +134,11 @@ void main() {
 
         for (final type in ExerciseType.values) {
           if (type != ExerciseType.readingRecognition) {
-            expect(type.benefitsFromIcon, false, reason: '${type.name} should not benefit from icon');
+            expect(
+              type.benefitsFromIcon,
+              false,
+              reason: '${type.name} should not benefit from icon',
+            );
           }
         }
       });
@@ -115,9 +146,15 @@ void main() {
 
     group('iconName', () {
       test('should return valid iconify icon names', () {
-        expect(ExerciseType.readingRecognition.iconName, 'mdi:book-open-page-variant');
+        expect(
+          ExerciseType.readingRecognition.iconName,
+          'mdi:book-open-page-variant',
+        );
         expect(ExerciseType.writingTranslation.iconName, 'mdi:pencil');
-        expect(ExerciseType.multipleChoiceText.iconName, 'mdi:format-list-checks');
+        expect(
+          ExerciseType.multipleChoiceText.iconName,
+          'mdi:format-list-checks',
+        );
         expect(ExerciseType.multipleChoiceIcon.iconName, 'mdi:image-multiple');
         expect(ExerciseType.reverseTranslation.iconName, 'mdi:swap-horizontal');
         expect(ExerciseType.listeningRecognition.iconName, 'mdi:ear-hearing');

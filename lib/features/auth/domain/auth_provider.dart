@@ -9,11 +9,11 @@ typedef OnAuthStateChanged = Future<void> Function(bool isAuthenticated);
 /// Provider for managing authentication state
 class AuthProvider extends ChangeNotifier {
   static final _jsonMessagePattern = RegExp(r'"message"\s*:\s*"([^"]+)"');
-  
+
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
-  
+
   /// Callback to initialize data providers after auth
   OnAuthStateChanged? onAuthStateChanged;
 
@@ -23,15 +23,16 @@ class AuthProvider extends ChangeNotifier {
       final wasAuthenticated = _user != null;
       _user = data.session?.user;
       final isNowAuthenticated = _user != null;
-      
+
       // Notify data providers when auth state changes
-      if (wasAuthenticated != isNowAuthenticated && onAuthStateChanged != null) {
+      if (wasAuthenticated != isNowAuthenticated &&
+          onAuthStateChanged != null) {
         await onAuthStateChanged!(isNowAuthenticated);
       }
-      
+
       notifyListeners();
     });
-    
+
     // Initialize with current user
     _user = SupabaseAuthService.client.auth.currentUser;
   }
@@ -45,29 +46,30 @@ class AuthProvider extends ChangeNotifier {
   String? get userId => _user?.id;
 
   /// Sign up with email and password
-  Future<bool> signUp({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> signUp({required String email, required String password}) async {
     _setLoading(true);
     _clearError();
 
     try {
       LoggerService.debug('Attempting signup for: $email');
-      
+
       final response = await SupabaseAuthService.signUp(
         email: email,
         password: password,
       );
 
       if (response.user != null) {
-        LoggerService.info('User signed up successfully: ${response.user!.email}');
+        LoggerService.info(
+          'User signed up successfully: ${response.user!.email}',
+        );
         _user = response.user;
         notifyListeners();
         return true;
       } else if (response.session == null) {
         // Email confirmation required
-        LoggerService.info('Signup successful, email confirmation required for: $email');
+        LoggerService.info(
+          'Signup successful, email confirmation required for: $email',
+        );
         _setError('Please check your email to confirm your account.');
         return false;
       } else {
@@ -92,7 +94,7 @@ class AuthProvider extends ChangeNotifier {
   /// Parse auth exception into user-friendly message
   String _parseAuthError(AuthException e) {
     final message = e.message.toLowerCase();
-    
+
     // Parse JSON error if present
     if (e.message.contains('"code"')) {
       try {
@@ -106,8 +108,8 @@ class AuthProvider extends ChangeNotifier {
         }
       } catch (_) {}
     }
-    
-    if (message.contains('email already registered') || 
+
+    if (message.contains('email already registered') ||
         message.contains('user already registered')) {
       return 'This email is already registered. Try signing in instead.';
     }
@@ -123,14 +125,14 @@ class AuthProvider extends ChangeNotifier {
     if (message.contains('database error')) {
       return 'Server error. Please try again later.';
     }
-    
+
     return e.message;
   }
 
   /// Parse generic error into user-friendly message
   String _parseGenericError(dynamic e) {
     final errorStr = e.toString().toLowerCase();
-    
+
     if (errorStr.contains('network') || errorStr.contains('connection')) {
       return 'Network error. Please check your internet connection.';
     }
@@ -140,15 +142,12 @@ class AuthProvider extends ChangeNotifier {
     if (errorStr.contains('database error')) {
       return 'Server configuration error. Please try again later.';
     }
-    
+
     return 'An unexpected error occurred. Please try again.';
   }
 
   /// Sign in with email and password
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> signIn({required String email, required String password}) async {
     _setLoading(true);
     _clearError();
 

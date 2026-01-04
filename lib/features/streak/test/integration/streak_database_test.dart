@@ -89,14 +89,11 @@ void main() {
       // Try to insert duplicate - should use upsert with onConflict
       final upserted = await SupabaseTestHelper.client
           .from('streaks')
-          .upsert(
-            {
-              'user_id': SupabaseTestHelper.currentUserId,
-              'current_streak': 10,
-              'best_streak': 10,
-            },
-            onConflict: 'user_id',
-          )
+          .upsert({
+            'user_id': SupabaseTestHelper.currentUserId,
+            'current_streak': 10,
+            'best_streak': 10,
+          }, onConflict: 'user_id')
           .select()
           .single();
 
@@ -135,7 +132,8 @@ void main() {
 
     test('should persist last review date', () async {
       final now = DateTime.now().toUtc();
-      final dateString = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final dateString =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
       final streak = await SupabaseTestHelper.client
           .from('streaks')
@@ -167,9 +165,7 @@ void main() {
     test('should handle zero/default values correctly', () async {
       final streak = await SupabaseTestHelper.client
           .from('streaks')
-          .insert({
-            'user_id': SupabaseTestHelper.currentUserId,
-          })
+          .insert({'user_id': SupabaseTestHelper.currentUserId})
           .select()
           .single();
 

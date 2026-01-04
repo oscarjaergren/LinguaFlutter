@@ -12,68 +12,68 @@ part 'card_model.g.dart';
 class CardModel {
   /// Unique identifier for the card
   final String id;
-  
+
   /// Front text of the card (usually the term to learn)
   final String frontText;
-  
+
   /// Back text of the card (usually the translation/definition)
   final String backText;
-  
+
   /// Optional icon associated with the card
   final IconModel? icon;
-  
+
   /// Language code for this card (e.g., 'de', 'es', 'fr')
   final String language;
-  
+
   /// Category or deck this card belongs to
   final String category;
-  
+
   /// Tags for organizing cards
   final List<String> tags;
-  
+
   /// German article for nouns (der, die, das) - only used for German language cards
   final String? germanArticle;
-  
+
   /// Number of times this card has been reviewed
   final int reviewCount;
-  
+
   /// Number of times this card was answered correctly
   final int correctCount;
-  
+
   /// Last review date
   final DateTime? lastReviewed;
-  
+
   /// Next review date (for spaced repetition)
   final DateTime? nextReview;
-  
+
   /// Creation date
   final DateTime createdAt;
-  
+
   /// Last modification date
   final DateTime updatedAt;
-  
+
   /// Whether this card is marked as favorite
   final bool isFavorite;
-  
+
   /// Whether this card is archived
   final bool isArchived;
-  
+
   /// Exercise-specific scores for different practice types
   /// Maps ExerciseType to ExerciseScore tracking performance
   final Map<ExerciseType, ExerciseScore> exerciseScores;
-  
+
   // === NEW: Word enrichment data ===
-  
+
   /// Word-specific grammatical data (verb conjugations, noun gender, etc.)
   /// Uses a tagged union for type-safe handling of different word types
   final WordData? wordData;
-  
+
   /// Example sentences demonstrating usage
   final List<String> examples;
-  
+
   /// Link to parent/base word (e.g., "absprechen" links to "sprechen")
   final String? parentId;
-  
+
   /// Additional notes about usage, grammar, or context
   final String? notes;
 
@@ -114,7 +114,7 @@ class CardModel {
     final now = DateTime.now();
     // Use UUID v4 for proper unique IDs instead of timestamp-based IDs
     final id = const Uuid().v4();
-    
+
     // Initialize exercise scores for all implemented exercise types
     final exerciseScores = <ExerciseType, ExerciseScore>{};
     for (final type in ExerciseType.values) {
@@ -122,7 +122,7 @@ class CardModel {
         exerciseScores[type] = ExerciseScore.initial(type);
       }
     }
-    
+
     return CardModel(
       id: id,
       frontText: frontText,
@@ -143,17 +143,17 @@ class CardModel {
     if (reviewCount == 0) return 0.0;
     return (correctCount / reviewCount) * 100;
   }
-  
+
   /// Check if this card is due for review
   bool get isDueForReview {
     if (nextReview == null) return true;
     return DateTime.now().isAfter(nextReview!);
   }
-  
+
   /// Get the current mastery level based on success rate and review count
   String get masteryLevel {
     if (reviewCount < 3) return 'New';
-    
+
     final rate = successRate;
     if (rate >= 90) return 'Mastered';
     if (rate >= 70) return 'Good';
@@ -165,33 +165,37 @@ class CardModel {
   ExerciseScore? getExerciseScore(ExerciseType type) {
     return exerciseScores[type];
   }
-  
+
   /// Get overall mastery across all exercise types
   String get overallMasteryLevel {
     if (exerciseScores.isEmpty) return masteryLevel;
-    
-    final totalAttempts = exerciseScores.values
-        .fold<int>(0, (sum, score) => sum + score.totalAttempts);
-    
+
+    final totalAttempts = exerciseScores.values.fold<int>(
+      0,
+      (sum, score) => sum + score.totalAttempts,
+    );
+
     if (totalAttempts < 5) return 'New';
-    
-    final totalCorrect = exerciseScores.values
-        .fold<int>(0, (sum, score) => sum + score.correctCount);
-    
+
+    final totalCorrect = exerciseScores.values.fold<int>(
+      0,
+      (sum, score) => sum + score.correctCount,
+    );
+
     final overallRate = (totalCorrect / totalAttempts) * 100;
-    
+
     if (overallRate >= 90) return 'Mastered';
     if (overallRate >= 70) return 'Good';
     if (overallRate >= 50) return 'Learning';
     return 'Difficult';
   }
-  
+
   /// Check if a specific exercise type is due for review
   bool isExerciseDue(ExerciseType type) {
     final score = exerciseScores[type];
     return score?.isDueForReview ?? true;
   }
-  
+
   /// Get list of exercise types that are due for review
   List<ExerciseType> get dueExerciseTypes {
     return exerciseScores.entries
@@ -213,22 +217,22 @@ class CardModel {
       updatedAt: DateTime.now(),
     );
   }
-  
+
   /// Create a copy with updated exercise score for a specific type
   CardModel copyWithExerciseResult({
     required ExerciseType exerciseType,
     required bool wasCorrect,
   }) {
-    final currentScore = exerciseScores[exerciseType] ?? 
-        ExerciseScore.initial(exerciseType);
-    
-    final updatedScore = wasCorrect 
-        ? currentScore.recordCorrect() 
+    final currentScore =
+        exerciseScores[exerciseType] ?? ExerciseScore.initial(exerciseType);
+
+    final updatedScore = wasCorrect
+        ? currentScore.recordCorrect()
         : currentScore.recordIncorrect();
-    
+
     final newScores = Map<ExerciseType, ExerciseScore>.from(exerciseScores);
     newScores[exerciseType] = updatedScore;
-    
+
     // Also update legacy fields for backward compatibility
     return copyWith(
       exerciseScores: newScores,
@@ -292,7 +296,8 @@ class CardModel {
   Map<String, dynamic> toJson() => _$CardModelToJson(this);
 
   /// Create a card from JSON
-  factory CardModel.fromJson(Map<String, dynamic> json) => _$CardModelFromJson(json);
+  factory CardModel.fromJson(Map<String, dynamic> json) =>
+      _$CardModelFromJson(json);
 
   @override
   bool operator ==(Object other) {
@@ -318,23 +323,23 @@ class CardModel {
   CardModel processAnswer(CardAnswer answer) {
     final wasCorrect = answer == CardAnswer.correct;
     DateTime? nextReviewDate;
-    
+
     if (wasCorrect) {
       // Calculate interval based on success rate and review history
       // Higher success rate = longer intervals
       final newCorrectCount = correctCount + 1;
       final newReviewCount = reviewCount + 1;
       final successRatio = newCorrectCount / newReviewCount;
-      
+
       // Base interval grows with consecutive successes
       final baseInterval = switch (newCorrectCount) {
-        1 => 1,   // First correct: 1 day
-        2 => 3,   // Second correct: 3 days
-        3 => 7,   // Third correct: 1 week
-        4 => 14,  // Fourth correct: 2 weeks
-        _ => 30,  // 5+ correct: 1 month base
+        1 => 1, // First correct: 1 day
+        2 => 3, // Second correct: 3 days
+        3 => 7, // Third correct: 1 week
+        4 => 14, // Fourth correct: 2 weeks
+        _ => 30, // 5+ correct: 1 month base
       };
-      
+
       // Multiply by success ratio (0.0 to 1.0) + 1 for scaling
       final intervalDays = (baseInterval * (successRatio + 1)).round();
       nextReviewDate = DateTime.now().add(Duration(days: intervalDays));
@@ -342,7 +347,7 @@ class CardModel {
       // If incorrect, review again tomorrow
       nextReviewDate = DateTime.now().add(const Duration(days: 1));
     }
-    
+
     return copyWithReview(
       wasCorrect: wasCorrect,
       nextReviewDate: nextReviewDate,
@@ -356,8 +361,4 @@ class CardModel {
 }
 
 /// Enum for card review answers
-enum CardAnswer {
-  correct,
-  incorrect,
-  skip,
-}
+enum CardAnswer { correct, incorrect, skip }

@@ -7,28 +7,28 @@ part 'streak_model.g.dart';
 class StreakModel {
   /// Current active streak in days
   final int currentStreak;
-  
+
   /// Best streak ever achieved
   final int bestStreak;
-  
+
   /// Last review date (to calculate if streak is broken)
   final DateTime? lastReviewDate;
-  
+
   /// Total number of review sessions
   final int totalReviewSessions;
-  
+
   /// Total cards reviewed across all sessions
   final int totalCardsReviewed;
-  
+
   /// Map of date strings to number of cards reviewed that day
   final Map<String, int> dailyReviewCounts;
-  
+
   /// Streak milestones achieved (e.g., [7, 14, 30, 50, 100])
   final List<int> achievedMilestones;
-  
+
   /// Date when the streak was started
   final DateTime? streakStartDate;
-  
+
   /// Date when the best streak was achieved
   final DateTime? bestStreakDate;
 
@@ -52,7 +52,7 @@ class StreakModel {
   /// Check if the streak is currently active (reviewed today or yesterday)
   bool get isStreakActive {
     if (lastReviewDate == null) return false;
-    
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lastReview = DateTime(
@@ -60,9 +60,9 @@ class StreakModel {
       lastReviewDate!.month,
       lastReviewDate!.day,
     );
-    
+
     final daysDiff = today.difference(lastReview).inDays;
-    
+
     // Streak is active if reviewed today (0 days) or yesterday (1 day)
     return daysDiff <= 1;
   }
@@ -70,7 +70,7 @@ class StreakModel {
   /// Check if user needs to review today to maintain streak
   bool get needsReviewToday {
     if (lastReviewDate == null) return true;
-    
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final lastReview = DateTime(
@@ -78,7 +78,7 @@ class StreakModel {
       lastReviewDate!.month,
       lastReviewDate!.day,
     );
-    
+
     return today.isAfter(lastReview);
   }
 
@@ -91,31 +91,33 @@ class StreakModel {
   /// Get average cards per day for current streak
   double get averageCardsPerDay {
     if (currentStreak == 0) return 0.0;
-    
+
     final now = DateTime.now();
     final streakDays = <String>[];
-    
+
     for (int i = 0; i < currentStreak; i++) {
       final date = now.subtract(Duration(days: i));
       streakDays.add(_formatDate(date));
     }
-    
+
     final totalCards = streakDays
         .map((date) => dailyReviewCounts[date] ?? 0)
         .fold(0, (sum, count) => sum + count);
-    
+
     return totalCards / currentStreak;
   }
 
   /// Get new milestones achieved for this streak level
   List<int> getNewMilestones(int previousStreak) {
     const milestones = [3, 7, 14, 21, 30, 50, 75, 100, 150, 200, 365];
-    
+
     return milestones
-        .where((milestone) => 
-            currentStreak >= milestone && 
-            previousStreak < milestone &&
-            !achievedMilestones.contains(milestone))
+        .where(
+          (milestone) =>
+              currentStreak >= milestone &&
+              previousStreak < milestone &&
+              !achievedMilestones.contains(milestone),
+        )
         .toList();
   }
 
@@ -127,15 +129,16 @@ class StreakModel {
     final date = reviewDate ?? DateTime.now();
     final dateKey = _formatDate(date);
     final reviewDay = DateTime(date.year, date.month, date.day);
-    
+
     // Update daily review counts
     final newDailyReviewCounts = Map<String, int>.from(dailyReviewCounts);
-    newDailyReviewCounts[dateKey] = (newDailyReviewCounts[dateKey] ?? 0) + cardsReviewed;
-    
+    newDailyReviewCounts[dateKey] =
+        (newDailyReviewCounts[dateKey] ?? 0) + cardsReviewed;
+
     // Calculate new streak
     int newCurrentStreak;
     DateTime? newStreakStartDate;
-    
+
     if (lastReviewDate == null) {
       // First review ever
       newCurrentStreak = 1;
@@ -146,9 +149,9 @@ class StreakModel {
         lastReviewDate!.month,
         lastReviewDate!.day,
       );
-      
+
       final daysDiff = reviewDay.difference(lastReview).inDays;
-      
+
       if (daysDiff == 0) {
         // Same day review - keep current streak
         newCurrentStreak = currentStreak;
@@ -163,15 +166,19 @@ class StreakModel {
         newStreakStartDate = reviewDay;
       }
     }
-    
+
     // Check for new best streak
-    final newBestStreak = newCurrentStreak > bestStreak ? newCurrentStreak : bestStreak;
-    final newBestStreakDate = newCurrentStreak > bestStreak ? date : bestStreakDate;
-    
+    final newBestStreak = newCurrentStreak > bestStreak
+        ? newCurrentStreak
+        : bestStreak;
+    final newBestStreakDate = newCurrentStreak > bestStreak
+        ? date
+        : bestStreakDate;
+
     // Add new milestones
     final newMilestones = getNewMilestones(currentStreak);
     final updatedMilestones = [...achievedMilestones, ...newMilestones];
-    
+
     return StreakModel(
       currentStreak: newCurrentStreak,
       bestStreak: newBestStreak,
@@ -245,13 +252,19 @@ class StreakModel {
     return StreakModel(
       currentStreak: currentStreak ?? this.currentStreak,
       bestStreak: bestStreak ?? this.bestStreak,
-      lastReviewDate: clearLastReviewDate ? null : (lastReviewDate ?? this.lastReviewDate),
+      lastReviewDate: clearLastReviewDate
+          ? null
+          : (lastReviewDate ?? this.lastReviewDate),
       totalReviewSessions: totalReviewSessions ?? this.totalReviewSessions,
       totalCardsReviewed: totalCardsReviewed ?? this.totalCardsReviewed,
       dailyReviewCounts: dailyReviewCounts ?? this.dailyReviewCounts,
       achievedMilestones: achievedMilestones ?? this.achievedMilestones,
-      streakStartDate: clearStreakStartDate ? null : (streakStartDate ?? this.streakStartDate),
-      bestStreakDate: clearBestStreakDate ? null : (bestStreakDate ?? this.bestStreakDate),
+      streakStartDate: clearStreakStartDate
+          ? null
+          : (streakStartDate ?? this.streakStartDate),
+      bestStreakDate: clearBestStreakDate
+          ? null
+          : (bestStreakDate ?? this.bestStreakDate),
     );
   }
 
@@ -259,14 +272,15 @@ class StreakModel {
   Map<String, dynamic> toJson() => _$StreakModelToJson(this);
 
   /// Create from JSON
-  factory StreakModel.fromJson(Map<String, dynamic> json) => _$StreakModelFromJson(json);
+  factory StreakModel.fromJson(Map<String, dynamic> json) =>
+      _$StreakModelFromJson(json);
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is StreakModel && 
-           other.currentStreak == currentStreak &&
-           other.bestStreak == bestStreak;
+    return other is StreakModel &&
+        other.currentStreak == currentStreak &&
+        other.bestStreak == bestStreak;
   }
 
   @override

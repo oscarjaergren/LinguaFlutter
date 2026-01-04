@@ -10,12 +10,9 @@ import 'package:provider/provider.dart';
 /// Screen for searching and selecting icons
 class IconSearchScreen extends StatefulWidget {
   final String? initialSearchQuery;
-  
-  const IconSearchScreen({
-    super.key,
-    this.initialSearchQuery,
-  });
-  
+
+  const IconSearchScreen({super.key, this.initialSearchQuery});
+
   @override
   State<IconSearchScreen> createState() => _IconSearchScreenState();
 }
@@ -24,27 +21,31 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounceTimer;
-  
+
   @override
   void initState() {
     super.initState();
     // Initialize search controller with initial query if provided
-    if (widget.initialSearchQuery != null && widget.initialSearchQuery!.trim().isNotEmpty) {
+    if (widget.initialSearchQuery != null &&
+        widget.initialSearchQuery!.trim().isNotEmpty) {
       _searchController.text = widget.initialSearchQuery!.trim();
     }
-    
+
     // Load content when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.initialSearchQuery != null && widget.initialSearchQuery!.trim().isNotEmpty) {
+      if (widget.initialSearchQuery != null &&
+          widget.initialSearchQuery!.trim().isNotEmpty) {
         // Auto-search with the initial query
-        context.read<IconProvider>().searchIcons(widget.initialSearchQuery!.trim());
+        context.read<IconProvider>().searchIcons(
+          widget.initialSearchQuery!.trim(),
+        );
       } else {
         // Load popular icons when no initial query
         context.read<IconProvider>().loadPopularCollections();
       }
     });
   }
-  
+
   @override
   void dispose() {
     _debounceTimer?.cancel();
@@ -52,11 +53,11 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
     _searchFocusNode.dispose();
     super.dispose();
   }
-  
+
   void _onSearchChanged(String query) {
     // Cancel the previous timer
     _debounceTimer?.cancel();
-     
+
     // Start a new timer
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
@@ -64,11 +65,11 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
       }
     });
   }
-  
+
   void _onIconSelected(IconModel icon) {
     final provider = context.read<IconProvider>();
     provider.selectIcon(icon);
-    
+
     // Automatically close the screen and return the selected icon
     Navigator.of(context).pop(icon);
   }
@@ -79,15 +80,16 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
     final itemWidth = 60.0; // Approximate width for each icon item
     final padding = 32.0; // Total horizontal padding
     final spacing = 4.0; // Spacing between items
-    
+
     // Calculate how many items can fit
     final availableWidth = screenWidth - padding;
-    final crossAxisCount = ((availableWidth + spacing) / (itemWidth + spacing)).floor();
-    
+    final crossAxisCount = ((availableWidth + spacing) / (itemWidth + spacing))
+        .floor();
+
     // Ensure we have at least 3 columns and at most 12
     return crossAxisCount.clamp(3, 12);
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,7 +122,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
               ],
             ),
           ),
-          
+
           // Selected icon display
           Consumer<IconProvider>(
             builder: (context, provider, child) {
@@ -134,10 +136,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                   ),
                   child: Row(
                     children: [
-                      IconifyIcon(
-                        icon: provider.selectedIcon!,
-                        size: 32,
-                      ),
+                      IconifyIcon(icon: provider.selectedIcon!, size: 32),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -165,26 +164,33 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
               return const SizedBox.shrink();
             },
           ),
-          
+
           // Results counter
           Consumer<IconProvider>(
             builder: (context, provider, child) {
               if (provider.searchResults.isNotEmpty && !provider.isLoading) {
                 return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 12.0,
+                  ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.search,
                         size: 16,
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         '${provider.searchResults.length} icons found',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -192,10 +198,13 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                         const Spacer(),
                         Text(
                           'for "${provider.searchQuery}"',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                            fontStyle: FontStyle.italic,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
+                                fontStyle: FontStyle.italic,
+                              ),
                         ),
                       ],
                     ],
@@ -205,17 +214,15 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
               return const SizedBox.shrink();
             },
           ),
-          
+
           // Search results
           Expanded(
             child: Consumer<IconProvider>(
               builder: (context, provider, child) {
                 if (provider.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 if (provider.errorMessage != null) {
                   return Center(
                     child: Column(
@@ -252,7 +259,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                     ),
                   );
                 }
-                
+
                 if (provider.searchResults.isEmpty) {
                   return Center(
                     child: Column(
@@ -261,11 +268,13 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                         Icon(
                           Icons.search_off,
                           size: 64,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          provider.searchQuery.isEmpty 
+                          provider.searchQuery.isEmpty
                               ? 'Search for icons above'
                               : 'No icons found',
                           style: Theme.of(context).textTheme.headlineSmall,
@@ -281,7 +290,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                     ),
                   );
                 }
-                
+
                 return GridView.builder(
                   padding: const EdgeInsets.all(16.0),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -296,7 +305,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                   itemBuilder: (context, index) {
                     final icon = provider.searchResults[index];
                     final isSelected = provider.selectedIcon?.id == icon.id;
-                    
+
                     return Tooltip(
                       message: '${icon.name}\n${icon.set}',
                       child: IconGridItem(

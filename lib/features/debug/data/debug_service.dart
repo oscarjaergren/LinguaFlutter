@@ -60,12 +60,14 @@ class DebugService {
   static List<CardModel> createDueForReviewCards(String language, int count) {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
     final cards = createBasicCards(language, count);
-    
+
     // Make all cards due for review
-    return cards.map((card) => card.copyWith(
-      nextReview: yesterday,
-      lastReviewed: yesterday,
-    )).toList();
+    return cards
+        .map(
+          (card) =>
+              card.copyWith(nextReview: yesterday, lastReviewed: yesterday),
+        )
+        .toList();
   }
 
   /// Load German vocabulary cards from JSON file
@@ -75,65 +77,75 @@ class DebugService {
   }) async {
     try {
       // Load JSON file from assets
-      final String jsonString = await rootBundle.loadString('assets/data/german_words.json');
-      final Map<String, dynamic> jsonData = json.decode(jsonString) as Map<String, dynamic>;
+      final String jsonString = await rootBundle.loadString(
+        'assets/data/german_words.json',
+      );
+      final Map<String, dynamic> jsonData =
+          json.decode(jsonString) as Map<String, dynamic>;
       final List<dynamic> words = jsonData['words'] as List<dynamic>;
-      
+
       LoggerService.debug('Loaded ${words.length} words from JSON');
-      
+
       // Convert to CardModel objects
       final List<CardModel> cards = [];
-      final wordsToProcess = limit != null && limit < words.length 
-          ? words.sublist(0, limit) 
+      final wordsToProcess = limit != null && limit < words.length
+          ? words.sublist(0, limit)
           : words;
-      
+
       LoggerService.debug('Processing ${wordsToProcess.length} words');
-      
+
       for (var i = 0; i < wordsToProcess.length; i++) {
         final word = wordsToProcess[i] as Map<String, dynamic>;
-        
+
         // Build example sentences text
-        final List<dynamic> examplesList = word['examples'] as List<dynamic>? ?? [];
+        final List<dynamic> examplesList =
+            word['examples'] as List<dynamic>? ?? [];
         final String examplesText = examplesList.isNotEmpty
             ? '\n\nExamples:\n${examplesList.map((e) => '• $e').join('\n')}'
             : '';
-        
+
         // Build plural information if available
-        final String pluralInfo = word.containsKey('plural') && word['plural'] != null
+        final String pluralInfo =
+            word.containsKey('plural') && word['plural'] != null
             ? '\nPlural: ${word['plural']}'
             : '';
-        
+
         // Calculate next review date based on hours
         final DateTime nextReview;
         if (makeAvailableNow) {
           // Make all cards available immediately for learning
           nextReview = DateTime.now().subtract(const Duration(hours: 1));
         } else {
-          final double hoursUntilReview = (word['nextReviewHours'] as num?)?.toDouble() ?? 24.0;
-          nextReview = DateTime.now().add(Duration(
-            hours: hoursUntilReview.floor(),
-            minutes: ((hoursUntilReview % 1) * 60).floor(),
-          ));
+          final double hoursUntilReview =
+              (word['nextReviewHours'] as num?)?.toDouble() ?? 24.0;
+          nextReview = DateTime.now().add(
+            Duration(
+              hours: hoursUntilReview.floor(),
+              minutes: ((hoursUntilReview % 1) * 60).floor(),
+            ),
+          );
         }
-        
+
         // Create the card
         final card = CardModel.create(
           frontText: word['german'] as String,
           backText: '${word['english']}$pluralInfo$examplesText',
           language: 'de', // German language code
           category: word['category'] as String? ?? 'vocabulary',
-          tags: ['german', 'vocabulary', word['category'] as String? ?? 'general'],
-        ).copyWith(
-          nextReview: nextReview,
-        );
-        
+          tags: [
+            'german',
+            'vocabulary',
+            word['category'] as String? ?? 'general',
+          ],
+        ).copyWith(nextReview: nextReview);
+
         cards.add(card);
-        
+
         if ((i + 1) % 50 == 0) {
           LoggerService.debug('Processed ${i + 1} cards');
         }
       }
-      
+
       LoggerService.debug('Successfully created ${cards.length} card objects');
       return cards;
     } catch (e, stackTrace) {
@@ -141,5 +153,4 @@ class DebugService {
       throw Exception('Failed to load German words from JSON: $e');
     }
   }
-
 }

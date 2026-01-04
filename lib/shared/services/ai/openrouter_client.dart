@@ -27,7 +27,7 @@ class OpenRouterClient extends BaseAiProviderClient {
       body: {
         'model': model ?? defaultModel,
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {'role': 'user', 'content': prompt},
         ],
         'temperature': 0.3,
         'max_tokens': 1000,

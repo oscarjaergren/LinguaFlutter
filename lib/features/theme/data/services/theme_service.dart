@@ -69,17 +69,7 @@ class ThemeService {
 }
 
 /// Enum for theme modes
-enum AppThemeMode {
-  light,
-  dark,
-  system,
-}
+enum AppThemeMode { light, dark, system }
 
 /// Enum for color schemes
-enum AppColorScheme {
-  blue,
-  green,
-  purple,
-  orange,
-  red,
-}
+enum AppColorScheme { blue, green, purple, orange, red }

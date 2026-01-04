@@ -24,13 +24,13 @@ class CardListViewModel extends ChangeNotifier {
     required CardManagementProvider cardManagement,
     required DuplicateDetectionProvider duplicateDetection,
     required LanguageProvider languageProvider,
-  })  : _cardManagement = cardManagement,
-        _duplicateDetection = duplicateDetection,
-        _languageProvider = languageProvider {
+  }) : _cardManagement = cardManagement,
+       _duplicateDetection = duplicateDetection,
+       _languageProvider = languageProvider {
     // Listen to provider changes
     _cardManagement.addListener(_onCardManagementChanged);
     _languageProvider.addListener(_onLanguageProviderChanged);
-    
+
     // Initialize with current provider state
     _syncWithProviders();
   }
@@ -52,11 +52,12 @@ class CardListViewModel extends ChangeNotifier {
   bool get showOnlyFavorites => _showOnlyFavorites;
   bool get showOnlyDuplicates => _showOnlyDuplicates;
   String? get errorMessage => _cardManagement.errorMessage;
-  
+
   // Duplicate detection getters
   int get duplicateCount => _duplicateDetection.duplicateCount;
-  bool cardHasDuplicates(String cardId) => _duplicateDetection.cardHasDuplicates(cardId);
-  List<DuplicateMatch> getDuplicatesForCard(String cardId) => 
+  bool cardHasDuplicates(String cardId) =>
+      _duplicateDetection.cardHasDuplicates(cardId);
+  List<DuplicateMatch> getDuplicatesForCard(String cardId) =>
       _duplicateDetection.getDuplicatesForCard(cardId);
 
   // Getters for card data
@@ -67,10 +68,12 @@ class CardListViewModel extends ChangeNotifier {
 
   // Language-related getters
   String get activeLanguage => _languageProvider.activeLanguage;
-  
+
   /// Get language details for the active language
   Map<String, String> get languageDetails {
-    final details = _languageProvider.getLanguageDetails(_languageProvider.activeLanguage)!;
+    final details = _languageProvider.getLanguageDetails(
+      _languageProvider.activeLanguage,
+    )!;
     return Map<String, String>.from(details);
   }
 
@@ -181,7 +184,7 @@ class CardListViewModel extends ChangeNotifier {
 
   // Navigation helpers
   bool get canStartReview => cardsToReview > 0;
-  
+
   String getCardCountText() {
     if (filteredCardsCount != totalCards) {
       return '$filteredCardsCount of $totalCards cards';

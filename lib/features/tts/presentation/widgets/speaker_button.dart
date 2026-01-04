@@ -13,7 +13,7 @@ class SpeakerButton extends StatefulWidget {
   final double size;
   final Color? color;
   final bool showLabel;
-  
+
   /// If true, automatically speaks the text when the widget appears
   /// or when the text changes
   final bool autoPlay;
@@ -34,8 +34,7 @@ class SpeakerButton extends StatefulWidget {
 
 class _SpeakerButtonState extends State<SpeakerButton>
     with SingleTickerProviderStateMixin {
-  late final GoogleCloudTtsService _ttsService =
-      SpeakerButton.ttsFactory();
+  late final GoogleCloudTtsService _ttsService = SpeakerButton.ttsFactory();
   bool _isSpeaking = false;
   late AnimationController _animationController;
 
@@ -47,7 +46,7 @@ class _SpeakerButtonState extends State<SpeakerButton>
       vsync: this,
     );
     _ttsService.initialize();
-    
+
     // Auto-play on first appearance if enabled
     if (widget.autoPlay) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -81,7 +80,7 @@ class _SpeakerButtonState extends State<SpeakerButton>
     } else {
       setState(() => _isSpeaking = true);
       _animationController.forward();
-      
+
       try {
         await _ttsService.speak(widget.text, widget.languageCode);
       } finally {

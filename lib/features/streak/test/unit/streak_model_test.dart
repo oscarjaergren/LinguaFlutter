@@ -3,14 +3,13 @@ import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
 
 void main() {
   group('StreakModel', () {
-    
     String formatDate(DateTime date) {
       return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
     }
 
     test('should create initial streak model', () {
       final streak = StreakModel.initial();
-      
+
       expect(streak.currentStreak, equals(0));
       expect(streak.bestStreak, equals(0));
       expect(streak.lastReviewDate, isNull);
@@ -26,25 +25,22 @@ void main() {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
-      
-      final activeStreak = StreakModel(
-        currentStreak: 5,
-        lastReviewDate: today,
-      );
+
+      final activeStreak = StreakModel(currentStreak: 5, lastReviewDate: today);
       expect(activeStreak.isStreakActive, isTrue);
-      
+
       final yesterdayStreak = StreakModel(
         currentStreak: 5,
         lastReviewDate: yesterday,
       );
       expect(yesterdayStreak.isStreakActive, isTrue);
-      
+
       final inactiveStreak = StreakModel(
         currentStreak: 0,
         lastReviewDate: today.subtract(const Duration(days: 2)),
       );
       expect(inactiveStreak.isStreakActive, isFalse);
-      
+
       const noStreak = StreakModel();
       expect(noStreak.isStreakActive, isFalse);
     });
@@ -53,25 +49,26 @@ void main() {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
-      
+
       final reviewedToday = StreakModel(lastReviewDate: today);
       expect(reviewedToday.needsReviewToday, isFalse);
-      
+
       final reviewedYesterday = StreakModel(lastReviewDate: yesterday);
       expect(reviewedYesterday.needsReviewToday, isTrue);
-      
+
       const neverReviewed = StreakModel();
       expect(neverReviewed.needsReviewToday, isTrue);
     });
 
     test('should get cards reviewed today', () {
       final now = DateTime.now();
-      final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      
+      final todayKey =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
       final streak = StreakModel(
         dailyReviewCounts: {todayKey: 15, '2024-01-01': 10},
       );
-      
+
       expect(streak.cardsReviewedToday, equals(15));
     });
 
@@ -80,25 +77,18 @@ void main() {
       final today = formatDate(now);
       final yesterday = formatDate(now.subtract(const Duration(days: 1)));
       final twoDaysAgo = formatDate(now.subtract(const Duration(days: 2)));
-      
+
       final streak = StreakModel(
         currentStreak: 3,
-        dailyReviewCounts: {
-          today: 15,
-          yesterday: 10,
-          twoDaysAgo: 5,
-        },
+        dailyReviewCounts: {today: 15, yesterday: 10, twoDaysAgo: 5},
       );
-      
+
       expect(streak.averageCardsPerDay, closeTo(10.0, 0.1));
     });
 
     test('should get new milestones', () {
-      const streak = StreakModel(
-        currentStreak: 7,
-        achievedMilestones: [3],
-      );
-      
+      const streak = StreakModel(currentStreak: 7, achievedMilestones: [3]);
+
       final newMilestones = streak.getNewMilestones(5);
       expect(newMilestones, contains(7));
       expect(newMilestones, isNot(contains(3)));
@@ -107,7 +97,7 @@ void main() {
     test('should update with review on same day', () {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      
+
       final streak = StreakModel(
         currentStreak: 5,
         lastReviewDate: today,
@@ -115,12 +105,12 @@ void main() {
         totalCardsReviewed: 50,
         streakStartDate: today.subtract(const Duration(days: 4)),
       );
-      
+
       final updatedStreak = streak.updateWithReview(
         cardsReviewed: 10,
         reviewDate: today,
       );
-      
+
       expect(updatedStreak.currentStreak, equals(5));
       expect(updatedStreak.totalReviewSessions, equals(11));
       expect(updatedStreak.totalCardsReviewed, equals(60));
@@ -130,7 +120,7 @@ void main() {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
-      
+
       final streak = StreakModel(
         currentStreak: 5,
         lastReviewDate: yesterday,
@@ -138,12 +128,12 @@ void main() {
         totalCardsReviewed: 50,
         streakStartDate: yesterday.subtract(const Duration(days: 4)),
       );
-      
+
       final updatedStreak = streak.updateWithReview(
         cardsReviewed: 10,
         reviewDate: today,
       );
-      
+
       expect(updatedStreak.currentStreak, equals(6));
       expect(updatedStreak.totalReviewSessions, equals(11));
       expect(updatedStreak.totalCardsReviewed, equals(60));
@@ -153,19 +143,19 @@ void main() {
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
       final threeDaysAgo = today.subtract(const Duration(days: 3));
-      
+
       final streak = StreakModel(
         currentStreak: 5,
         lastReviewDate: threeDaysAgo,
         totalReviewSessions: 10,
         totalCardsReviewed: 50,
       );
-      
+
       final updatedStreak = streak.updateWithReview(
         cardsReviewed: 10,
         reviewDate: today,
       );
-      
+
       expect(updatedStreak.currentStreak, equals(1));
       expect(updatedStreak.streakStartDate, equals(today));
       expect(updatedStreak.totalReviewSessions, equals(11));
@@ -174,19 +164,19 @@ void main() {
     test('should update best streak', () {
       final now = DateTime.now();
       final yesterday = now.subtract(const Duration(days: 1));
-      
+
       final streak = StreakModel(
         currentStreak: 5,
         bestStreak: 3,
         lastReviewDate: yesterday,
         streakStartDate: yesterday.subtract(const Duration(days: 4)),
       );
-      
+
       final updatedStreak = streak.updateWithReview(
         cardsReviewed: 10,
         reviewDate: now,
       );
-      
+
       expect(updatedStreak.currentStreak, equals(6));
       expect(updatedStreak.bestStreak, equals(6));
       expect(updatedStreak.bestStreakDate, isNotNull);
@@ -200,9 +190,9 @@ void main() {
         totalReviewSessions: 20,
         totalCardsReviewed: 100,
       );
-      
+
       final resetStreak = streak.resetStreak();
-      
+
       expect(resetStreak.currentStreak, equals(0));
       expect(resetStreak.lastReviewDate, isNull);
       expect(resetStreak.streakStartDate, isNull);
@@ -214,35 +204,35 @@ void main() {
     test('should provide correct status messages', () {
       const noStreak = StreakModel();
       expect(noStreak.statusMessage, equals('Start your streak today!'));
-      
+
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
-      final activeStreak = StreakModel(
-        currentStreak: 5,
-        lastReviewDate: today,
-      );
+      final activeStreak = StreakModel(currentStreak: 5, lastReviewDate: today);
       expect(activeStreak.statusMessage, equals('5-day streak! Great job!'));
-      
+
       final needsReview = StreakModel(
         currentStreak: 3,
         lastReviewDate: today.subtract(const Duration(days: 1)),
       );
-      expect(needsReview.statusMessage, equals('Keep your 3-day streak alive!'));
+      expect(
+        needsReview.statusMessage,
+        equals('Keep your 3-day streak alive!'),
+      );
     });
 
     test('should provide motivational messages', () {
       const noStreak = StreakModel();
       expect(noStreak.motivationMessage, contains('Every journey begins'));
-      
+
       const shortStreak = StreakModel(currentStreak: 5);
       expect(shortStreak.motivationMessage, contains('Building momentum'));
-      
+
       const mediumStreak = StreakModel(currentStreak: 15);
       expect(mediumStreak.motivationMessage, contains('Habit is forming'));
-      
+
       const longStreak = StreakModel(currentStreak: 50);
       expect(longStreak.motivationMessage, contains('Incredible dedication'));
-      
+
       const legendaryStreak = StreakModel(currentStreak: 150);
       expect(legendaryStreak.motivationMessage, contains('LEGENDARY'));
     });
@@ -260,10 +250,10 @@ void main() {
         streakStartDate: now.subtract(const Duration(days: 9)),
         bestStreakDate: now.subtract(const Duration(days: 5)),
       );
-      
+
       final json = streak.toJson();
       final fromJson = StreakModel.fromJson(json);
-      
+
       expect(fromJson.currentStreak, equals(streak.currentStreak));
       expect(fromJson.bestStreak, equals(streak.bestStreak));
       expect(fromJson.totalReviewSessions, equals(streak.totalReviewSessions));
@@ -278,12 +268,12 @@ void main() {
         bestStreak: 10,
         totalReviewSessions: 15,
       );
-      
+
       final copied = original.copyWith(
         currentStreak: 6,
         totalCardsReviewed: 100,
       );
-      
+
       expect(copied.currentStreak, equals(6));
       expect(copied.bestStreak, equals(10));
       expect(copied.totalReviewSessions, equals(15));
@@ -294,7 +284,7 @@ void main() {
       const streak1 = StreakModel(currentStreak: 5, bestStreak: 10);
       const streak2 = StreakModel(currentStreak: 5, bestStreak: 10);
       const streak3 = StreakModel(currentStreak: 3, bestStreak: 10);
-      
+
       expect(streak1, equals(streak2));
       expect(streak1, isNot(equals(streak3)));
     });

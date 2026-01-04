@@ -15,10 +15,7 @@ class RateLimiter {
   };
 
   /// Check if action is allowed for user
-  bool isAllowed({
-    required String userId,
-    required String action,
-  }) {
+  bool isAllowed({required String userId, required String action}) {
     final config = _configs[action];
     if (config == null) return true; // No limit configured
 
@@ -44,10 +41,7 @@ class RateLimiter {
   }
 
   /// Get remaining actions for user
-  int getRemainingActions({
-    required String userId,
-    required String action,
-  }) {
+  int getRemainingActions({required String userId, required String action}) {
     final config = _configs[action];
     if (config == null) return -1; // No limit
 
@@ -56,7 +50,9 @@ class RateLimiter {
     final windowStart = now.subtract(Duration(minutes: config.windowMinutes));
 
     final timestamps = _actionTimestamps[key] ?? [];
-    final recentActions = timestamps.where((t) => t.isAfter(windowStart)).length;
+    final recentActions = timestamps
+        .where((t) => t.isAfter(windowStart))
+        .length;
 
     return (config.maxActions - recentActions).clamp(0, config.maxActions);
   }
@@ -74,7 +70,9 @@ class RateLimiter {
     final windowStart = now.subtract(Duration(minutes: config.windowMinutes));
 
     final timestamps = _actionTimestamps[key] ?? [];
-    final recentTimestamps = timestamps.where((t) => t.isAfter(windowStart)).toList();
+    final recentTimestamps = timestamps
+        .where((t) => t.isAfter(windowStart))
+        .toList();
 
     if (recentTimestamps.length < config.maxActions) {
       return Duration.zero; // Action allowed now
@@ -83,7 +81,9 @@ class RateLimiter {
     // Find oldest timestamp in window
     recentTimestamps.sort();
     final oldestInWindow = recentTimestamps.first;
-    final whenOldestExpires = oldestInWindow.add(Duration(minutes: config.windowMinutes));
+    final whenOldestExpires = oldestInWindow.add(
+      Duration(minutes: config.windowMinutes),
+    );
 
     return whenOldestExpires.difference(now);
   }
@@ -99,10 +99,7 @@ class RateLimiter {
   }
 
   /// Get human-readable error message
-  String getErrorMessage({
-    required String userId,
-    required String action,
-  }) {
+  String getErrorMessage({required String userId, required String action}) {
     final config = _configs[action];
     if (config == null) return 'Rate limit exceeded';
 
@@ -111,7 +108,7 @@ class RateLimiter {
     if (timeUntil != null && timeUntil > Duration.zero) {
       final minutes = timeUntil.inMinutes;
       final seconds = timeUntil.inSeconds % 60;
-      
+
       if (minutes > 0) {
         return 'Rate limit exceeded. Try again in $minutes minute${minutes != 1 ? 's' : ''}.';
       } else {

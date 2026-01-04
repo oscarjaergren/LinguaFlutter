@@ -38,7 +38,8 @@ extension AiProviderExtension on AiProvider {
       AiProvider.openai => 'gpt-4o-mini',
       AiProvider.anthropic => 'claude-3-5-haiku-latest',
       AiProvider.openRouter => 'openai/gpt-4o-mini',
-      AiProvider.gemini => 'gemini-2.5-flash-lite', // Best free tier availability
+      AiProvider.gemini =>
+        'gemini-2.5-flash-lite', // Best free tier availability
     };
   }
 
@@ -107,6 +108,7 @@ class AiConfig {
     );
   }
 
-  factory AiConfig.fromJson(Map<String, dynamic> json) => _$AiConfigFromJson(json);
+  factory AiConfig.fromJson(Map<String, dynamic> json) =>
+      _$AiConfigFromJson(json);
   Map<String, dynamic> toJson() => _$AiConfigToJson(this);
 }

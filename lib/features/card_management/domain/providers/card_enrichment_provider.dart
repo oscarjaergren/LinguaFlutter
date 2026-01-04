@@ -19,26 +19,25 @@ class SharedPrefsConfigStorage implements AiConfigStorage {
   Future<String?> getString(String key) => _prefs.getString(key);
 
   @override
-  Future<void> setString(String key, String value) => _prefs.setString(key, value);
+  Future<void> setString(String key, String value) =>
+      _prefs.setString(key, value);
 }
 
 /// Provider for managing AI-powered card enrichment
 class CardEnrichmentProvider extends ChangeNotifier {
   static const String configKey = 'ai_config';
-  
+
   final AiConfigStorage _storage;
   final AiService _service;
-  
+
   AiConfig _config = const AiConfig();
   bool _isLoading = false;
   String? _error;
   bool _isInitialized = false;
 
-  CardEnrichmentProvider({
-    AiConfigStorage? storage,
-    AiService? service,
-  })  : _storage = storage ?? SharedPrefsConfigStorage(),
-        _service = service ?? AiService();
+  CardEnrichmentProvider({AiConfigStorage? storage, AiService? service})
+    : _storage = storage ?? SharedPrefsConfigStorage(),
+      _service = service ?? AiService();
 
   AiConfig get config => _config;
   bool get isLoading => _isLoading;
@@ -57,19 +56,16 @@ class CardEnrichmentProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Failed to load AI config: $e');
     }
-    
+
     // Auto-load from .env if not configured (for easier debugging)
     if (!_config.isConfigured) {
       final envKey = dotenv.env['GEMINI_API_KEY'];
       if (envKey != null && envKey.isNotEmpty) {
-        _config = _config.copyWith(
-          apiKey: envKey,
-          provider: AiProvider.gemini,
-        );
+        _config = _config.copyWith(apiKey: envKey, provider: AiProvider.gemini);
         debugPrint('Loaded Gemini API key from .env');
       }
     }
-    
+
     _isInitialized = true;
     notifyListeners();
   }
@@ -120,12 +116,11 @@ class CardEnrichmentProvider extends ChangeNotifier {
     try {
       final prompt = _buildPrompt(word, language);
       debugPrint('Enriching word: $word');
-      final response = await _service.complete(
-        prompt: prompt,
-        config: _config,
+      final response = await _service.complete(prompt: prompt, config: _config);
+      debugPrint(
+        'AI response for $word: ${response.substring(0, response.length.clamp(0, 200))}...',
       );
-      debugPrint('AI response for $word: ${response.substring(0, response.length.clamp(0, 200))}...');
-      
+
       final result = _parseResponse(response);
       _isLoading = false;
       notifyListeners();
@@ -189,7 +184,7 @@ Only return valid JSON, no markdown or explanation.''';
 
   String _cleanJsonResponse(String response) {
     var cleaned = response.trim();
-    
+
     if (cleaned.startsWith('```json')) {
       cleaned = cleaned.substring(7);
     } else if (cleaned.startsWith('```')) {
@@ -198,7 +193,7 @@ Only return valid JSON, no markdown or explanation.''';
     if (cleaned.endsWith('```')) {
       cleaned = cleaned.substring(0, cleaned.length - 3);
     }
-    
+
     return cleaned.trim();
   }
 

@@ -102,7 +102,9 @@ void main() {
         expect(practiceProvider.answerState, AnswerState.answered);
 
         // Confirm and advance
-        await practiceProvider.confirmAnswerAndAdvance(markedCorrect: isCorrect);
+        await practiceProvider.confirmAnswerAndAdvance(
+          markedCorrect: isCorrect,
+        );
 
         if (isCorrect) {
           correctAnswers++;
@@ -123,7 +125,9 @@ void main() {
       expect(practiceProvider.accuracy, closeTo(expectedAccuracy, 0.01));
 
       // === PHASE 5: Update Streak ===
-      await streakProvider.updateStreakWithReview(cardsReviewed: exercisesCompleted);
+      await streakProvider.updateStreakWithReview(
+        cardsReviewed: exercisesCompleted,
+      );
 
       // Verify streak updated
       expect(streakProvider.currentStreak, greaterThanOrEqualTo(1));
@@ -134,21 +138,24 @@ void main() {
       expect(updatedCards, isNotEmpty);
     });
 
-    test('multiple sessions in same day increment cards reviewed but not streak', () async {
-      await streakProvider.loadStreak();
+    test(
+      'multiple sessions in same day increment cards reviewed but not streak',
+      () async {
+        await streakProvider.loadStreak();
 
-      // First session
-      await streakProvider.updateStreakWithReview(cardsReviewed: 5);
-      expect(streakProvider.currentStreak, 1);
-      expect(streakProvider.totalCardsReviewed, 5);
-      expect(streakProvider.totalReviewSessions, 1);
+        // First session
+        await streakProvider.updateStreakWithReview(cardsReviewed: 5);
+        expect(streakProvider.currentStreak, 1);
+        expect(streakProvider.totalCardsReviewed, 5);
+        expect(streakProvider.totalReviewSessions, 1);
 
-      // Second session same day
-      await streakProvider.updateStreakWithReview(cardsReviewed: 3);
-      expect(streakProvider.currentStreak, 1); // Still 1, same day
-      expect(streakProvider.totalCardsReviewed, 8); // Accumulated
-      expect(streakProvider.totalReviewSessions, 2);
-    });
+        // Second session same day
+        await streakProvider.updateStreakWithReview(cardsReviewed: 3);
+        expect(streakProvider.currentStreak, 1); // Still 1, same day
+        expect(streakProvider.totalCardsReviewed, 8); // Accumulated
+        expect(streakProvider.totalReviewSessions, 2);
+      },
+    );
 
     test('session with all correct answers achieves 100% accuracy', () async {
       practiceProvider.startSession();

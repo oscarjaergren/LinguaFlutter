@@ -13,7 +13,7 @@ void main() {
 
     setUp(() {
       lastUpdatedCard = null;
-      
+
       testCards = [
         CardModel.create(
           frontText: 'Hund',
@@ -32,56 +32,68 @@ void main() {
       );
     });
 
-    test('writing translation exercise score updates on correct answer', () async {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.writingTranslation},
-      );
-      
-      provider.startSession(preferences: prefs);
-      
-      expect(provider.isSessionActive, true);
-      expect(provider.currentExerciseType, ExerciseType.writingTranslation);
-      
-      final initialCard = provider.currentCard!;
-      final initialScore = initialCard.getExerciseScore(ExerciseType.writingTranslation);
-      
-      expect(initialScore, isNotNull);
-      expect(initialScore!.totalAttempts, 0);
-      
-      await provider.confirmAnswerAndAdvance(markedCorrect: true);
-      
-      expect(lastUpdatedCard, isNotNull);
-      
-      final updatedScore = lastUpdatedCard!.getExerciseScore(ExerciseType.writingTranslation);
-      expect(updatedScore, isNotNull);
-      expect(updatedScore!.correctCount, 1);
-      expect(updatedScore.incorrectCount, 0);
-      expect(updatedScore.totalAttempts, 1);
-      expect(updatedScore.successRate, 100.0);
-      expect(updatedScore.currentStreak, 1);
-      expect(updatedScore.masteryLevel, 'Learning');
-    });
+    test(
+      'writing translation exercise score updates on correct answer',
+      () async {
+        final prefs = ExercisePreferences(
+          enabledTypes: {ExerciseType.writingTranslation},
+        );
 
-    test('writing translation exercise score updates on incorrect answer', () async {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.writingTranslation},
-      );
-      
-      provider.startSession(preferences: prefs);
-      
-      await provider.confirmAnswerAndAdvance(markedCorrect: false);
-      
-      expect(lastUpdatedCard, isNotNull);
-      
-      final updatedScore = lastUpdatedCard!.getExerciseScore(ExerciseType.writingTranslation);
-      expect(updatedScore, isNotNull);
-      expect(updatedScore!.correctCount, 0);
-      expect(updatedScore.incorrectCount, 1);
-      expect(updatedScore.totalAttempts, 1);
-      expect(updatedScore.successRate, 0.0);
-      expect(updatedScore.currentStreak, 0);
-      expect(updatedScore.masteryLevel, 'Difficult');
-    });
+        provider.startSession(preferences: prefs);
+
+        expect(provider.isSessionActive, true);
+        expect(provider.currentExerciseType, ExerciseType.writingTranslation);
+
+        final initialCard = provider.currentCard!;
+        final initialScore = initialCard.getExerciseScore(
+          ExerciseType.writingTranslation,
+        );
+
+        expect(initialScore, isNotNull);
+        expect(initialScore!.totalAttempts, 0);
+
+        await provider.confirmAnswerAndAdvance(markedCorrect: true);
+
+        expect(lastUpdatedCard, isNotNull);
+
+        final updatedScore = lastUpdatedCard!.getExerciseScore(
+          ExerciseType.writingTranslation,
+        );
+        expect(updatedScore, isNotNull);
+        expect(updatedScore!.correctCount, 1);
+        expect(updatedScore.incorrectCount, 0);
+        expect(updatedScore.totalAttempts, 1);
+        expect(updatedScore.successRate, 100.0);
+        expect(updatedScore.currentStreak, 1);
+        expect(updatedScore.masteryLevel, 'Learning');
+      },
+    );
+
+    test(
+      'writing translation exercise score updates on incorrect answer',
+      () async {
+        final prefs = ExercisePreferences(
+          enabledTypes: {ExerciseType.writingTranslation},
+        );
+
+        provider.startSession(preferences: prefs);
+
+        await provider.confirmAnswerAndAdvance(markedCorrect: false);
+
+        expect(lastUpdatedCard, isNotNull);
+
+        final updatedScore = lastUpdatedCard!.getExerciseScore(
+          ExerciseType.writingTranslation,
+        );
+        expect(updatedScore, isNotNull);
+        expect(updatedScore!.correctCount, 0);
+        expect(updatedScore.incorrectCount, 1);
+        expect(updatedScore.totalAttempts, 1);
+        expect(updatedScore.successRate, 0.0);
+        expect(updatedScore.currentStreak, 0);
+        expect(updatedScore.masteryLevel, 'Difficult');
+      },
+    );
 
     test('writing translation mastery level progresses correctly', () async {
       var card = CardModel.create(
@@ -90,11 +102,11 @@ void main() {
         language: 'de',
         category: 'vocabulary',
       );
-      
+
       var initialScore = card.getExerciseScore(ExerciseType.writingTranslation);
       expect(initialScore, isNotNull);
       expect(initialScore!.totalAttempts, 0);
-      
+
       card = card.copyWithExerciseResult(
         exerciseType: ExerciseType.writingTranslation,
         wasCorrect: true,
@@ -103,7 +115,7 @@ void main() {
       expect(score.correctCount, 1);
       expect(score.currentStreak, 1);
       expect(score.masteryLevel, 'Learning');
-      
+
       card = card.copyWithExerciseResult(
         exerciseType: ExerciseType.writingTranslation,
         wasCorrect: true,
@@ -112,7 +124,7 @@ void main() {
       expect(score.correctCount, 2);
       expect(score.currentStreak, 2);
       expect(score.masteryLevel, 'Learning');
-      
+
       card = card.copyWithExerciseResult(
         exerciseType: ExerciseType.writingTranslation,
         wasCorrect: true,
@@ -123,7 +135,7 @@ void main() {
       expect(score.totalAttempts, 3);
       expect(score.successRate, 100.0);
       expect(score.masteryLevel, 'Good');
-      
+
       card = card.copyWithExerciseResult(
         exerciseType: ExerciseType.writingTranslation,
         wasCorrect: false,
@@ -144,46 +156,52 @@ void main() {
         language: 'de',
         category: 'vocabulary',
       );
-      
+
       card = card.copyWithExerciseResult(
         exerciseType: ExerciseType.writingTranslation,
         wasCorrect: true,
       );
-      
+
       card = card.copyWithExerciseResult(
         exerciseType: ExerciseType.readingRecognition,
         wasCorrect: false,
       );
-      
-      final writingScore = card.getExerciseScore(ExerciseType.writingTranslation)!;
+
+      final writingScore = card.getExerciseScore(
+        ExerciseType.writingTranslation,
+      )!;
       expect(writingScore.correctCount, 1);
       expect(writingScore.incorrectCount, 0);
-      
-      final readingScore = card.getExerciseScore(ExerciseType.readingRecognition)!;
+
+      final readingScore = card.getExerciseScore(
+        ExerciseType.readingRecognition,
+      )!;
       expect(readingScore.correctCount, 0);
       expect(readingScore.incorrectCount, 1);
     });
 
     test('exercise score persists across multiple practice sessions', () async {
-      var cardWithHistory = CardModel.create(
-        frontText: 'Hund',
-        backText: 'dog',
-        language: 'de',
-        category: 'vocabulary',
-      ).copyWith(
-        exerciseScores: {
-          ExerciseType.writingTranslation: ExerciseScore.initial(
-            ExerciseType.writingTranslation,
+      var cardWithHistory =
+          CardModel.create(
+            frontText: 'Hund',
+            backText: 'dog',
+            language: 'de',
+            category: 'vocabulary',
           ).copyWith(
-            correctCount: 5,
-            incorrectCount: 2,
-            lastPracticed: DateTime.now(),
-          ),
-        },
-      );
-      
+            exerciseScores: {
+              ExerciseType.writingTranslation:
+                  ExerciseScore.initial(
+                    ExerciseType.writingTranslation,
+                  ).copyWith(
+                    correctCount: 5,
+                    incorrectCount: 2,
+                    lastPracticed: DateTime.now(),
+                  ),
+            },
+          );
+
       testCards = [cardWithHistory];
-      
+
       provider = PracticeSessionProvider(
         getReviewCards: () => testCards,
         getAllCards: () => testCards,
@@ -191,24 +209,28 @@ void main() {
           lastUpdatedCard = card;
         },
       );
-      
+
       final prefs = ExercisePreferences(
         enabledTypes: {ExerciseType.writingTranslation},
       );
-      
+
       provider.startSession(preferences: prefs);
-      
-      final initialScore = provider.currentCard!.getExerciseScore(ExerciseType.writingTranslation)!;
+
+      final initialScore = provider.currentCard!.getExerciseScore(
+        ExerciseType.writingTranslation,
+      )!;
       expect(initialScore.correctCount, 5);
       expect(initialScore.incorrectCount, 2);
       expect(initialScore.currentStreak, 0);
       expect(initialScore.totalAttempts, 7);
       expect(initialScore.successRate, closeTo(71.4, 0.1));
       expect(initialScore.masteryLevel, 'Difficult');
-      
+
       await provider.confirmAnswerAndAdvance(markedCorrect: true);
-      
-      final updatedScore = lastUpdatedCard!.getExerciseScore(ExerciseType.writingTranslation)!;
+
+      final updatedScore = lastUpdatedCard!.getExerciseScore(
+        ExerciseType.writingTranslation,
+      )!;
       expect(updatedScore.correctCount, 6);
       expect(updatedScore.incorrectCount, 2);
       expect(updatedScore.currentStreak, 1);
@@ -221,14 +243,16 @@ void main() {
       final prefs = ExercisePreferences(
         enabledTypes: {ExerciseType.readingRecognition},
       );
-      
+
       provider.startSession(preferences: prefs);
-      
+
       expect(provider.currentExerciseType, ExerciseType.readingRecognition);
-      
+
       await provider.confirmAnswerAndAdvance(markedCorrect: true);
-      
-      final updatedScore = lastUpdatedCard!.getExerciseScore(ExerciseType.readingRecognition);
+
+      final updatedScore = lastUpdatedCard!.getExerciseScore(
+        ExerciseType.readingRecognition,
+      );
       expect(updatedScore, isNotNull);
       expect(updatedScore!.correctCount, 1);
       expect(updatedScore.type, ExerciseType.readingRecognition);
@@ -244,7 +268,7 @@ void main() {
           category: 'vocabulary',
         ),
       );
-      
+
       provider = PracticeSessionProvider(
         getReviewCards: () => testCards,
         getAllCards: () => testCards,
@@ -252,18 +276,20 @@ void main() {
           lastUpdatedCard = card;
         },
       );
-      
+
       final prefs = ExercisePreferences(
         enabledTypes: {ExerciseType.multipleChoiceText},
       );
-      
+
       provider.startSession(preferences: prefs);
-      
+
       expect(provider.currentExerciseType, ExerciseType.multipleChoiceText);
-      
+
       await provider.confirmAnswerAndAdvance(markedCorrect: true);
-      
-      final updatedScore = lastUpdatedCard!.getExerciseScore(ExerciseType.multipleChoiceText);
+
+      final updatedScore = lastUpdatedCard!.getExerciseScore(
+        ExerciseType.multipleChoiceText,
+      );
       expect(updatedScore, isNotNull);
       expect(updatedScore!.correctCount, 1);
       expect(updatedScore.type, ExerciseType.multipleChoiceText);
@@ -273,14 +299,16 @@ void main() {
       final prefs = ExercisePreferences(
         enabledTypes: {ExerciseType.reverseTranslation},
       );
-      
+
       provider.startSession(preferences: prefs);
-      
+
       expect(provider.currentExerciseType, ExerciseType.reverseTranslation);
-      
+
       await provider.confirmAnswerAndAdvance(markedCorrect: false);
-      
-      final updatedScore = lastUpdatedCard!.getExerciseScore(ExerciseType.reverseTranslation);
+
+      final updatedScore = lastUpdatedCard!.getExerciseScore(
+        ExerciseType.reverseTranslation,
+      );
       expect(updatedScore, isNotNull);
       expect(updatedScore!.incorrectCount, 1);
       expect(updatedScore.type, ExerciseType.reverseTranslation);

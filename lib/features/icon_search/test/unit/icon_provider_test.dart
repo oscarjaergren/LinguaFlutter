@@ -21,7 +21,7 @@ void main() {
     setUp(() {
       mockService = MockIconifyService();
       provider = IconProvider(iconifyService: mockService);
-      
+
       // Default stubs
       when(mockService.searchIcons(any)).thenAnswer((_) async => <IconModel>[]);
     });
@@ -39,14 +39,16 @@ void main() {
     });
 
     test('should clear search properly', () {
-      provider.selectIcon(const IconModel(
-        id: 'test:icon',
-        name: 'Test',
-        set: 'test',
-        category: 'Test',
-        tags: [],
-        svgUrl: 'test.svg',
-      ));
+      provider.selectIcon(
+        const IconModel(
+          id: 'test:icon',
+          name: 'Test',
+          set: 'test',
+          category: 'Test',
+          tags: [],
+          svgUrl: 'test.svg',
+        ),
+      );
 
       provider.clearSearch();
 
@@ -75,7 +77,7 @@ void main() {
 
     test('should handle empty search query', () async {
       await provider.searchIcons('');
-      
+
       expect(provider.searchResults, isEmpty);
       expect(provider.searchQuery, isEmpty);
       expect(provider.errorMessage, isNull);
@@ -84,7 +86,7 @@ void main() {
 
     test('should handle whitespace-only search query', () async {
       await provider.searchIcons('   ');
-      
+
       expect(provider.searchResults, isEmpty);
       expect(provider.searchQuery, isEmpty);
       expect(provider.errorMessage, isNull);
@@ -113,8 +115,9 @@ void main() {
     });
 
     test('should handle search error', () async {
-      when(mockService.searchIcons('error'))
-          .thenThrow(Exception('Network error'));
+      when(
+        mockService.searchIcons('error'),
+      ).thenThrow(Exception('Network error'));
 
       await provider.searchIcons('error');
 

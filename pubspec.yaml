@@ -106,7 +106,6 @@ flutter:
     - assets/data/german_words.json
     - assets/data/seed_cards.json
     - assets/data/sample_import_cards.json
-    - assets/google_tts_api_key.txt
     - assets/lingualabs_mascot_manual_crop-removebg-preview.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

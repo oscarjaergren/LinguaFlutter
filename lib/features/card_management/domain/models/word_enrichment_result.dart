@@ -28,27 +28,27 @@ class WordEnrichmentResult {
       final grammar = json['grammar'] as Map<String, dynamic>;
       wordData = switch (wordType) {
         WordType.verb => WordData.verb(
-            isRegular: grammar['isRegular'] as bool? ?? true,
-            isSeparable: grammar['isSeparable'] as bool? ?? false,
-            separablePrefix: grammar['separablePrefix'] as String?,
-            auxiliary: grammar['auxiliary'] as String? ?? 'haben',
-            presentDu: grammar['presentDu'] as String?,
-            presentEr: grammar['presentEr'] as String?,
-            pastSimple: grammar['pastSimple'] as String?,
-            pastParticiple: grammar['pastParticiple'] as String?,
-          ),
+          isRegular: grammar['isRegular'] as bool? ?? true,
+          isSeparable: grammar['isSeparable'] as bool? ?? false,
+          separablePrefix: grammar['separablePrefix'] as String?,
+          auxiliary: grammar['auxiliary'] as String? ?? 'haben',
+          presentDu: grammar['presentDu'] as String?,
+          presentEr: grammar['presentEr'] as String?,
+          pastSimple: grammar['pastSimple'] as String?,
+          pastParticiple: grammar['pastParticiple'] as String?,
+        ),
         WordType.noun => WordData.noun(
-            gender: grammar['gender'] as String? ?? 'das',
-            plural: grammar['plural'] as String?,
-            genitive: grammar['genitive'] as String?,
-          ),
+          gender: grammar['gender'] as String? ?? 'das',
+          plural: grammar['plural'] as String?,
+          genitive: grammar['genitive'] as String?,
+        ),
         WordType.adjective => WordData.adjective(
-            comparative: grammar['comparative'] as String?,
-            superlative: grammar['superlative'] as String?,
-          ),
+          comparative: grammar['comparative'] as String?,
+          superlative: grammar['superlative'] as String?,
+        ),
         WordType.adverb => WordData.adverb(
-            usageNote: grammar['usageNote'] as String?,
-          ),
+          usageNote: grammar['usageNote'] as String?,
+        ),
         _ => null,
       };
     }
@@ -57,7 +57,8 @@ class WordEnrichmentResult {
       wordType: wordType,
       translation: json['translation'] as String?,
       wordData: wordData,
-      examples: (json['examples'] as List<dynamic>?)
+      examples:
+          (json['examples'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],

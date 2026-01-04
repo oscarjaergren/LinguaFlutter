@@ -36,7 +36,7 @@ void main() {
 
     test('should get language details', () {
       final details = provider.getLanguageDetails('de');
-      
+
       expect(details, isNotNull);
       expect(details!['name'], 'German');
       expect(details['nativeName'], 'Deutsch');

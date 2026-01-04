@@ -60,11 +60,12 @@ class MascotProvider extends ChangeNotifier {
   void showMessage(String context, {MascotState? state}) {
     final messages = _contextMessages[context];
     if (messages != null && messages.isNotEmpty) {
-      final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
+      final randomIndex =
+          DateTime.now().millisecondsSinceEpoch % messages.length;
       _currentMessage = messages[randomIndex];
       _currentState = state ?? MascotState.idle;
       notifyListeners();
-      
+
       // Auto-hide message after 4 seconds
       if (animationsEnabled) {
         Future.delayed(const Duration(seconds: 4), () {
@@ -79,7 +80,7 @@ class MascotProvider extends ChangeNotifier {
     _currentMessage = message;
     _currentState = state ?? MascotState.idle;
     notifyListeners();
-    
+
     // Auto-hide message after 4 seconds
     if (animationsEnabled) {
       Future.delayed(const Duration(seconds: 4), () {
@@ -112,14 +113,14 @@ class MascotProvider extends ChangeNotifier {
     _currentState = MascotState.celebrating;
     _currentMessage = customMessage ?? _getRandomMessage('celebration');
     notifyListeners();
-    
+
     if (animationsEnabled) {
       // Return to idle after celebration
       Future.delayed(const Duration(seconds: 3), () {
         _currentState = MascotState.idle;
         notifyListeners();
       });
-      
+
       // Hide message after 5 seconds
       Future.delayed(const Duration(seconds: 5), () {
         hideMessage();
@@ -132,14 +133,14 @@ class MascotProvider extends ChangeNotifier {
     _currentState = MascotState.excited;
     _currentMessage = customMessage ?? _getRandomMessage('encouragement');
     notifyListeners();
-    
+
     if (animationsEnabled) {
       // Return to idle after excitement
       Future.delayed(const Duration(seconds: 2), () {
         _currentState = MascotState.idle;
         notifyListeners();
       });
-      
+
       // Hide message after 4 seconds
       Future.delayed(const Duration(seconds: 4), () {
         hideMessage();
@@ -151,7 +152,8 @@ class MascotProvider extends ChangeNotifier {
   void reactToAction(MascotAction action) {
     switch (action) {
       case MascotAction.cardCompleted:
-        if (DateTime.now().millisecond % 3 == 0) { // Random chance
+        if (DateTime.now().millisecond % 3 == 0) {
+          // Random chance
           showExcitement();
         }
         break;
@@ -165,7 +167,10 @@ class MascotProvider extends ChangeNotifier {
         showMessage('welcome', state: MascotState.excited);
         break;
       case MascotAction.longAbsence:
-        showCustomMessage('Welcome back! I missed you!', state: MascotState.excited);
+        showCustomMessage(
+          'Welcome back! I missed you!',
+          state: MascotState.excited,
+        );
         break;
       case MascotAction.struggling:
         showMessage('motivation', state: MascotState.thinking);
@@ -176,7 +181,8 @@ class MascotProvider extends ChangeNotifier {
           ..._contextMessages['encouragement']!,
           ..._contextMessages['motivation']!,
         ];
-        final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
+        final randomIndex =
+            DateTime.now().millisecondsSinceEpoch % messages.length;
         showCustomMessage(messages[randomIndex], state: MascotState.excited);
         break;
     }
@@ -185,7 +191,7 @@ class MascotProvider extends ChangeNotifier {
   String _getRandomMessage(String context) {
     final messages = _contextMessages[context];
     if (messages == null || messages.isEmpty) return '';
-    
+
     final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
     return messages[randomIndex];
   }
@@ -199,9 +205,9 @@ class MascotProvider extends ChangeNotifier {
   }) {
     // Only show new message if we haven't initialized for this session
     if (_hasInitializedForSession) return;
-    
+
     _hasInitializedForSession = true;
-    
+
     if (!hasStudiedToday && dueCards > 0) {
       showMessage('motivation', state: MascotState.thinking);
     } else if (currentStreak > 0 && currentStreak % 7 == 0) {
@@ -209,13 +215,16 @@ class MascotProvider extends ChangeNotifier {
     } else if (dueCards == 0 && totalCards > 0) {
       showMessage('celebration', state: MascotState.celebrating);
     } else if (totalCards == 0) {
-      showCustomMessage('Let\'s create your first card!', state: MascotState.excited);
+      showCustomMessage(
+        'Let\'s create your first card!',
+        state: MascotState.excited,
+      );
     } else {
       // Show welcome message
       showMessage('welcome');
     }
   }
-  
+
   /// Reset session state (call when screen is reopened)
   void resetSession() {
     _hasInitializedForSession = false;

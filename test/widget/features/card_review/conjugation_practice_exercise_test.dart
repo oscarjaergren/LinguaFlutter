@@ -11,35 +11,37 @@ void main() {
     late CardModel nounCard;
 
     setUp(() {
-      verbCard = CardModel.create(
-        frontText: 'gehen',
-        backText: 'to go',
-        language: 'de',
-        category: 'vocabulary',
-      ).copyWith(
-        wordData: WordData.verb(
-          isRegular: false,
-          isSeparable: false,
-          auxiliary: 'sein',
-          presentDu: 'gehst',
-          presentEr: 'geht',
-          pastSimple: 'ging',
-          pastParticiple: 'gegangen',
-        ),
-      );
+      verbCard =
+          CardModel.create(
+            frontText: 'gehen',
+            backText: 'to go',
+            language: 'de',
+            category: 'vocabulary',
+          ).copyWith(
+            wordData: WordData.verb(
+              isRegular: false,
+              isSeparable: false,
+              auxiliary: 'sein',
+              presentDu: 'gehst',
+              presentEr: 'geht',
+              pastSimple: 'ging',
+              pastParticiple: 'gegangen',
+            ),
+          );
 
-      nounCard = CardModel.create(
-        frontText: 'der Hund',
-        backText: 'dog',
-        language: 'de',
-        category: 'vocabulary',
-      ).copyWith(
-        wordData: WordData.noun(
-          gender: 'der',
-          plural: 'Hunde',
-          genitive: 'Hundes',
-        ),
-      );
+      nounCard =
+          CardModel.create(
+            frontText: 'der Hund',
+            backText: 'dog',
+            language: 'de',
+            category: 'vocabulary',
+          ).copyWith(
+            wordData: WordData.noun(
+              gender: 'der',
+              plural: 'Hunde',
+              genitive: 'Hundes',
+            ),
+          );
     });
 
     testWidgets('displays prompt and word', (tester) async {

@@ -18,20 +18,21 @@ class ArticleSelectionExercise extends StatefulWidget {
   });
 
   @override
-  State<ArticleSelectionExercise> createState() => _ArticleSelectionExerciseState();
+  State<ArticleSelectionExercise> createState() =>
+      _ArticleSelectionExerciseState();
 }
 
 class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
   String? _selectedArticle;
-  
+
   static const List<String> _articles = ['der', 'die', 'das'];
-  
+
   String? get _correctArticle {
     // Try to extract from germanArticle field
     if (widget.card.germanArticle != null) {
       return widget.card.germanArticle!.toLowerCase();
     }
-    
+
     // Try to extract from front text (e.g., "der Hund" -> "der")
     final frontText = widget.card.frontText.toLowerCase().trim();
     for (final article in _articles) {
@@ -39,26 +40,26 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
         return article;
       }
     }
-    
+
     return null;
   }
-  
+
   String get _nounWithoutArticle {
     final frontText = widget.card.frontText.trim();
-    
+
     // Remove article if present
     for (final article in ['der', 'die', 'das', 'Der', 'Die', 'Das']) {
       if (frontText.startsWith('$article ')) {
         return frontText.substring(article.length + 1);
       }
     }
-    
+
     return frontText;
   }
 
   void _selectArticle(String article) {
     if (widget.answerState == AnswerState.answered) return;
-    
+
     setState(() {
       _selectedArticle = article;
     });
@@ -66,8 +67,9 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
 
   void _checkAnswer() {
     if (_selectedArticle == null) return;
-    
-    final isCorrect = _selectedArticle!.toLowerCase() == _correctArticle?.toLowerCase();
+
+    final isCorrect =
+        _selectedArticle!.toLowerCase() == _correctArticle?.toLowerCase();
     widget.onCheckAnswer(isCorrect);
   }
 
@@ -99,7 +101,7 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        
+
         // Noun display
         Container(
           padding: const EdgeInsets.all(20),
@@ -128,9 +130,9 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
             ],
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Translation hint
         Text(
           widget.card.backText,
@@ -140,9 +142,9 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
           ),
           textAlign: TextAlign.center,
         ),
-        
+
         const SizedBox(height: 32),
-        
+
         // Article options
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -150,12 +152,12 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
             final isSelected = _selectedArticle == article;
             final articleColor = _getArticleColor(article);
             final isCorrectAnswer = article == _correctArticle;
-            
+
             // Show feedback colors only after answer
             Color? backgroundColor;
             Color? borderColor;
             Color? textColor;
-            
+
             if (isAnswered) {
               if (isSelected) {
                 if (widget.currentAnswerCorrect == true) {
@@ -177,7 +179,7 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
               borderColor = articleColor;
               textColor = articleColor;
             }
-            
+
             return Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -191,11 +193,14 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: borderColor ?? 
-                                 (isSelected 
-                                     ? articleColor 
-                                     : colorScheme.outline.withValues(alpha: 0.3)),
-                          width: isSelected || (isAnswered && isCorrectAnswer) ? 3 : 1,
+                          color:
+                              borderColor ??
+                              (isSelected
+                                  ? articleColor
+                                  : colorScheme.outline.withValues(alpha: 0.3)),
+                          width: isSelected || (isAnswered && isCorrectAnswer)
+                              ? 3
+                              : 1,
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -204,8 +209,11 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
                           Text(
                             article,
                             style: theme.textTheme.headlineMedium?.copyWith(
-                              color: textColor ?? 
-                                     (isSelected ? articleColor : colorScheme.onSurface),
+                              color:
+                                  textColor ??
+                                  (isSelected
+                                      ? articleColor
+                                      : colorScheme.onSurface),
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.center,
@@ -228,9 +236,9 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
             );
           }).toList(),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Check answer button
         if (!isAnswered)
           SizedBox(
@@ -240,7 +248,7 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
               child: const Text('Check Answer'),
             ),
           ),
-        
+
         // Gender hint
         if (isAnswered) ...[
           const SizedBox(height: 16),
@@ -253,8 +261,9 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.lightbulb_outline, 
-                  size: 16, 
+                Icon(
+                  Icons.lightbulb_outline,
+                  size: 16,
                   color: colorScheme.outline,
                 ),
                 const SizedBox(width: 8),
@@ -271,7 +280,7 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
       ],
     );
   }
-  
+
   String _getGenderHint(String article) {
     switch (article.toLowerCase()) {
       case 'der':

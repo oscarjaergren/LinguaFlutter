@@ -51,10 +51,9 @@ void main() {
     });
 
     testWidgets('should handle zero counts', (tester) async {
-      await tester.pumpWidget(buildTestWidget(
-        correctCount: 0,
-        incorrectCount: 0,
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(correctCount: 0, incorrectCount: 0),
+      );
 
       expect(find.text('0'), findsNWidgets(2));
     });

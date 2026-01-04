@@ -21,13 +21,12 @@ class ExerciseMasteryWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     // Get all exercise scores that have been attempted
-    final scores = card.exerciseScores.entries
-        .where((e) => e.key.isImplemented)
-        .toList()
-      ..sort((a, b) => a.key.index.compareTo(b.key.index));
-    
+    final scores =
+        card.exerciseScores.entries.where((e) => e.key.isImplemented).toList()
+          ..sort((a, b) => a.key.index.compareTo(b.key.index));
+
     if (scores.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -41,8 +40,9 @@ class ExerciseMasteryWidget extends StatelessWidget {
             if (showHeader) ...[
               Row(
                 children: [
-                  Icon(Icons.analytics_outlined, 
-                    size: 20, 
+                  Icon(
+                    Icons.analytics_outlined,
+                    size: 20,
                     color: colorScheme.primary,
                   ),
                   const SizedBox(width: 8),
@@ -59,16 +59,16 @@ class ExerciseMasteryWidget extends StatelessWidget {
               ),
               const SizedBox(height: 12),
             ],
-            
+
             // Group by category
             _buildCategorySection(
-              context, 
+              context,
               ExerciseCategory.recognition,
               scores.where((e) => e.key.isRecognition).toList(),
             ),
             const SizedBox(height: 12),
             _buildCategorySection(
-              context, 
+              context,
               ExerciseCategory.production,
               scores.where((e) => e.key.isProduction).toList(),
             ),
@@ -82,7 +82,7 @@ class ExerciseMasteryWidget extends StatelessWidget {
     final theme = Theme.of(context);
     final level = card.overallMasteryLevel;
     final color = _getMasteryColor(level);
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -107,7 +107,7 @@ class ExerciseMasteryWidget extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     if (scores.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -133,7 +133,9 @@ class ExerciseMasteryWidget extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        ...scores.map((entry) => _buildExerciseRow(context, entry.key, entry.value)),
+        ...scores.map(
+          (entry) => _buildExerciseRow(context, entry.key, entry.value),
+        ),
       ],
     );
   }
@@ -145,12 +147,12 @@ class ExerciseMasteryWidget extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     final hasAttempts = score.totalAttempts > 0;
     final masteryLevel = score.masteryLevel;
     final color = _getMasteryColor(masteryLevel);
     final successRate = score.successRate;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -159,7 +161,7 @@ class ExerciseMasteryWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: hasAttempts 
+              color: hasAttempts
                   ? color.withValues(alpha: 0.1)
                   : colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(6),
@@ -171,7 +173,7 @@ class ExerciseMasteryWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          
+
           // Exercise name and stats
           Expanded(
             child: Column(
@@ -183,7 +185,7 @@ class ExerciseMasteryWidget extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (hasAttempts) 
+                if (hasAttempts)
                   Text(
                     '${score.correctCount}/${score.totalAttempts} correct',
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -201,7 +203,7 @@ class ExerciseMasteryWidget extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Progress bar and percentage
           if (hasAttempts) ...[
             SizedBox(

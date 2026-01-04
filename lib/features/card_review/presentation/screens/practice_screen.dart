@@ -40,9 +40,15 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   void _startSession() {
-    final provider = Provider.of<PracticeSessionProvider>(context, listen: false);
-    final prefsProvider = Provider.of<ExercisePreferencesProvider>(context, listen: false);
-    
+    final provider = Provider.of<PracticeSessionProvider>(
+      context,
+      listen: false,
+    );
+    final prefsProvider = Provider.of<ExercisePreferencesProvider>(
+      context,
+      listen: false,
+    );
+
     if (!provider.isSessionActive) {
       // Start session with current exercise preferences
       provider.startSession(preferences: prefsProvider.preferences);
@@ -50,14 +56,20 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 
   Future<void> _showFilterSheet() async {
-    final provider = Provider.of<PracticeSessionProvider>(context, listen: false);
-    final prefsProvider = Provider.of<ExercisePreferencesProvider>(context, listen: false);
-    
+    final provider = Provider.of<PracticeSessionProvider>(
+      context,
+      listen: false,
+    );
+    final prefsProvider = Provider.of<ExercisePreferencesProvider>(
+      context,
+      listen: false,
+    );
+
     final newPrefs = await ExerciseFilterSheet.show(
       context,
       currentPreferences: provider.exercisePreferences,
     );
-    
+
     if (newPrefs != null && mounted) {
       // Update both providers
       await prefsProvider.updatePreferences(newPrefs);
@@ -65,7 +77,10 @@ class _PracticeScreenState extends State<PracticeScreen> {
     }
   }
 
-  Future<void> _editCurrentCard(BuildContext context, PracticeSessionProvider provider) async {
+  Future<void> _editCurrentCard(
+    BuildContext context,
+    PracticeSessionProvider provider,
+  ) async {
     final currentCard = provider.currentCard;
     if (currentCard == null) return;
 
@@ -79,8 +94,11 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
-      final provider = Provider.of<PracticeSessionProvider>(context, listen: false);
-      
+      final provider = Provider.of<PracticeSessionProvider>(
+        context,
+        listen: false,
+      );
+
       // Allow swiping only when answer has been checked
       if (provider.canSwipe) {
         // Arrow keys or Enter to confirm answer
@@ -88,8 +106,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
           _cardKey.currentState?.triggerSwipe(false);
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
-                   event.logicalKey == LogicalKeyboardKey.enter ||
-                   event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+            event.logicalKey == LogicalKeyboardKey.enter ||
+            event.logicalKey == LogicalKeyboardKey.numpadEnter) {
           // Enter confirms with current answer correctness
           final isCorrect = provider.currentAnswerCorrect ?? true;
           _cardKey.currentState?.triggerSwipe(isCorrect);
@@ -102,33 +120,36 @@ class _PracticeScreenState extends State<PracticeScreen> {
           _selectMultipleChoiceOption(provider, 0);
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.digit2 ||
-                   event.logicalKey == LogicalKeyboardKey.numpad2) {
+            event.logicalKey == LogicalKeyboardKey.numpad2) {
           _selectMultipleChoiceOption(provider, 1);
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.digit3 ||
-                   event.logicalKey == LogicalKeyboardKey.numpad3) {
+            event.logicalKey == LogicalKeyboardKey.numpad3) {
           _selectMultipleChoiceOption(provider, 2);
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.digit4 ||
-                   event.logicalKey == LogicalKeyboardKey.numpad4) {
+            event.logicalKey == LogicalKeyboardKey.numpad4) {
           _selectMultipleChoiceOption(provider, 3);
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.enter ||
-                   event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+            event.logicalKey == LogicalKeyboardKey.numpadEnter) {
           // Enter reveals answer for reading recognition
           _revealAnswer(provider);
           return KeyEventResult.handled;
         }
       }
     }
-    
+
     return KeyEventResult.ignored;
   }
 
-  void _selectMultipleChoiceOption(PracticeSessionProvider provider, int index) {
+  void _selectMultipleChoiceOption(
+    PracticeSessionProvider provider,
+    int index,
+  ) {
     final options = provider.multipleChoiceOptions;
     if (options == null || index >= options.length) return;
-    
+
     final selectedOption = options[index];
     final correctAnswer = provider.currentCard?.backText;
     final isCorrect = selectedOption == correctAnswer;
@@ -192,7 +213,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
             }
 
             // No current card (shouldn't happen but handle gracefully)
-            if (provider.currentCard == null || provider.currentExerciseType == null) {
+            if (provider.currentCard == null ||
+                provider.currentExerciseType == null) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -204,9 +226,9 @@ class _PracticeScreenState extends State<PracticeScreen> {
                   correctCount: provider.correctCount,
                   incorrectCount: provider.incorrectCount,
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Swipeable card with exercise content
                 Expanded(
                   child: _SwipeableCardWrapper(
@@ -215,22 +237,22 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     onEditCard: () => _editCurrentCard(context, provider),
                   ),
                 ),
-                
+
                 // Keyboard hints
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
                   child: Text(
                     provider.canSwipe
                         ? 'Enter = Confirm • ← = Wrong • → = Correct'
                         : '1-4 = Select option • Enter = Reveal',
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
               ],
             );
@@ -273,7 +295,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
     final currentStreak = score?.currentStreak ?? 0;
     final masteryProgress = score?.masteryProgress ?? 0.0;
     final color = _getMasteryColor(masteryLevel);
-    
+
     return SwipeableExerciseCard(
       key: _swipeCardKey,
       canSwipe: widget.provider.canSwipe,
@@ -305,7 +327,15 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
                 ),
               ),
               // Mastery info bar at bottom of card
-              _buildMasteryBar(context, exerciseType, masteryLevel, currentStreak, masteryProgress, color, score),
+              _buildMasteryBar(
+                context,
+                exerciseType,
+                masteryLevel,
+                currentStreak,
+                masteryProgress,
+                color,
+                score,
+              ),
             ],
           ),
           // Edit button in top-right corner of card
@@ -313,10 +343,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
             top: 8,
             right: 8,
             child: IconButton(
-              icon: Icon(
-                Icons.edit,
-                color: Colors.grey[400],
-              ),
+              icon: Icon(Icons.edit, color: Colors.grey[400]),
               tooltip: 'Edit card',
               onPressed: widget.onEditCard,
             ),
@@ -325,18 +352,22 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
       ),
     );
   }
-  
-  Widget _buildMasteryBar(BuildContext context, ExerciseType exerciseType, String masteryLevel, 
-      int currentStreak, double masteryProgress, Color color, ExerciseScore? score) {
+
+  Widget _buildMasteryBar(
+    BuildContext context,
+    ExerciseType exerciseType,
+    String masteryLevel,
+    int currentStreak,
+    double masteryProgress,
+    Color color,
+    ExerciseScore? score,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         border: Border(
-          top: BorderSide(
-            color: color.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          top: BorderSide(color: color.withValues(alpha: 0.3), width: 1),
         ),
       ),
       child: Row(
@@ -403,10 +434,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: color.withValues(alpha: 0.4),
-                width: 1,
-              ),
+              border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
             ),
             child: Text(
               masteryLevel,
@@ -421,7 +449,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
       ),
     );
   }
-  
+
   Color _getMasteryColor(String masteryLevel) {
     switch (masteryLevel) {
       case 'Mastered':
@@ -436,7 +464,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
         return Colors.grey;
     }
   }
-  
+
   String _getExerciseShortName(ExerciseType type) {
     switch (type) {
       case ExerciseType.readingRecognition:

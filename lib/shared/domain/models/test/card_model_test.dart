@@ -69,10 +69,7 @@ void main() {
         backText: 'Prueba',
         language: 'es',
         category: 'Test',
-      ).copyWith(
-        reviewCount: 10,
-        correctCount: 7,
-      );
+      ).copyWith(reviewCount: 10, correctCount: 7);
 
       expect(card.successRate, 70.0);
     });
@@ -90,7 +87,7 @@ void main() {
 
     test('should determine if card is due for review', () {
       final now = DateTime.now();
-      
+
       final newCard = CardModel.create(
         frontText: 'Test',
         backText: 'Prueba',
@@ -191,10 +188,7 @@ void main() {
         category: 'Test',
       );
 
-      final copied = original.copyWith(
-        frontText: 'Updated',
-        isFavorite: true,
-      );
+      final copied = original.copyWith(frontText: 'Updated', isFavorite: true);
 
       expect(copied.frontText, 'Updated');
       expect(copied.backText, 'Original');

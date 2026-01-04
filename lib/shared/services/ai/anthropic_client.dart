@@ -28,7 +28,7 @@ class AnthropicClient extends BaseAiProviderClient {
       body: {
         'model': model ?? defaultModel,
         'messages': [
-          {'role': 'user', 'content': prompt}
+          {'role': 'user', 'content': prompt},
         ],
         'max_tokens': 1000,
       },

@@ -32,10 +32,7 @@ void main() {
       });
 
       test('should create regular verb', () {
-        const verb = WordData.verb(
-          isRegular: true,
-          auxiliary: 'haben',
-        );
+        const verb = WordData.verb(isRegular: true, auxiliary: 'haben');
 
         final verbData = verb as VerbData;
         expect(verbData.isRegular, true);
@@ -60,10 +57,7 @@ void main() {
       });
 
       test('should create separable verb', () {
-        const verb = WordData.verb(
-          isSeparable: true,
-          separablePrefix: 'auf',
-        );
+        const verb = WordData.verb(isSeparable: true, separablePrefix: 'auf');
 
         final verbData = verb as VerbData;
         expect(verbData.isSeparable, true);
@@ -130,10 +124,7 @@ void main() {
       });
 
       test('should create feminine noun', () {
-        const noun = WordData.noun(
-          gender: 'die',
-          plural: 'Lampen',
-        );
+        const noun = WordData.noun(gender: 'die', plural: 'Lampen');
 
         final nounData = noun as NounData;
         expect(nounData.gender, 'die');
@@ -238,9 +229,7 @@ void main() {
       });
 
       test('should serialize adverb to JSON and back', () {
-        const original = WordData.adverb(
-          usageNote: 'Colloquial usage',
-        );
+        const original = WordData.adverb(usageNote: 'Colloquial usage');
 
         final json = original.toJson();
         final restored = WordData.fromJson(json);
@@ -355,7 +344,9 @@ void main() {
 
       test('should copy adjective with changes', () {
         const original = WordData.adjective(comparative: 'größer');
-        final copied = (original as AdjectiveData).copyWith(superlative: 'größten');
+        final copied = (original as AdjectiveData).copyWith(
+          superlative: 'größten',
+        );
 
         expect(copied.comparative, 'größer');
         expect(copied.superlative, 'größten');

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Tests for Supabase authentication error handling
-/// 
+///
 /// These tests verify that stale refresh tokens are handled gracefully
 /// without throwing unhandled exceptions.
 void main() {
@@ -36,21 +36,24 @@ void main() {
         expect(isRefreshTokenError, isTrue);
       });
 
-      test('should not catch unrelated exceptions as refresh token error', () async {
-        // Arrange
-        const errorMessage = 'Network error';
-        var isRefreshTokenError = false;
+      test(
+        'should not catch unrelated exceptions as refresh token error',
+        () async {
+          // Arrange
+          const errorMessage = 'Network error';
+          var isRefreshTokenError = false;
 
-        // Act
-        try {
-          throw AuthException(errorMessage);
-        } on AuthException catch (e) {
-          isRefreshTokenError = e.message.contains('Refresh Token');
-        }
+          // Act
+          try {
+            throw AuthException(errorMessage);
+          } on AuthException catch (e) {
+            isRefreshTokenError = e.message.contains('Refresh Token');
+          }
 
-        // Assert
-        expect(isRefreshTokenError, isFalse);
-      });
+          // Assert
+          expect(isRefreshTokenError, isFalse);
+        },
+      );
 
       test('should handle exception with statusCode in message', () {
         // Arrange - simulating the real error format from Supabase
@@ -67,7 +70,7 @@ void main() {
       test('should handle null session gracefully', () {
         // Arrange
         final String? refreshToken = null;
-        
+
         // Act - simulating the null-coalescing in our code
         final tokenToUse = refreshToken ?? '';
 
@@ -101,10 +104,7 @@ void main() {
 
       test('should classify session expired as recoverable', () {
         // Arrange
-        final error = AuthException(
-          'Session expired',
-          statusCode: '401',
-        );
+        final error = AuthException('Session expired', statusCode: '401');
 
         // Act
         final isRecoverable = _isRecoverableAuthError(error);
@@ -140,10 +140,7 @@ void main() {
 
       test('should classify token not found as recoverable', () {
         // Arrange
-        final error = AuthException(
-          'Token not found',
-          statusCode: '400',
-        );
+        final error = AuthException('Token not found', statusCode: '400');
 
         // Act
         final isRecoverable = _isRecoverableAuthError(error);
@@ -158,7 +155,7 @@ void main() {
         // This simulates what happens in SupabaseAuthService.initialize()
         var sessionCleared = false;
         var errorLogged = false;
-        
+
         // Simulate the recovery attempt
         Future<void> simulateRecoverSession() async {
           throw AuthException(
@@ -166,7 +163,7 @@ void main() {
             statusCode: '400',
           );
         }
-        
+
         // Act - simulate our error handling
         try {
           await simulateRecoverSession();
@@ -177,7 +174,7 @@ void main() {
             sessionCleared = true;
           }
         }
-        
+
         // Assert
         expect(errorLogged, isTrue);
         expect(sessionCleared, isTrue);
@@ -185,11 +182,11 @@ void main() {
 
       test('should not clear session for non-recoverable errors', () async {
         var sessionCleared = false;
-        
+
         Future<void> simulateRecoverSession() async {
           throw AuthException('Network timeout');
         }
-        
+
         // Act
         try {
           await simulateRecoverSession();
@@ -198,7 +195,7 @@ void main() {
             sessionCleared = true;
           }
         }
-        
+
         // Assert - session should NOT be cleared for network errors
         expect(sessionCleared, isFalse);
       });
@@ -210,7 +207,7 @@ void main() {
 /// This mirrors the logic we use in SupabaseAuthService
 bool _isRecoverableAuthError(AuthException error) {
   final message = error.message.toLowerCase();
-  
+
   // Check for known recoverable error patterns
   final recoverablePatterns = [
     'refresh token',
@@ -219,12 +216,12 @@ bool _isRecoverableAuthError(AuthException error) {
     'session not found',
     'invalid grant',
   ];
-  
+
   for (final pattern in recoverablePatterns) {
     if (message.contains(pattern)) {
       return true;
     }
   }
-  
+
   return false;
 }

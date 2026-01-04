@@ -11,7 +11,9 @@ class LanguageSelectorWidget extends StatelessWidget {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         final activeLanguage = languageProvider.activeLanguage;
-        final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
+        final languageDetails = languageProvider.getLanguageDetails(
+          activeLanguage,
+        )!;
 
         return PopupMenuButton<String>(
           onSelected: (String languageCode) {
@@ -26,10 +28,7 @@ class LanguageSelectorWidget extends StatelessWidget {
                 value: code,
                 child: Row(
                   children: [
-                    Text(
-                      details['flag'],
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    Text(details['flag'], style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 8),
                     Text(details['name']),
                     if (code == activeLanguage) ...[

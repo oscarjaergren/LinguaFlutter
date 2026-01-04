@@ -69,10 +69,7 @@ void main() {
     });
 
     test('effectiveModel returns custom model when set', () {
-      const config = AiConfig(
-        provider: AiProvider.openai,
-        model: 'gpt-4',
-      );
+      const config = AiConfig(provider: AiProvider.openai, model: 'gpt-4');
       expect(config.effectiveModel, 'gpt-4');
     });
 
@@ -82,13 +79,10 @@ void main() {
     });
 
     test('copyWith creates new instance with updated values', () {
-      const original = AiConfig(
-        provider: AiProvider.openai,
-        apiKey: 'key1',
-      );
-      
+      const original = AiConfig(provider: AiProvider.openai, apiKey: 'key1');
+
       final copied = original.copyWith(apiKey: 'key2');
-      
+
       expect(copied.provider, AiProvider.openai);
       expect(copied.apiKey, 'key2');
       expect(original.apiKey, 'key1');
@@ -106,7 +100,10 @@ void main() {
     test('baseUrl returns correct URLs', () {
       expect(AiProvider.openai.baseUrl, 'https://api.openai.com/v1');
       expect(AiProvider.anthropic.baseUrl, 'https://api.anthropic.com/v1');
-      expect(AiProvider.gemini.baseUrl, 'https://generativelanguage.googleapis.com/v1beta');
+      expect(
+        AiProvider.gemini.baseUrl,
+        'https://generativelanguage.googleapis.com/v1beta',
+      );
       expect(AiProvider.openRouter.baseUrl, 'https://openrouter.ai/api/v1');
     });
 
@@ -120,7 +117,10 @@ void main() {
     test('availableModels returns non-empty lists', () {
       for (final provider in AiProvider.values) {
         expect(provider.availableModels, isNotEmpty);
-        expect(provider.availableModels.contains(provider.defaultModel), isTrue);
+        expect(
+          provider.availableModels.contains(provider.defaultModel),
+          isTrue,
+        );
       }
     });
   });

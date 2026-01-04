@@ -62,7 +62,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -81,7 +81,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // Header
           Padding(
             padding: const EdgeInsets.all(16),
@@ -114,15 +114,16 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
                   child: const Text('All'),
                 ),
                 TextButton(
-                  onPressed: () => _updatePreferences(_preferences.disableAll()),
+                  onPressed: () =>
+                      _updatePreferences(_preferences.disableAll()),
                   child: const Text('None'),
                 ),
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Category toggles
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -144,9 +145,9 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Exercise type list
           ConstrainedBox(
             constraints: BoxConstraints(
@@ -156,24 +157,28 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                for (final type in ExerciseType.values.where((t) => t.isImplemented))
+                for (final type in ExerciseType.values.where(
+                  (t) => t.isImplemented,
+                ))
                   _buildExerciseTypeTile(type),
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           // Prioritize weaknesses toggle
           SwitchListTile(
             title: const Text('Prioritize Weaknesses'),
             subtitle: const Text('Focus on exercise types you struggle with'),
             value: _preferences.prioritizeWeaknesses,
             onChanged: (value) {
-              _updatePreferences(_preferences.copyWith(prioritizeWeaknesses: value));
+              _updatePreferences(
+                _preferences.copyWith(prioritizeWeaknesses: value),
+              );
             },
           ),
-          
+
           // Apply button
           Padding(
             padding: const EdgeInsets.all(16),
@@ -187,7 +192,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
               ),
             ),
           ),
-          
+
           // Safe area padding
           SizedBox(height: MediaQuery.of(context).viewPadding.bottom),
         ],
@@ -197,10 +202,12 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
 
   Widget _buildCategoryChip(ExerciseCategory category, IconData icon) {
     final isFullyEnabled = _preferences.isCategoryFullyEnabled(category);
-    final isPartiallyEnabled = _preferences.isCategoryPartiallyEnabled(category);
+    final isPartiallyEnabled = _preferences.isCategoryPartiallyEnabled(
+      category,
+    );
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return FilterChip(
       label: Row(
         mainAxisSize: MainAxisSize.min,
@@ -219,14 +226,12 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
       selected: isFullyEnabled,
       showCheckmark: false,
       onSelected: (selected) {
-        _updatePreferences(_preferences.toggleCategory(category, enabled: selected));
+        _updatePreferences(
+          _preferences.toggleCategory(category, enabled: selected),
+        );
       },
       avatar: isPartiallyEnabled && !isFullyEnabled
-          ? Icon(
-              Icons.remove,
-              size: 18,
-              color: colorScheme.outline,
-            )
+          ? Icon(Icons.remove, size: 18, color: colorScheme.outline)
           : null,
     );
   }
@@ -235,7 +240,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
     final isEnabled = _preferences.isEnabled(type);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
@@ -256,9 +261,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
       title: Text(type.displayName),
       subtitle: Text(
         type.description,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: colorScheme.outline,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.outline),
       ),
       trailing: Switch(
         value: isEnabled,

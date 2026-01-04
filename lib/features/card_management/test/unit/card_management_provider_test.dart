@@ -22,7 +22,7 @@ void main() {
         languageProvider: languageProvider,
         repository: mockRepository,
       );
-      
+
       // Default stubs
       when(mockRepository.getAllCards()).thenAnswer((_) async => <CardModel>[]);
       when(mockRepository.getCategories()).thenAnswer((_) async => <String>[]);

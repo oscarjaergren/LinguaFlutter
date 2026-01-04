@@ -8,52 +8,52 @@ enum ExerciseType {
   /// Tests: Recognition, visual memory
   @JsonValue('reading_recognition')
   readingRecognition,
-  
+
   /// Type the correct translation of the word
   /// Tests: Spelling, active recall, writing
   @JsonValue('writing_translation')
   writingTranslation,
-  
+
   /// Select the correct translation from multiple text options
   /// Tests: Recognition, comprehension
   @JsonValue('multiple_choice_text')
   multipleChoiceText,
-  
+
   /// Select the correct icon that represents the word
   /// Tests: Visual association, meaning comprehension
   @JsonValue('multiple_choice_icon')
   multipleChoiceIcon,
-  
+
   /// Translate from native language to target language (reverse of normal)
   /// Tests: Active production, harder recall
   @JsonValue('reverse_translation')
   reverseTranslation,
-  
+
   /// Listen to audio and identify the correct word (future feature)
   /// Tests: Listening comprehension, pronunciation recognition
   @JsonValue('listening_recognition')
   listeningRecognition,
-  
+
   /// Speak the word and get pronunciation feedback (future feature)
   /// Tests: Speaking, pronunciation
   @JsonValue('speaking_pronunciation')
   speakingPronunciation,
-  
+
   /// Fill in the blank in a sentence with the correct word (future feature)
   /// Tests: Context usage, grammar
   @JsonValue('sentence_fill')
   sentenceFill,
-  
+
   /// Arrange scrambled words into correct sentence order
   /// Tests: Grammar, word order, sentence structure
   @JsonValue('sentence_building')
   sentenceBuilding,
-  
+
   /// Provide correct conjugation/declension for given context
   /// Tests: Grammar rules, conjugation patterns
   @JsonValue('conjugation_practice')
   conjugationPractice,
-  
+
   /// Select correct article for German nouns (der/die/das)
   /// Tests: Gender memorization
   @JsonValue('article_selection')
@@ -89,7 +89,7 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'Article Selection';
     }
   }
-  
+
   /// Description of what this exercise type tests
   String get description {
     switch (this) {
@@ -117,7 +117,7 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'Choose the correct article';
     }
   }
-  
+
   /// Whether this exercise type is currently implemented
   bool get isImplemented {
     switch (this) {
@@ -137,17 +137,17 @@ extension ExerciseTypeExtension on ExerciseType {
         return true;
     }
   }
-  
+
   /// Whether this exercise type requires an icon to function
   bool get requiresIcon {
     return this == ExerciseType.multipleChoiceIcon;
   }
-  
+
   /// Whether this exercise type benefits from having an icon
   bool get benefitsFromIcon {
     return this == ExerciseType.readingRecognition;
   }
-  
+
   /// Icon name to represent this exercise type in UI
   String get iconName {
     switch (this) {
@@ -175,7 +175,7 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'mdi:label';
     }
   }
-  
+
   /// Material icon to represent this exercise type in UI
   IconData get icon {
     switch (this) {

@@ -12,7 +12,8 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
+class _AuthScreenState extends State<AuthScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -39,7 +40,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -48,7 +49,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 40),
-              
+
               // Logo/Title
               Icon(
                 Icons.school_rounded,
@@ -71,9 +72,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 40),
-              
+
               // Tab bar
               Container(
                 decoration: BoxDecoration(
@@ -96,9 +97,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Form
               Consumer<AuthProvider>(
                 builder: (context, authProvider, child) {
@@ -141,7 +142,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           ),
                           const SizedBox(height: 16),
                         ],
-                        
+
                         // Email field
                         TextFormField(
                           controller: _emailController,
@@ -164,23 +165,23 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Password field
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          textInputAction: _tabController.index == 0 
-                              ? TextInputAction.done 
+                          textInputAction: _tabController.index == 0
+                              ? TextInputAction.done
                               : TextInputAction.next,
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outlined),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword 
-                                    ? Icons.visibility_outlined 
+                                _obscurePassword
+                                    ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
                               ),
                               onPressed: () {
@@ -203,7 +204,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             return null;
                           },
                         ),
-                        
+
                         // Confirm password (sign up only)
                         AnimatedBuilder(
                           animation: _tabController,
@@ -223,13 +224,14 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                     prefixIcon: const Icon(Icons.lock_outlined),
                                     suffixIcon: IconButton(
                                       icon: Icon(
-                                        _obscureConfirmPassword 
-                                            ? Icons.visibility_outlined 
+                                        _obscureConfirmPassword
+                                            ? Icons.visibility_outlined
                                             : Icons.visibility_off_outlined,
                                       ),
                                       onPressed: () {
                                         setState(() {
-                                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                                          _obscureConfirmPassword =
+                                              !_obscureConfirmPassword;
                                         });
                                       },
                                     ),
@@ -253,9 +255,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             );
                           },
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Submit button
                         SizedBox(
                           height: 56,
@@ -263,8 +265,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             animation: _tabController,
                             builder: (context, child) {
                               return ElevatedButton(
-                                onPressed: authProvider.isLoading 
-                                    ? null 
+                                onPressed: authProvider.isLoading
+                                    ? null
                                     : () => _submit(authProvider),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: theme.colorScheme.primary,
@@ -283,8 +285,8 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                         ),
                                       )
                                     : Text(
-                                        _tabController.index == 0 
-                                            ? 'Sign In' 
+                                        _tabController.index == 0
+                                            ? 'Sign In'
                                             : 'Create Account',
                                         style: const TextStyle(
                                           fontSize: 16,
@@ -295,9 +297,9 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             },
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Forgot password (sign in only)
                         AnimatedBuilder(
                           animation: _tabController,
@@ -306,14 +308,15 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                               return const SizedBox.shrink();
                             }
                             return TextButton(
-                              onPressed: () => _showForgotPasswordDialog(authProvider),
+                              onPressed: () =>
+                                  _showForgotPasswordDialog(authProvider),
                               child: const Text('Forgot Password?'),
                             );
                           },
                         ),
-                        
+
                         // Debug quick login (only in debug mode)
-                        if (kDebugMode) ...[                          
+                        if (kDebugMode) ...[
                           const SizedBox(height: 24),
                           const Divider(),
                           const SizedBox(height: 8),
@@ -337,7 +340,6 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                             ),
                           ),
                         ],
-                        
                       ],
                     ),
                   );
@@ -385,7 +387,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
 
   void _showForgotPasswordDialog(AuthProvider authProvider) {
     final emailController = TextEditingController(text: _emailController.text);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

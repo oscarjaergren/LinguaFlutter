@@ -21,7 +21,8 @@ abstract class AiProviderClient {
 abstract class BaseAiProviderClient implements AiProviderClient {
   final http.Client _client;
 
-  BaseAiProviderClient({http.Client? client}) : _client = client ?? http.Client();
+  BaseAiProviderClient({http.Client? client})
+    : _client = client ?? http.Client();
 
   Future<http.Response> post(
     Uri uri, {
@@ -40,7 +41,9 @@ abstract class BaseAiProviderClient implements AiProviderClient {
         401 => 'Invalid API key. Please check your credentials.',
         403 => 'Access denied. Your API key may not have access to this model.',
         404 => 'Model not found. Please check the model name.',
-        500 || 502 || 503 => 'AI service temporarily unavailable. Please try again.',
+        500 ||
+        502 ||
+        503 => 'AI service temporarily unavailable. Please try again.',
         _ => 'API error: ${response.statusCode}',
       };
       throw AiProviderException(errorMessage, response.body);

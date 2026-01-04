@@ -21,35 +21,38 @@ class AppRouter {
   static const String logs = '/logs';
 
   static final GoRouter router = GoRouter(
-    initialLocation: auth, // Start at auth - redirect will handle if already logged in
+    initialLocation:
+        auth, // Start at auth - redirect will handle if already logged in
     redirect: (context, state) {
       final isAuthenticated = SupabaseAuthService.isAuthenticated;
       final path = state.matchedLocation;
       final isAuthRoute = path == auth;
-      
+
       // Check if this is an auth callback (email confirmation, OAuth, etc.)
       // The token comes in the URL fragment which Supabase SDK handles automatically
-      final isAuthCallback = path == '/auth/callback' || 
-                             path.startsWith('/auth/callback');
-      
-      LoggerService.debug('Router redirect: path=$path, authenticated=$isAuthenticated, callback=$isAuthCallback');
-      
+      final isAuthCallback =
+          path == '/auth/callback' || path.startsWith('/auth/callback');
+
+      LoggerService.debug(
+        'Router redirect: path=$path, authenticated=$isAuthenticated, callback=$isAuthCallback',
+      );
+
       // Handle auth callback - redirect based on auth state
       // Supabase SDK should have already processed the token from the URL fragment
       if (isAuthCallback) {
         return isAuthenticated ? dashboard : auth;
       }
-      
+
       // Not authenticated and not on auth page -> go to auth
       if (!isAuthenticated && !isAuthRoute) {
         return auth;
       }
-      
+
       // Authenticated and on auth page -> go to dashboard
       if (isAuthenticated && isAuthRoute) {
         return dashboard;
       }
-      
+
       // No redirect needed
       return null;
     },
@@ -60,14 +63,14 @@ class AppRouter {
         name: 'dashboard',
         builder: (context, state) => const DashboardScreen(),
       ),
-      
+
       // Auth Screen
       GoRoute(
         path: auth,
         name: 'auth',
         builder: (context, state) => const AuthScreen(),
       ),
-      
+
       // Auth callback route for email confirmation
       // This handles the redirect from Supabase after email verification
       GoRoute(
@@ -90,21 +93,21 @@ class AppRouter {
           );
         },
       ),
-      
+
       // Cards Screen
       GoRoute(
         path: cards,
         name: 'cards',
         builder: (context, state) => const CardsScreen(),
       ),
-      
+
       // Card Creation Screen
       GoRoute(
         path: cardCreation,
         name: 'card-creation',
         builder: (context, state) => const CreationCreationScreen(),
       ),
-      
+
       // Card Edit Screen
       GoRoute(
         path: '$cardEdit/:cardId',
@@ -119,31 +122,30 @@ class AppRouter {
           return CreationCreationScreen(cardToEdit: card);
         },
       ),
-      
+
       // Practice Screen
       GoRoute(
         path: practice,
         name: 'practice',
         builder: (context, state) => const PracticeScreen(),
       ),
-      
+
       // Debug Menu Screen
       GoRoute(
         path: debug,
         name: 'debug',
         builder: (context, state) => const DebugMenuScreen(),
       ),
-      
+
       // Logs Screen (Talker UI)
       GoRoute(
         path: logs,
         name: 'logs',
-        builder: (context, state) => TalkerScreen(
-          talker: LoggerService.instance,
-        ),
+        builder: (context, state) =>
+            TalkerScreen(talker: LoggerService.instance),
       ),
     ],
-    
+
     // Error handling - redirect unknown routes appropriately
     errorBuilder: (context, state) {
       LoggerService.warning('Unknown route: ${state.uri}');
@@ -154,24 +156,16 @@ class AppRouter {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           context.go(SupabaseAuthService.isAuthenticated ? dashboard : auth);
         });
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
       // Regular unknown route
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Page Not Found'),
-        ),
+        appBar: AppBar(title: const Text('Page Not Found')),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               Text(
                 'Page not found: ${state.matchedLocation}',
@@ -194,46 +188,46 @@ class AppRouter {
 extension AppRouterExtension on BuildContext {
   /// Navigate to dashboard screen
   void goToDashboard() => go(AppRouter.dashboard);
-  
+
   /// Navigate to auth screen
   void goToAuth() => go(AppRouter.auth);
-  
+
   /// Push auth screen
   void pushAuth() => push(AppRouter.auth);
-  
+
   /// Navigate to cards screen
   void goToCards() => go(AppRouter.cards);
-  
+
   /// Navigate to card creation screen
   void goToCardCreation() => go(AppRouter.cardCreation);
-  
+
   /// Navigate to card edit screen
   void goToCardEdit(String cardId) => go('${AppRouter.cardEdit}/$cardId');
-  
+
   /// Navigate to practice screen
   void goToPractice() => go(AppRouter.practice);
-  
+
   /// Navigate to debug menu
   void goToDebug() => go(AppRouter.debug);
-  
+
   /// Navigate to logs screen
   void goToLogs() => go(AppRouter.logs);
-  
+
   /// Push card creation screen
   void pushCardCreation() => push(AppRouter.cardCreation);
-  
+
   /// Push card edit screen
   void pushCardEdit(String cardId) => push('${AppRouter.cardEdit}/$cardId');
-  
+
   /// Push practice screen
   void pushPractice() => push(AppRouter.practice);
-  
+
   /// Push debug menu
   void pushDebug() => push(AppRouter.debug);
-  
+
   /// Push logs screen
   void pushLogs() => push(AppRouter.logs);
-  
+
   /// Push cards screen
   void pushCards() => push(AppRouter.cards);
 }

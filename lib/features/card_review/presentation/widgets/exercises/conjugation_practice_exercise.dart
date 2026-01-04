@@ -19,10 +19,12 @@ class ConjugationPracticeExercise extends StatefulWidget {
   });
 
   @override
-  State<ConjugationPracticeExercise> createState() => _ConjugationPracticeExerciseState();
+  State<ConjugationPracticeExercise> createState() =>
+      _ConjugationPracticeExerciseState();
 }
 
-class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercise> {
+class _ConjugationPracticeExerciseState
+    extends State<ConjugationPracticeExercise> {
   final _answerController = TextEditingController();
   String? _correctAnswer;
   String? _prompt;
@@ -41,16 +43,18 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
 
   void _generateConjugationPrompt() {
     final wordData = widget.card.wordData;
-    
+
     if (wordData is VerbData) {
       // Pick a random conjugation form to test
       final forms = <String, String>{
         if (wordData.presentDu != null) 'du (present)': wordData.presentDu!,
-        if (wordData.presentEr != null) 'er/sie/es (present)': wordData.presentEr!,
+        if (wordData.presentEr != null)
+          'er/sie/es (present)': wordData.presentEr!,
         if (wordData.pastSimple != null) 'past simple': wordData.pastSimple!,
-        if (wordData.pastParticiple != null) 'past participle': wordData.pastParticiple!,
+        if (wordData.pastParticiple != null)
+          'past participle': wordData.pastParticiple!,
       };
-      
+
       if (forms.isNotEmpty) {
         final entry = forms.entries.toList()..shuffle();
         final selected = entry.first;
@@ -67,7 +71,7 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
         if (wordData.plural != null) 'plural': wordData.plural!,
         if (wordData.genitive != null) 'genitive': wordData.genitive!,
       };
-      
+
       if (forms.isNotEmpty) {
         final entry = forms.entries.toList()..shuffle();
         final selected = entry.first;
@@ -84,7 +88,7 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
         if (wordData.comparative != null) 'comparative': wordData.comparative!,
         if (wordData.superlative != null) 'superlative': wordData.superlative!,
       };
-      
+
       if (forms.isNotEmpty) {
         final entry = forms.entries.toList()..shuffle();
         final selected = entry.first;
@@ -105,11 +109,13 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
   void _checkAnswer() {
     final userAnswer = _answerController.text.trim().toLowerCase();
     final correctAnswer = _correctAnswer!.toLowerCase();
-    
+
     // Allow some flexibility with articles and spacing
-    final isCorrect = userAnswer == correctAnswer ||
-                      userAnswer == correctAnswer.replaceAll(RegExp(r'^(der|die|das|ein|eine)\s+'), '');
-    
+    final isCorrect =
+        userAnswer == correctAnswer ||
+        userAnswer ==
+            correctAnswer.replaceAll(RegExp(r'^(der|die|das|ein|eine)\s+'), '');
+
     widget.onCheckAnswer(isCorrect);
   }
 
@@ -128,7 +134,7 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 24),
-        
+
         // Word and form prompt
         Container(
           padding: const EdgeInsets.all(20),
@@ -158,9 +164,9 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
             ],
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Translation hint
         Text(
           widget.card.backText,
@@ -170,9 +176,9 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
           ),
           textAlign: TextAlign.center,
         ),
-        
+
         const SizedBox(height: 32),
-        
+
         // Answer input
         TextField(
           controller: _answerController,
@@ -184,8 +190,8 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
             filled: true,
             fillColor: isAnswered
                 ? (widget.currentAnswerCorrect == true
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.1))
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1))
                 : null,
             prefixIcon: isAnswered
                 ? Icon(
@@ -203,9 +209,9 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
           autofocus: true,
           onSubmitted: !isAnswered ? (_) => _checkAnswer() : null,
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Check answer button
         if (!isAnswered)
           SizedBox(
@@ -217,7 +223,7 @@ class _ConjugationPracticeExerciseState extends State<ConjugationPracticeExercis
               child: const Text('Check Answer'),
             ),
           ),
-        
+
         // Show correct answer if wrong
         if (isAnswered && widget.currentAnswerCorrect == false) ...[
           const SizedBox(height: 16),

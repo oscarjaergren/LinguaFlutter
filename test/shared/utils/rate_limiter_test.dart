@@ -38,10 +38,7 @@ void main() {
         }
 
         // Next action should be blocked
-        expect(
-          rateLimiter.isAllowed(userId: userId, action: action),
-          false,
-        );
+        expect(rateLimiter.isAllowed(userId: userId, action: action), false);
       });
 
       test('allows actions for different users independently', () {
@@ -53,10 +50,7 @@ void main() {
         }
 
         // User 2 should still be allowed
-        expect(
-          rateLimiter.isAllowed(userId: 'user2', action: action),
-          true,
-        );
+        expect(rateLimiter.isAllowed(userId: 'user2', action: action), true);
       });
 
       test('allows actions for different action types independently', () {
@@ -78,10 +72,7 @@ void main() {
         const userId = 'user123';
         const action = 'unconfigured_action';
 
-        expect(
-          rateLimiter.isAllowed(userId: userId, action: action),
-          true,
-        );
+        expect(rateLimiter.isAllowed(userId: userId, action: action), true);
       });
     });
 
@@ -221,10 +212,7 @@ void main() {
         );
 
         // Should contain "minute" or "minutes"
-        expect(
-          message.contains('minute') || message.contains('second'),
-          true,
-        );
+        expect(message.contains('minute') || message.contains('second'), true);
       });
     });
 

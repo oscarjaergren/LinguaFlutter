@@ -22,19 +22,23 @@ void main() {
     setUp(() {
       mockProvider = MockPracticeSessionProvider();
       mockPrefsProvider = MockExercisePreferencesProvider();
-      
+
       // Setup preferences provider mock
-      when(mockPrefsProvider.preferences).thenReturn(ExercisePreferences.defaults());
+      when(
+        mockPrefsProvider.preferences,
+      ).thenReturn(ExercisePreferences.defaults());
       when(mockPrefsProvider.addListener(any)).thenReturn(null);
       when(mockPrefsProvider.removeListener(any)).thenReturn(null);
       when(mockPrefsProvider.updatePreferences(any)).thenAnswer((_) async {});
-      
+
       // Default mock setup
       when(mockProvider.isSessionActive).thenReturn(true);
       when(mockProvider.canSwipe).thenReturn(false);
       when(mockProvider.currentAnswerCorrect).thenReturn(null);
       when(mockProvider.currentCard).thenReturn(null);
-      when(mockProvider.currentExerciseType).thenReturn(ExerciseType.readingRecognition);
+      when(
+        mockProvider.currentExerciseType,
+      ).thenReturn(ExerciseType.readingRecognition);
       when(mockProvider.multipleChoiceOptions).thenReturn([]);
       when(mockProvider.answerState).thenReturn(AnswerState.pending);
       when(mockProvider.currentIndex).thenReturn(0);
@@ -48,15 +52,21 @@ void main() {
       when(mockProvider.userInput).thenReturn(null);
       when(mockProvider.addListener(any)).thenReturn(null);
       when(mockProvider.removeListener(any)).thenReturn(null);
-      
+
       // Stub async methods
-      when(mockProvider.confirmAnswerAndAdvance(markedCorrect: anyNamed('markedCorrect')))
-          .thenAnswer((_) async {});
-      when(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')))
-          .thenReturn(null);
+      when(
+        mockProvider.confirmAnswerAndAdvance(
+          markedCorrect: anyNamed('markedCorrect'),
+        ),
+      ).thenAnswer((_) async {});
+      when(
+        mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')),
+      ).thenReturn(null);
     });
 
-    testWidgets('Space key should NOT advance exercise after answer', (tester) async {
+    testWidgets('Space key should NOT advance exercise after answer', (
+      tester,
+    ) async {
       // Setup: Answer has been checked
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(true);
@@ -65,8 +75,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -81,10 +95,16 @@ void main() {
       await tester.pump();
 
       // Verify that confirmAnswerAndAdvance was NOT called (Space should be ignored)
-      verifyNever(mockProvider.confirmAnswerAndAdvance(markedCorrect: anyNamed('markedCorrect')));
+      verifyNever(
+        mockProvider.confirmAnswerAndAdvance(
+          markedCorrect: anyNamed('markedCorrect'),
+        ),
+      );
     });
 
-    testWidgets('Space key should NOT reveal answer before checking', (tester) async {
+    testWidgets('Space key should NOT reveal answer before checking', (
+      tester,
+    ) async {
       // Setup: Answer not yet checked
       when(mockProvider.canSwipe).thenReturn(false);
 
@@ -92,8 +112,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -120,8 +144,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -139,7 +167,9 @@ void main() {
       expect(result, isTrue);
     });
 
-    testWidgets('Enter key SHOULD reveal answer before checking', (tester) async {
+    testWidgets('Enter key SHOULD reveal answer before checking', (
+      tester,
+    ) async {
       // Setup: Answer not yet checked
       when(mockProvider.canSwipe).thenReturn(false);
       when(mockProvider.answerState).thenReturn(AnswerState.pending);
@@ -148,8 +178,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -167,7 +201,9 @@ void main() {
       verify(mockProvider.checkAnswer(isCorrect: true)).called(1);
     });
 
-    testWidgets('Arrow keys are handled when answer is checked', (tester) async {
+    testWidgets('Arrow keys are handled when answer is checked', (
+      tester,
+    ) async {
       // Setup: Answer has been checked
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(true);
@@ -176,8 +212,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -190,12 +230,14 @@ void main() {
       // Test right arrow - should be handled by keyboard handler
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
       await tester.pump();
-      
+
       // Verify the key was handled
       expect(result, isTrue);
     });
 
-    testWidgets('Left arrow key is handled when answer is checked', (tester) async {
+    testWidgets('Left arrow key is handled when answer is checked', (
+      tester,
+    ) async {
       // Setup: Answer has been checked
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(false);
@@ -204,8 +246,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -218,7 +264,7 @@ void main() {
       // Send left arrow key event
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
       await tester.pump();
-      
+
       // Verify the key was handled
       expect(result, isTrue);
     });
@@ -226,8 +272,12 @@ void main() {
     testWidgets('Number keys are handled for multiple choice', (tester) async {
       // Setup: Multiple choice exercise with options
       when(mockProvider.canSwipe).thenReturn(false);
-      when(mockProvider.currentExerciseType).thenReturn(ExerciseType.multipleChoiceText);
-      when(mockProvider.multipleChoiceOptions).thenReturn(['Option 1', 'Option 2', 'Option 3', 'Option 4']);
+      when(
+        mockProvider.currentExerciseType,
+      ).thenReturn(ExerciseType.multipleChoiceText);
+      when(
+        mockProvider.multipleChoiceOptions,
+      ).thenReturn(['Option 1', 'Option 2', 'Option 3', 'Option 4']);
       when(mockProvider.currentCard).thenReturn(
         CardModel(
           id: 'test-1',
@@ -244,8 +294,12 @@ void main() {
         MaterialApp(
           home: MultiProvider(
             providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                value: mockPrefsProvider,
+              ),
             ],
             child: const PracticeScreen(),
           ),
@@ -257,25 +311,35 @@ void main() {
 
       // Send number key 1 - should trigger checkAnswer
       await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
-      
+
       // Verify checkAnswer was called
-      verify(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect'))).called(1);
+      verify(
+        mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')),
+      ).called(1);
     }, skip: true);
 
     group('Regression tests for Space key removal', () {
-      testWidgets('Space key does not interfere with text input', (tester) async {
+      testWidgets('Space key does not interfere with text input', (
+        tester,
+      ) async {
         // This test verifies that Space key is ignored by keyboard handler
         // allowing it to be used in text fields for multi-word answers
-        
+
         when(mockProvider.canSwipe).thenReturn(false);
-        when(mockProvider.currentExerciseType).thenReturn(ExerciseType.writingTranslation);
+        when(
+          mockProvider.currentExerciseType,
+        ).thenReturn(ExerciseType.writingTranslation);
 
         await tester.pumpWidget(
           MaterialApp(
             home: MultiProvider(
               providers: [
-                ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-                ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+                ChangeNotifierProvider<PracticeSessionProvider>.value(
+                  value: mockProvider,
+                ),
+                ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                  value: mockPrefsProvider,
+                ),
               ],
               child: const PracticeScreen(),
             ),
@@ -290,22 +354,32 @@ void main() {
         await tester.pump();
 
         // Verify that Space key did NOT trigger any navigation
-        verifyNever(mockProvider.confirmAnswerAndAdvance(markedCorrect: anyNamed('markedCorrect')));
+        verifyNever(
+          mockProvider.confirmAnswerAndAdvance(
+            markedCorrect: anyNamed('markedCorrect'),
+          ),
+        );
         verifyNever(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')));
       });
 
-      testWidgets('Space key is not handled by keyboard event handler', (tester) async {
+      testWidgets('Space key is not handled by keyboard event handler', (
+        tester,
+      ) async {
         // This test verifies the keyboard handler ignores Space key
         // The actual UI hints are implementation details that may change
-        
+
         when(mockProvider.canSwipe).thenReturn(false);
 
         await tester.pumpWidget(
           MaterialApp(
             home: MultiProvider(
               providers: [
-                ChangeNotifierProvider<PracticeSessionProvider>.value(value: mockProvider),
-                ChangeNotifierProvider<ExercisePreferencesProvider>.value(value: mockPrefsProvider),
+                ChangeNotifierProvider<PracticeSessionProvider>.value(
+                  value: mockProvider,
+                ),
+                ChangeNotifierProvider<ExercisePreferencesProvider>.value(
+                  value: mockPrefsProvider,
+                ),
               ],
               child: const PracticeScreen(),
             ),
@@ -320,7 +394,11 @@ void main() {
         await tester.pump();
 
         // Verify Space key triggered no provider methods
-        verifyNever(mockProvider.confirmAnswerAndAdvance(markedCorrect: anyNamed('markedCorrect')));
+        verifyNever(
+          mockProvider.confirmAnswerAndAdvance(
+            markedCorrect: anyNamed('markedCorrect'),
+          ),
+        );
         verifyNever(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')));
       });
     });

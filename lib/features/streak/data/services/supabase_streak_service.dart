@@ -5,7 +5,7 @@ import 'package:lingua_flutter/shared/services/logger_service.dart';
 import 'streak_service.dart';
 
 /// Supabase implementation of [StreakService].
-/// 
+///
 /// Manages streak data persistence in Supabase database.
 class SupabaseStreakService implements StreakService {
   static const String _tableName = 'streaks';
@@ -32,7 +32,7 @@ class SupabaseStreakService implements StreakService {
       LoggerService.debug('Not authenticated, returning initial streak');
       return StreakModel.initial();
     }
-    
+
     try {
       final response = await _client
           .from(_tableName)
@@ -60,13 +60,11 @@ class SupabaseStreakService implements StreakService {
       LoggerService.debug('Not authenticated, skipping streak save');
       return;
     }
-    
+
     try {
       final data = _streakToSupabase(streak);
-      
-      await _client
-          .from(_tableName)
-          .upsert(data);
+
+      await _client.from(_tableName).upsert(data);
 
       LoggerService.debug('Streak saved to Supabase');
     } catch (e) {
@@ -99,10 +97,7 @@ class SupabaseStreakService implements StreakService {
   @override
   Future<void> clearStreakData() async {
     try {
-      await _client
-          .from(_tableName)
-          .delete()
-          .eq('user_id', _userId);
+      await _client.from(_tableName).delete().eq('user_id', _userId);
 
       LoggerService.debug('Streak data cleared from Supabase');
     } catch (e) {
@@ -126,7 +121,9 @@ class SupabaseStreakService implements StreakService {
       'best_streak': streak.bestStreak,
       'total_cards_reviewed': streak.totalCardsReviewed,
       'total_review_sessions': streak.totalReviewSessions,
-      'last_review_date': streak.lastReviewDate?.toIso8601String().split('T')[0],
+      'last_review_date': streak.lastReviewDate?.toIso8601String().split(
+        'T',
+      )[0],
       'daily_review_counts': streak.dailyReviewCounts,
       'achieved_milestones': streak.achievedMilestones,
     };
@@ -144,9 +141,11 @@ class SupabaseStreakService implements StreakService {
     }
 
     // Parse achieved milestones
-    final achievedMilestones = (json['achieved_milestones'] as List<dynamic>?)
-        ?.map((e) => e as int)
-        .toList() ?? [];
+    final achievedMilestones =
+        (json['achieved_milestones'] as List<dynamic>?)
+            ?.map((e) => e as int)
+            .toList() ??
+        [];
 
     // Parse last review date
     DateTime? lastReviewDate;
@@ -168,7 +167,7 @@ class SupabaseStreakService implements StreakService {
   @override
   Future<Map<String, dynamic>> getStreakStats() async {
     final streak = await loadStreak();
-    
+
     return {
       'currentStreak': streak.currentStreak,
       'bestStreak': streak.bestStreak,
@@ -187,13 +186,13 @@ class SupabaseStreakService implements StreakService {
     final streak = await loadStreak();
     final now = DateTime.now();
     final dailyData = <String, int>{};
-    
+
     for (int i = 0; i < days; i++) {
       final date = now.subtract(Duration(days: i));
       final dateKey = _formatDate(date);
       dailyData[dateKey] = streak.dailyReviewCounts[dateKey] ?? 0;
     }
-    
+
     return dailyData;
   }
 

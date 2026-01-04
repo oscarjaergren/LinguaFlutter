@@ -20,9 +20,7 @@ class DebugMenuScreen extends StatelessWidget {
     // Only show debug menu in debug mode
     if (!kDebugMode) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Debug Menu'),
-        ),
+        appBar: AppBar(title: const Text('Debug Menu')),
         body: const Center(
           child: Text(
             'Debug menu is only available in debug mode',
@@ -58,11 +56,13 @@ class DebugMenuScreen extends StatelessWidget {
                   Text(
                     'Create cards in the currently selected language for testing.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Quick sets
                   SizedBox(
                     width: double.infinity,
@@ -72,7 +72,10 @@ class DebugMenuScreen extends StatelessWidget {
                       label: const Text('Create 10 Cards'),
                       style: OutlinedButton.styleFrom(
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -85,7 +88,10 @@ class DebugMenuScreen extends StatelessWidget {
                       label: const Text('Create 20 Cards'),
                       style: OutlinedButton.styleFrom(
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -98,11 +104,14 @@ class DebugMenuScreen extends StatelessWidget {
                       label: const Text('Create 30 Cards'),
                       style: OutlinedButton.styleFrom(
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   // Special button for creating due cards
                   const SizedBox(height: 16),
                   SizedBox(
@@ -113,7 +122,10 @@ class DebugMenuScreen extends StatelessWidget {
                       label: const Text('Create 5 Cards Due for Review'),
                       style: FilledButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -149,65 +161,84 @@ class DebugMenuScreen extends StatelessWidget {
                   Text(
                     'Load real German vocabulary cards from JSON file with proper scheduling.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Load all German words - Available Now
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _loadGermanWords(context, null, makeAvailableNow: true),
+                      onPressed: () => _loadGermanWords(
+                        context,
+                        null,
+                        makeAvailableNow: true,
+                      ),
                       icon: const Icon(Icons.library_books),
-                      label: const Text('Load All German Words (Available Now)'),
+                      label: const Text(
+                        'Load All German Words (Available Now)',
+                      ),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Load 10 German words - Available Now
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _loadGermanWords(context, 10, makeAvailableNow: true),
+                      onPressed: () =>
+                          _loadGermanWords(context, 10, makeAvailableNow: true),
                       icon: const Icon(Icons.book),
                       label: const Text('Load 10 Words (Available Now)'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.blue.shade700),
                         foregroundColor: Colors.blue.shade700,
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Load 25 German words - Available Now
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _loadGermanWords(context, 25, makeAvailableNow: true),
+                      onPressed: () =>
+                          _loadGermanWords(context, 25, makeAvailableNow: true),
                       icon: const Icon(Icons.book),
                       label: const Text('Load 25 Words (Available Now)'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.blue.shade700),
                         foregroundColor: Colors.blue.shade700,
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 12),
                   const Divider(),
                   const SizedBox(height: 8),
-                  
+
                   Text(
                     '⏰ Scheduled Review Times',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -219,23 +250,32 @@ class DebugMenuScreen extends StatelessWidget {
                   Text(
                     'Load with original spaced repetition schedule.',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Load with scheduled times
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _loadGermanWords(context, 10, makeAvailableNow: false),
+                      onPressed: () => _loadGermanWords(
+                        context,
+                        10,
+                        makeAvailableNow: false,
+                      ),
                       icon: const Icon(Icons.schedule),
                       label: const Text('Load 10 Words (Scheduled)'),
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.orange.shade700),
                         foregroundColor: Colors.orange.shade700,
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -271,20 +311,27 @@ class DebugMenuScreen extends StatelessWidget {
                   Text(
                     'Import curated German vocabulary and auto-fill with AI (Magic button).',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
                       onPressed: () => _importSampleCards(context),
                       icon: const Icon(Icons.download),
-                      label: const Text('Import 20 Sample Cards with AI Autofill'),
+                      label: const Text(
+                        'Import 20 Sample Cards with AI Autofill',
+                      ),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.green.shade700,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -312,11 +359,13 @@ class DebugMenuScreen extends StatelessWidget {
                   Text(
                     'Manage stored data for testing purposes.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Clear all cards
                   SizedBox(
                     width: double.infinity,
@@ -330,13 +379,16 @@ class DebugMenuScreen extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.red),
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Show card statistics
                   SizedBox(
                     width: double.infinity,
@@ -346,7 +398,10 @@ class DebugMenuScreen extends StatelessWidget {
                       label: const Text('Show Card Statistics'),
                       style: OutlinedButton.styleFrom(
                         alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -387,10 +442,13 @@ class DebugMenuScreen extends StatelessWidget {
                         children: [
                           Text(
                             'Current: ${ttsService.isEnabled ? "Google Cloud Neural2 ⭐⭐⭐⭐⭐" : "Not configured"}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: ttsService.isEnabled ? Colors.green : Colors.red,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: ttsService.isEnabled
+                                      ? Colors.green
+                                      : Colors.red,
+                                ),
                           ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
@@ -461,21 +519,23 @@ class DebugMenuScreen extends StatelessWidget {
     try {
       final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
-      
+
       // Get active language or default to 'en'
-      final language = languageProvider.activeLanguage.isEmpty 
-          ? 'en' 
+      final language = languageProvider.activeLanguage.isEmpty
+          ? 'en'
           : languageProvider.activeLanguage;
-      
+
       final cards = DebugService.createBasicCards(language, count);
-      
+
       // Batch add all cards
       await cardManagement.addMultipleCards(cards);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Created $count test cards in ${language.toUpperCase()}'),
+            content: Text(
+              'Created $count test cards in ${language.toUpperCase()}',
+            ),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'VIEW',
@@ -501,21 +561,23 @@ class DebugMenuScreen extends StatelessWidget {
     try {
       final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
-      
+
       // Get active language or default to 'en'
-      final language = languageProvider.activeLanguage.isEmpty 
-          ? 'en' 
+      final language = languageProvider.activeLanguage.isEmpty
+          ? 'en'
           : languageProvider.activeLanguage;
-      
+
       final cards = DebugService.createDueForReviewCards(language, count);
-      
+
       // Batch add all cards
       await cardManagement.addMultipleCards(cards);
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Created $count cards due for review in ${language.toUpperCase()}'),
+            content: Text(
+              'Created $count cards due for review in ${language.toUpperCase()}',
+            ),
             backgroundColor: Colors.green,
             action: SnackBarAction(
               label: 'REVIEW',
@@ -538,7 +600,7 @@ class DebugMenuScreen extends StatelessWidget {
   }
 
   Future<void> _loadGermanWords(
-    BuildContext context, 
+    BuildContext context,
     int? limit, {
     bool makeAvailableNow = true,
   }) async {
@@ -558,7 +620,9 @@ class DebugMenuScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Text('Loading German vocabulary${limit != null ? ' ($limit cards)' : ''}...'),
+                Text(
+                  'Loading German vocabulary${limit != null ? ' ($limit cards)' : ''}...',
+                ),
               ],
             ),
             duration: const Duration(seconds: 3),
@@ -568,26 +632,28 @@ class DebugMenuScreen extends StatelessWidget {
 
       final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
-      
+
       // Set active language to German
       languageProvider.setActiveLanguage('de');
-      
+
       // Load German words from JSON
-      LoggerService.debug('Calling loadGermanWordsFromJson with limit=$limit, makeAvailableNow=$makeAvailableNow');
+      LoggerService.debug(
+        'Calling loadGermanWordsFromJson with limit=$limit, makeAvailableNow=$makeAvailableNow',
+      );
       final cards = await DebugService.loadGermanWordsFromJson(
         limit: limit,
         makeAvailableNow: makeAvailableNow,
       );
-      
+
       LoggerService.debug('Received ${cards.length} cards from service');
-      
+
       // Batch add all cards
       await cardManagement.addMultipleCards(cards);
-      
-      final availabilityText = makeAvailableNow 
-          ? 'available now for review' 
+
+      final availabilityText = makeAvailableNow
+          ? 'available now for review'
           : 'scheduled for future review';
-      
+
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -643,7 +709,7 @@ class DebugMenuScreen extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       try {
         await context.read<CardManagementProvider>().clearAllCards();
-        
+
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -668,16 +734,17 @@ class DebugMenuScreen extends StatelessWidget {
   void _showCardStatistics(BuildContext context) {
     final cardManagement = context.read<CardManagementProvider>();
     final allCards = cardManagement.allCards;
-    
+
     // Calculate statistics
     final totalCards = allCards.length;
     final languages = allCards.map((c) => c.language).toSet().toList()..sort();
     final categories = allCards.map((c) => c.category).toSet().toList()..sort();
     final reviewedCards = allCards.where((c) => c.reviewCount > 0).length;
     final averageSuccessRate = allCards.isNotEmpty
-        ? allCards.map((c) => c.successRate).reduce((a, b) => a + b) / allCards.length
+        ? allCards.map((c) => c.successRate).reduce((a, b) => a + b) /
+              allCards.length
         : 0.0;
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -688,14 +755,22 @@ class DebugMenuScreen extends StatelessWidget {
           children: [
             _buildStatRow('Total Cards', totalCards.toString()),
             _buildStatRow('Reviewed Cards', reviewedCards.toString()),
-            _buildStatRow('Average Success Rate', '${averageSuccessRate.toStringAsFixed(1)}%'),
+            _buildStatRow(
+              'Average Success Rate',
+              '${averageSuccessRate.toStringAsFixed(1)}%',
+            ),
             _buildStatRow('Languages', languages.join(', ')),
             const SizedBox(height: 8),
-            const Text('Categories:', style: TextStyle(fontWeight: FontWeight.bold)),
-            ...categories.map((category) => Padding(
-              padding: const EdgeInsets.only(left: 16, top: 2),
-              child: Text('• $category'),
-            )),
+            const Text(
+              'Categories:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            ...categories.map(
+              (category) => Padding(
+                padding: const EdgeInsets.only(left: 16, top: 2),
+                child: Text('• $category'),
+              ),
+            ),
           ],
         ),
         actions: [
@@ -728,7 +803,7 @@ class DebugMenuScreen extends StatelessWidget {
 
   Future<void> _testTts(BuildContext context) async {
     final testPhrase = 'Guten Tag! Das ist ein Test.';
-    
+
     try {
       LoggerService.debug('Testing Google Cloud TTS...');
       final googleTts = GoogleCloudTtsService();
@@ -748,10 +823,7 @@ class DebugMenuScreen extends StatelessWidget {
       LoggerService.error('TTS test error', e, stack);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -762,12 +834,14 @@ class DebugMenuScreen extends StatelessWidget {
     final aiProvider = context.read<CardEnrichmentProvider>();
     final cardManagement = context.read<CardManagementProvider>();
     final languageProvider = context.read<LanguageProvider>();
-    
+
     // Check if AI is configured
     if (!aiProvider.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please configure AI API key first (Settings → AI Provider)'),
+          content: Text(
+            'Please configure AI API key first (Settings → AI Provider)',
+          ),
           backgroundColor: Colors.orange,
           duration: Duration(seconds: 4),
         ),
@@ -800,10 +874,13 @@ class DebugMenuScreen extends StatelessWidget {
       }
 
       // Load sample cards from JSON
-      final jsonString = await rootBundle.loadString('assets/data/sample_import_cards.json');
+      final jsonString = await rootBundle.loadString(
+        'assets/data/sample_import_cards.json',
+      );
       final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
-      final cardsList = (jsonData['cards'] as List).cast<Map<String, dynamic>>();
-      
+      final cardsList = (jsonData['cards'] as List)
+          .cast<Map<String, dynamic>>();
+
       // Set active language to German
       languageProvider.setActiveLanguage('de');
 
@@ -813,7 +890,7 @@ class DebugMenuScreen extends StatelessWidget {
 
       for (final cardData in cardsList) {
         final frontText = cardData['front'] as String;
-        
+
         try {
           // Use AI to enrich the word
           final enrichResult = await aiProvider.enrichWord(
@@ -822,7 +899,7 @@ class DebugMenuScreen extends StatelessWidget {
           );
 
           final now = DateTime.now();
-          
+
           if (enrichResult != null) {
             // Create the card with enriched data
             final card = CardModel(
@@ -850,7 +927,8 @@ class DebugMenuScreen extends StatelessWidget {
               backText: '(needs translation)',
               language: 'de',
               category: 'Imported',
-              notes: 'AI enrichment failed - please use Magic button to fill in details',
+              notes:
+                  'AI enrichment failed - please use Magic button to fill in details',
               createdAt: now,
               updatedAt: now,
               nextReview: now,
@@ -858,13 +936,15 @@ class DebugMenuScreen extends StatelessWidget {
 
             await cardManagement.addCard(card);
             errorCount++;
-            LoggerService.warning('Imported without enrichment: $frontText (AI error: ${aiProvider.error})');
+            LoggerService.warning(
+              'Imported without enrichment: $frontText (AI error: ${aiProvider.error})',
+            );
           }
         } catch (e) {
           errorCount++;
           LoggerService.error('Error importing $frontText', e);
         }
-        
+
         // Small delay to avoid rate limiting
         await Future.delayed(const Duration(milliseconds: 500));
       }

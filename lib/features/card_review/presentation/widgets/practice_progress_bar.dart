@@ -23,7 +23,7 @@ class PracticeProgressBar extends StatelessWidget {
           backgroundColor: Colors.grey[300],
           minHeight: 4,
         ),
-        
+
         // Score indicators
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

@@ -84,7 +84,10 @@ void main() {
       });
 
       test('should allow custom state with custom message', () {
-        provider.showCustomMessage('Excited message!', state: MascotState.excited);
+        provider.showCustomMessage(
+          'Excited message!',
+          state: MascotState.excited,
+        );
 
         expect(provider.currentMessage, 'Excited message!');
         expect(provider.currentState, MascotState.excited);
@@ -338,7 +341,7 @@ void main() {
 
       test('should notify listeners on hideMessage', () {
         provider.showCustomMessage('Test');
-        
+
         var notified = false;
         provider.addListener(() => notified = true);
 

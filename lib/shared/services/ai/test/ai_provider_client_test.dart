@@ -17,24 +17,27 @@ void main() {
 
     test('complete sends correct request and parses response', () async {
       final mockClient = MockClient((request) async {
-        expect(request.url.toString(), 'https://api.openai.com/v1/chat/completions');
+        expect(
+          request.url.toString(),
+          'https://api.openai.com/v1/chat/completions',
+        );
         expect(request.headers['Authorization'], 'Bearer test-key');
         expect(request.headers['Content-Type'], 'application/json');
-        
+
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['model'], 'gpt-4o-mini');
         expect(body['messages'], isA<List>());
         expect(body['temperature'], 0.3);
-        
+
         return http.Response(
           jsonEncode({
             'choices': [
               {
                 'message': {
-                  'content': '{"wordType": "noun", "translation": "test"}'
-                }
-              }
-            ]
+                  'content': '{"wordType": "noun", "translation": "test"}',
+                },
+              },
+            ],
           }),
           200,
         );
@@ -53,8 +56,10 @@ void main() {
       final client = OpenAiClient();
       final result = client.parseResponse({
         'choices': [
-          {'message': {'content': 'test content'}}
-        ]
+          {
+            'message': {'content': 'test content'},
+          },
+        ],
       });
       expect(result, 'test content');
     });
@@ -65,7 +70,7 @@ void main() {
       });
 
       final client = OpenAiClient(client: mockClient);
-      
+
       expect(
         () => client.complete(prompt: 'Test', apiKey: 'bad-key'),
         throwsA(isA<AiProviderException>()),
@@ -84,12 +89,12 @@ void main() {
         expect(request.url.toString(), 'https://api.anthropic.com/v1/messages');
         expect(request.headers['x-api-key'], 'test-key');
         expect(request.headers['anthropic-version'], '2023-06-01');
-        
+
         return http.Response(
           jsonEncode({
             'content': [
-              {'text': '{"wordType": "verb"}'}
-            ]
+              {'text': '{"wordType": "verb"}'},
+            ],
           }),
           200,
         );
@@ -108,8 +113,8 @@ void main() {
       final client = AnthropicClient();
       final result = client.parseResponse({
         'content': [
-          {'text': 'anthropic response'}
-        ]
+          {'text': 'anthropic response'},
+        ],
       });
       expect(result, 'anthropic response');
     });
@@ -128,22 +133,22 @@ void main() {
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=test-key',
         );
         expect(request.headers['Authorization'], isNull);
-        
+
         final body = jsonDecode(request.body) as Map<String, dynamic>;
         expect(body['contents'], isA<List>());
         expect(body['generationConfig']['temperature'], 0.3);
-        
+
         return http.Response(
           jsonEncode({
             'candidates': [
               {
                 'content': {
                   'parts': [
-                    {'text': '{"wordType": "adjective"}'}
-                  ]
-                }
-              }
-            ]
+                    {'text': '{"wordType": "adjective"}'},
+                  ],
+                },
+              },
+            ],
           }),
           200,
         );
@@ -165,11 +170,11 @@ void main() {
           {
             'content': {
               'parts': [
-                {'text': 'gemini response'}
-              ]
-            }
-          }
-        ]
+                {'text': 'gemini response'},
+              ],
+            },
+          },
+        ],
       });
       expect(result, 'gemini response');
     });
@@ -183,18 +188,19 @@ void main() {
 
     test('complete sends correct request to openrouter', () async {
       final mockClient = MockClient((request) async {
-        expect(request.url.toString(), 'https://openrouter.ai/api/v1/chat/completions');
+        expect(
+          request.url.toString(),
+          'https://openrouter.ai/api/v1/chat/completions',
+        );
         expect(request.headers['Authorization'], 'Bearer test-key');
-        
+
         return http.Response(
           jsonEncode({
             'choices': [
               {
-                'message': {
-                  'content': '{"wordType": "adverb"}'
-                }
-              }
-            ]
+                'message': {'content': '{"wordType": "adverb"}'},
+              },
+            ],
           }),
           200,
         );

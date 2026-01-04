@@ -8,22 +8,22 @@ part 'exercise_score.g.dart';
 class ExerciseScore {
   /// The type of exercise this score tracks
   final ExerciseType type;
-  
+
   /// Number of correct answers for this exercise type
   final int correctCount;
-  
+
   /// Number of incorrect answers for this exercise type
   final int incorrectCount;
-  
+
   /// Current streak of consecutive correct answers
   final int currentStreak;
-  
+
   /// Best streak achieved for this exercise
   final int bestStreak;
-  
+
   /// Last time this exercise was practiced
   final DateTime? lastPracticed;
-  
+
   /// Next scheduled review for this exercise type
   final DateTime? nextReview;
 
@@ -44,19 +44,19 @@ class ExerciseScore {
 
   /// Total number of attempts for this exercise type
   int get totalAttempts => correctCount + incorrectCount;
-  
+
   /// Success rate as a percentage (0-100)
   double get successRate {
     if (totalAttempts == 0) return 0.0;
     return (correctCount / totalAttempts) * 100;
   }
-  
+
   /// Whether this exercise is due for review
   bool get isDueForReview {
     if (nextReview == null) return true;
     return DateTime.now().isAfter(nextReview!);
   }
-  
+
   /// Mastery level for this specific exercise type
   /// Based on current streak: 5+ correct in a row = Mastered
   String get masteryLevel {
@@ -66,18 +66,18 @@ class ExerciseScore {
     if (currentStreak >= 1) return 'Learning';
     return 'Difficult';
   }
-  
+
   /// Progress toward mastery (0.0 to 1.0)
   /// Shows how close to achieving 5-streak mastery
   double get masteryProgress {
     return (currentStreak / 5.0).clamp(0.0, 1.0);
   }
-  
+
   /// Number of correct answers needed to reach mastery
   int get answersToMastery {
     return (5 - currentStreak).clamp(0, 5);
   }
-  
+
   /// Net score (correct - incorrect)
   int get netScore => correctCount - incorrectCount;
 
@@ -86,13 +86,13 @@ class ExerciseScore {
     final now = DateTime.now();
     final newStreak = currentStreak + 1;
     final newBestStreak = newStreak > bestStreak ? newStreak : bestStreak;
-    
+
     // Calculate next review using spaced repetition
     final multiplier = (correctCount + 1) / (totalAttempts + 1);
     final baseDays = 1;
     final intervalDays = (baseDays * (1 + multiplier * 2)).round();
     final nextReviewDate = now.add(Duration(days: intervalDays));
-    
+
     return copyWith(
       correctCount: correctCount + 1,
       currentStreak: newStreak,
@@ -106,10 +106,10 @@ class ExerciseScore {
   /// Wrong answer decreases streak by 1 (minimum 0)
   ExerciseScore recordIncorrect() {
     final now = DateTime.now();
-    
+
     // Review again tomorrow if incorrect
     final nextReviewDate = now.add(const Duration(days: 1));
-    
+
     return copyWith(
       incorrectCount: incorrectCount + 1,
       currentStreak: currentStreak - 1,

@@ -10,11 +10,11 @@ class ExercisePreferencesService {
   Future<ExercisePreferences> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     final jsonString = prefs.getString(_preferencesKey);
-    
+
     if (jsonString == null || jsonString.isEmpty) {
       return ExercisePreferences.defaults();
     }
-    
+
     try {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       return ExercisePreferences.fromJson(json);

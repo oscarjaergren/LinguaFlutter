@@ -14,9 +14,7 @@ void main() {
         backText: 'dog',
         language: 'de',
         category: 'vocabulary',
-      ).copyWith(
-        examples: ['Der Hund ist groß'],
-      );
+      ).copyWith(examples: ['Der Hund ist groß']);
     });
 
     testWidgets('displays prompt and translation hint', (tester) async {
@@ -33,7 +31,10 @@ void main() {
         ),
       );
 
-      expect(find.text('Arrange the words to form a correct sentence:'), findsOneWidget);
+      expect(
+        find.text('Arrange the words to form a correct sentence:'),
+        findsOneWidget,
+      );
       expect(find.text('dog'), findsOneWidget);
     });
 
@@ -113,7 +114,6 @@ void main() {
     });
 
     testWidgets('shows correct answer when wrong', (tester) async {
-      
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

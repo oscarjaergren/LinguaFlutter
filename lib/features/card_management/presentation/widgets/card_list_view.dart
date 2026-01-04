@@ -12,24 +12,19 @@ import 'search_bar_widget.dart';
 class CardListView extends StatelessWidget {
   final CardListViewModel viewModel;
 
-  const CardListView({
-    super.key,
-    required this.viewModel,
-  });
+  const CardListView({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
     // Watch CardManagementProvider directly to ensure rebuild on changes
     final cardProvider = context.watch<CardManagementProvider>();
-    
+
     return Consumer<CardListViewModel>(
       builder: (context, vm, child) {
         // Use cardProvider.filteredCards to get fresh data
         final cards = cardProvider.filteredCards;
         if (cardProvider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (vm.errorMessage != null) {
@@ -154,7 +149,9 @@ class CardListView extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: viewModel.canStartReview
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -163,7 +160,8 @@ class CardListView extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context, CardListViewModel viewModel) {
-    final hasFilters = viewModel.selectedCategory.isNotEmpty ||
+    final hasFilters =
+        viewModel.selectedCategory.isNotEmpty ||
         viewModel.selectedTags.isNotEmpty ||
         viewModel.showOnlyDue ||
         viewModel.showOnlyFavorites ||
@@ -176,13 +174,17 @@ class CardListView extends StatelessWidget {
           Icon(
             hasFilters ? Icons.filter_list_off : Icons.library_books_outlined,
             size: 64,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
             hasFilters ? 'No cards match your filters' : 'No cards yet',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 8),
@@ -191,7 +193,9 @@ class CardListView extends StatelessWidget {
                 ? 'Try adjusting your search or filters'
                 : 'Create your first card to get started',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.4),
             ),
             textAlign: TextAlign.center,
           ),
@@ -207,7 +211,11 @@ class CardListView extends StatelessWidget {
     );
   }
 
-  Widget _buildCardListDirect(BuildContext context, CardListViewModel viewModel, List<CardModel> cards) {
+  Widget _buildCardListDirect(
+    BuildContext context,
+    CardListViewModel viewModel,
+    List<CardModel> cards,
+  ) {
     return ListView.builder(
       key: ValueKey(cards.length),
       padding: const EdgeInsets.all(16),
@@ -223,8 +231,9 @@ class CardListView extends StatelessWidget {
           onTap: () => _onCardTap(context, card),
           onEdit: () => _onCardEdit(context, card),
           onDelete: () => _onCardDelete(context, viewModel, card),
-          onDuplicateTap: duplicates.isNotEmpty 
-              ? () => _showDuplicatesDialog(context, card, duplicates, viewModel)
+          onDuplicateTap: duplicates.isNotEmpty
+              ? () =>
+                    _showDuplicatesDialog(context, card, duplicates, viewModel)
               : null,
         );
       },
@@ -254,7 +263,11 @@ class CardListView extends StatelessWidget {
     context.pushCardEdit(card.id);
   }
 
-  void _onCardDelete(BuildContext context, CardListViewModel viewModel, CardModel card) {
+  void _onCardDelete(
+    BuildContext context,
+    CardListViewModel viewModel,
+    CardModel card,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -279,10 +292,10 @@ class CardListView extends StatelessWidget {
       ),
     );
   }
-  
+
   void _showDuplicatesDialog(
-    BuildContext context, 
-    CardModel card, 
+    BuildContext context,
+    CardModel card,
     List<DuplicateMatch> duplicates,
     CardListViewModel viewModel,
   ) {
@@ -290,7 +303,8 @@ class CardListView extends StatelessWidget {
       context,
       card: card,
       duplicates: duplicates,
-      onDeleteCard: (cardToDelete) => _onCardDelete(context, viewModel, cardToDelete),
+      onDeleteCard: (cardToDelete) =>
+          _onCardDelete(context, viewModel, cardToDelete),
     );
   }
 }
@@ -332,18 +346,17 @@ class _AnimatedCardItemState extends State<_AnimatedCardItem>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0.3, 0),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
     _controller.forward();
   }
 
@@ -379,7 +392,9 @@ class _AnimatedCardItemState extends State<_AnimatedCardItem>
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text('Delete Card'),
-                content: Text('Are you sure you want to delete "${widget.card.frontText}"?'),
+                content: Text(
+                  'Are you sure you want to delete "${widget.card.frontText}"?',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
@@ -415,7 +430,8 @@ class _AnimatedCardItemState extends State<_AnimatedCardItem>
             onTap: widget.onTap,
             onEdit: widget.onEdit,
             onDelete: widget.onDelete,
-            onToggleFavorite: () => widget.viewModel.toggleCardFavorite(widget.card.id),
+            onToggleFavorite: () =>
+                widget.viewModel.toggleCardFavorite(widget.card.id),
             duplicates: widget.duplicates.isNotEmpty ? widget.duplicates : null,
             onDuplicateTap: widget.onDuplicateTap,
           ),

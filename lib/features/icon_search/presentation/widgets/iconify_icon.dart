@@ -20,7 +20,7 @@ class IconifyIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = color ?? Theme.of(context).iconTheme.color;
-    
+
     return SizedBox(
       width: size,
       height: size,
@@ -39,7 +39,7 @@ class IconifyIcon extends StatelessWidget {
       icon.svgUrl,
       width: size,
       height: size,
-      colorFilter: iconColor != null 
+      colorFilter: iconColor != null
           ? ColorFilter.mode(iconColor, BlendMode.srcIn)
           : null,
       semanticsLabel: semanticLabel ?? icon.name,
@@ -62,5 +62,4 @@ class IconifyIcon extends StatelessWidget {
       ),
     );
   }
-
 }

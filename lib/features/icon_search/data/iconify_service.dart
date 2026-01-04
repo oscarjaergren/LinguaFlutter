@@ -14,7 +14,9 @@ class IconifyService {
 
     try {
       final searchLimit = limit ?? AppConstants.defaultSearchLimit;
-      final uri = Uri.parse('${AppConstants.iconifyBaseUrl}/search?query=${Uri.encodeComponent(query)}&limit=$searchLimit');
+      final uri = Uri.parse(
+        '${AppConstants.iconifyBaseUrl}/search?query=${Uri.encodeComponent(query)}&limit=$searchLimit',
+      );
       final response = await _client.get(uri);
 
       if (response.statusCode == 200) {
@@ -24,22 +26,19 @@ class IconifyService {
 
         if (icons == null) return [];
 
-        return icons
-            .cast<String>()
-            .map((iconId) {
-              // Extract collection info if available
-              final parts = iconId.split(':');
-              final collectionId = parts.length > 1 ? parts[0] : null;
-              final collectionName = collectionId != null
-                  ? collections?[collectionId]?['name'] as String?
-                  : null;
+        return icons.cast<String>().map((iconId) {
+          // Extract collection info if available
+          final parts = iconId.split(':');
+          final collectionId = parts.length > 1 ? parts[0] : null;
+          final collectionName = collectionId != null
+              ? collections?[collectionId]?['name'] as String?
+              : null;
 
-              return IconModel.fromIconify(
-                iconId: iconId,
-                collectionName: collectionName,
-              );
-            })
-            .toList();
+          return IconModel.fromIconify(
+            iconId: iconId,
+            collectionName: collectionName,
+          );
+        }).toList();
       } else {
         throw Exception('Failed to search icons: ${response.statusCode}');
       }

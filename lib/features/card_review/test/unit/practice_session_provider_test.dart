@@ -158,7 +158,10 @@ void main() {
         provider.startSession();
 
         expect(provider.sessionDuration, isA<Duration>());
-        expect(provider.sessionDuration.inMilliseconds, greaterThanOrEqualTo(0));
+        expect(
+          provider.sessionDuration.inMilliseconds,
+          greaterThanOrEqualTo(0),
+        );
       });
     });
 
@@ -287,7 +290,9 @@ void main() {
           expect(provider.multipleChoiceOptions!.length, greaterThan(0));
           // Should contain the correct answer
           expect(
-            provider.multipleChoiceOptions!.contains(provider.currentCard!.backText),
+            provider.multipleChoiceOptions!.contains(
+              provider.currentCard!.backText,
+            ),
             true,
           );
         }
@@ -299,7 +304,8 @@ void main() {
         // Skip to a non-multiple-choice exercise
         while (provider.isSessionActive &&
             (provider.currentExerciseType == ExerciseType.multipleChoiceText ||
-                provider.currentExerciseType == ExerciseType.multipleChoiceIcon)) {
+                provider.currentExerciseType ==
+                    ExerciseType.multipleChoiceIcon)) {
           provider.skipExercise();
         }
 
@@ -407,9 +413,18 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      final item1 = PracticeItem(card: card, exerciseType: ExerciseType.readingRecognition);
-      final item2 = PracticeItem(card: card, exerciseType: ExerciseType.readingRecognition);
-      final item3 = PracticeItem(card: card, exerciseType: ExerciseType.writingTranslation);
+      final item1 = PracticeItem(
+        card: card,
+        exerciseType: ExerciseType.readingRecognition,
+      );
+      final item2 = PracticeItem(
+        card: card,
+        exerciseType: ExerciseType.readingRecognition,
+      );
+      final item3 = PracticeItem(
+        card: card,
+        exerciseType: ExerciseType.writingTranslation,
+      );
 
       expect(item1, equals(item2));
       expect(item1, isNot(equals(item3)));
@@ -426,8 +441,14 @@ void main() {
         updatedAt: DateTime.now(),
       );
 
-      final item1 = PracticeItem(card: card, exerciseType: ExerciseType.readingRecognition);
-      final item2 = PracticeItem(card: card, exerciseType: ExerciseType.readingRecognition);
+      final item1 = PracticeItem(
+        card: card,
+        exerciseType: ExerciseType.readingRecognition,
+      );
+      final item2 = PracticeItem(
+        card: card,
+        exerciseType: ExerciseType.readingRecognition,
+      );
 
       expect(item1.hashCode, equals(item2.hashCode));
     });

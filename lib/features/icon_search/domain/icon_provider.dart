@@ -6,27 +6,27 @@ import '../data/iconify_service.dart';
 /// Provider for managing icon search state and selected icons
 class IconProvider extends ChangeNotifier {
   final IconifyService _iconifyService;
-  
+
   /// Create an IconProvider with optional service injection for testing.
-  IconProvider({IconifyService? iconifyService}) 
-      : _iconifyService = iconifyService ?? IconifyService();
-  
+  IconProvider({IconifyService? iconifyService})
+    : _iconifyService = iconifyService ?? IconifyService();
+
   // Search state
   List<IconModel> _searchResults = [];
   bool _isLoading = false;
   String _searchQuery = '';
   String? _errorMessage;
-  
+
   // Selected icon state
   IconModel? _selectedIcon;
-  
+
   // Getters
   List<IconModel> get searchResults => _searchResults;
   bool get isLoading => _isLoading;
   String get searchQuery => _searchQuery;
   String? get errorMessage => _errorMessage;
   IconModel? get selectedIcon => _selectedIcon;
-  
+
   /// Search for icons based on query
   Future<void> searchIcons(String query) async {
     if (query.trim().isEmpty) {
@@ -36,12 +36,12 @@ class IconProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    
+
     _isLoading = true;
     _searchQuery = query;
     _errorMessage = null;
     notifyListeners();
-    
+
     try {
       final results = await _iconifyService.searchIcons(query);
       _searchResults = results;
@@ -55,19 +55,19 @@ class IconProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   /// Select an icon for use in cards
   void selectIcon(IconModel icon) {
     _selectedIcon = icon;
     notifyListeners();
   }
-  
+
   /// Clear the selected icon
   void clearSelection() {
     _selectedIcon = null;
     notifyListeners();
   }
-  
+
   /// Clear search results and reset state
   void clearSearch() {
     _searchResults = [];
@@ -76,23 +76,23 @@ class IconProvider extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
-  
+
   /// Get popular icon collections for initial display
   Future<void> loadPopularCollections() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-    
+
     try {
       // Load some popular icons from common collections
       final popularSearches = ['home', 'user', 'heart', 'star', 'check'];
       final results = <IconModel>[];
-      
+
       for (final search in popularSearches) {
         final icons = await _iconifyService.searchIcons(search, limit: 4);
         results.addAll(icons);
       }
-      
+
       _searchResults = results;
       _searchQuery = 'Popular Icons';
       _errorMessage = null;

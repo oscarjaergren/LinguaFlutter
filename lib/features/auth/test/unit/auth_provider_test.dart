@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Tests for AuthProvider error parsing logic
-/// 
+///
 /// These tests verify that authentication errors are properly parsed
 /// into user-friendly messages. The actual AuthProvider requires
 /// Supabase initialization, so we test the parsing logic separately.
@@ -27,9 +27,7 @@ void main() {
       });
 
       test('should parse invalid email error', () {
-        final message = _parseAuthError(
-          AuthException('Invalid email format'),
-        );
+        final message = _parseAuthError(AuthException('Invalid email format'));
 
         expect(message, contains('valid email'));
       });
@@ -43,17 +41,13 @@ void main() {
       });
 
       test('should parse generic password error', () {
-        final message = _parseAuthError(
-          AuthException('password too short'),
-        );
+        final message = _parseAuthError(AuthException('password too short'));
 
         expect(message, contains('6 characters'));
       });
 
       test('should parse rate limit error', () {
-        final message = _parseAuthError(
-          AuthException('Rate limit exceeded'),
-        );
+        final message = _parseAuthError(AuthException('Rate limit exceeded'));
 
         expect(message, contains('Too many attempts'));
       });
@@ -68,16 +62,16 @@ void main() {
 
       test('should parse JSON error with message field', () {
         final message = _parseAuthError(
-          AuthException('{"code": "error", "message": "Database error occurred"}'),
+          AuthException(
+            '{"code": "error", "message": "Database error occurred"}',
+          ),
         );
 
         expect(message, contains('Server configuration error'));
       });
 
       test('should return original message for unknown errors', () {
-        final message = _parseAuthError(
-          AuthException('Some specific error'),
-        );
+        final message = _parseAuthError(AuthException('Some specific error'));
 
         expect(message, 'Some specific error');
       });
@@ -206,7 +200,7 @@ void main() {
 /// Simulates the _parseAuthError method from AuthProvider
 String _parseAuthError(AuthException e) {
   final message = e.message.toLowerCase();
-  
+
   // Parse JSON error if present
   if (e.message.contains('"code"')) {
     final jsonMessagePattern = RegExp(r'"message"\s*:\s*"([^"]+)"');
@@ -219,8 +213,8 @@ String _parseAuthError(AuthException e) {
       return errorMsg;
     }
   }
-  
-  if (message.contains('email already registered') || 
+
+  if (message.contains('email already registered') ||
       message.contains('user already registered')) {
     return 'This email is already registered. Try signing in instead.';
   }
@@ -236,14 +230,14 @@ String _parseAuthError(AuthException e) {
   if (message.contains('database error')) {
     return 'Server error. Please try again later.';
   }
-  
+
   return e.message;
 }
 
 /// Simulates the _parseGenericError method from AuthProvider
 String _parseGenericError(dynamic e) {
   final errorStr = e.toString().toLowerCase();
-  
+
   if (errorStr.contains('network') || errorStr.contains('connection')) {
     return 'Network error. Please check your internet connection.';
   }
@@ -253,7 +247,7 @@ String _parseGenericError(dynamic e) {
   if (errorStr.contains('database error')) {
     return 'Server configuration error. Please try again later.';
   }
-  
+
   return 'An unexpected error occurred. Please try again.';
 }
 

@@ -139,7 +139,9 @@ void main() {
 
       test('should catch exceptions during transformation', () {
         final result = Result.success(0);
-        final mapped = result.map<int>((data) => throw Exception('Transform error'));
+        final mapped = result.map<int>(
+          (data) => throw Exception('Transform error'),
+        );
 
         expect(mapped.isFailure, true);
         expect(mapped.error, contains('Transform error'));

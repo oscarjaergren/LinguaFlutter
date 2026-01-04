@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 /// Service for managing Supabase authentication
-/// 
+///
 /// Handles initialization, sign in, sign up, sign out, and session management.
 class SupabaseAuthService {
   static SupabaseClient? _client;
@@ -16,7 +16,7 @@ class SupabaseAuthService {
 
     try {
       await dotenv.load(fileName: '.env');
-      
+
       final url = dotenv.env['SUPABASE_URL'];
       final anonKey = dotenv.env['SUPABASE_ANON_KEY'];
 
@@ -36,11 +36,13 @@ class SupabaseAuthService {
 
       _client = Supabase.instance.client;
       _initialized = true;
-      
+
       // Log current auth state
       final user = _client!.auth.currentUser;
       if (user != null) {
-        LoggerService.info('✅ Supabase initialized - User logged in: ${user.email}');
+        LoggerService.info(
+          '✅ Supabase initialized - User logged in: ${user.email}',
+        );
       } else {
         LoggerService.info('✅ Supabase initialized - No user session');
       }
@@ -53,7 +55,9 @@ class SupabaseAuthService {
   /// Get the Supabase client instance
   static SupabaseClient get client {
     if (!_initialized || _client == null) {
-      throw Exception('Supabase not initialized. Call SupabaseAuthService.initialize() first.');
+      throw Exception(
+        'Supabase not initialized. Call SupabaseAuthService.initialize() first.',
+      );
     }
     return _client!;
   }
@@ -115,5 +119,6 @@ class SupabaseAuthService {
   }
 
   /// Listen to auth state changes
-  static Stream<AuthState> get authStateChanges => client.auth.onAuthStateChange;
+  static Stream<AuthState> get authStateChanges =>
+      client.auth.onAuthStateChange;
 }

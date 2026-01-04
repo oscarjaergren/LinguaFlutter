@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 /// Provider for managing available languages and current selection
 class LanguageProvider extends ChangeNotifier {
-  
   // Available languages with their details
   final Map<String, Map<String, dynamic>> _availableLanguages = {
     'de': {
@@ -63,19 +62,20 @@ class LanguageProvider extends ChangeNotifier {
       'hasArticles': false,
     },
   };
-  
+
   // Currently active language for both filtering cards and creating new cards
   String _activeLanguage = 'de';
-  
+
   // Getters
   String get activeLanguage => _activeLanguage;
-  Map<String, Map<String, dynamic>> get availableLanguages => _availableLanguages;
-  
+  Map<String, Map<String, dynamic>> get availableLanguages =>
+      _availableLanguages;
+
   /// Get language details by code
   Map<String, dynamic>? getLanguageDetails(String languageCode) {
     return _availableLanguages[languageCode];
   }
-  
+
   /// Set the active language for filtering/viewing cards and creating new cards
   void setActiveLanguage(String languageCode) {
     if (_availableLanguages.containsKey(languageCode)) {
@@ -83,7 +83,7 @@ class LanguageProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
-  
+
   /// Get the color for a language
   Color getLanguageColor(String languageCode) {
     final details = _availableLanguages[languageCode];
@@ -92,13 +92,13 @@ class LanguageProvider extends ChangeNotifier {
     }
     return const Color(0xFF2196F3); // Default blue
   }
-  
+
   /// Check if a language has articles (like German)
   bool languageHasArticles(String languageCode) {
     final details = _availableLanguages[languageCode];
     return details?['hasArticles'] ?? false;
   }
-  
+
   /// Get articles for a language (if it has them)
   List<String> getLanguageArticles(String languageCode) {
     final details = _availableLanguages[languageCode];

@@ -14,11 +14,8 @@ import '../../domain/providers/card_enrichment_provider.dart';
 /// Screen for creating and editing language learning cards with full model support
 class CreationCreationScreen extends StatefulWidget {
   final CardModel? cardToEdit;
-  
-  const CreationCreationScreen({
-    super.key,
-    this.cardToEdit,
-  });
+
+  const CreationCreationScreen({super.key, this.cardToEdit});
 
   @override
   State<CreationCreationScreen> createState() => _CreationCreationScreenState();
@@ -26,32 +23,32 @@ class CreationCreationScreen extends StatefulWidget {
 
 class _CreationCreationScreenState extends State<CreationCreationScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Basic text controllers
   final _frontTextController = TextEditingController();
   final _backTextController = TextEditingController();
   final _categoryController = TextEditingController();
   final _tagsController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   // Verb-specific controllers
   final _presentDuController = TextEditingController();
   final _presentErController = TextEditingController();
   final _pastSimpleController = TextEditingController();
   final _pastParticipleController = TextEditingController();
   final _separablePrefixController = TextEditingController();
-  
+
   // Noun-specific controllers
   final _pluralController = TextEditingController();
   final _genitiveController = TextEditingController();
-  
+
   // Adjective-specific controllers
   final _comparativeController = TextEditingController();
   final _superlativeController = TextEditingController();
-  
+
   // Adverb-specific controllers
   final _usageNoteController = TextEditingController();
-  
+
   // State
   IconModel? _selectedIcon;
   bool _isLoading = false;
@@ -59,12 +56,12 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   WordType _selectedWordType = WordType.other;
   List<String> _examples = [];
   final _exampleController = TextEditingController();
-  
+
   // Verb state
   bool _isRegularVerb = true;
   bool _isSeparableVerb = false;
   String _auxiliaryVerb = 'haben';
-  
+
   // Noun state
   String? _nounGender;
 
@@ -86,12 +83,12 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       _selectedIcon = card.icon;
       _notesController.text = card.notes ?? '';
       _examples = List.from(card.examples);
-      
+
       // Initialize word data
       if (card.wordData != null) {
         _initializeWordData(card.wordData!);
       }
-      
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.read<LanguageProvider>().setActiveLanguage(card.language);
       });
@@ -152,47 +149,47 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
         return WordData.verb(
           isRegular: _isRegularVerb,
           isSeparable: _isSeparableVerb,
-          separablePrefix: _separablePrefixController.text.trim().isNotEmpty 
-              ? _separablePrefixController.text.trim() 
+          separablePrefix: _separablePrefixController.text.trim().isNotEmpty
+              ? _separablePrefixController.text.trim()
               : null,
           auxiliary: _auxiliaryVerb,
-          presentDu: _presentDuController.text.trim().isNotEmpty 
-              ? _presentDuController.text.trim() 
+          presentDu: _presentDuController.text.trim().isNotEmpty
+              ? _presentDuController.text.trim()
               : null,
-          presentEr: _presentErController.text.trim().isNotEmpty 
-              ? _presentErController.text.trim() 
+          presentEr: _presentErController.text.trim().isNotEmpty
+              ? _presentErController.text.trim()
               : null,
-          pastSimple: _pastSimpleController.text.trim().isNotEmpty 
-              ? _pastSimpleController.text.trim() 
+          pastSimple: _pastSimpleController.text.trim().isNotEmpty
+              ? _pastSimpleController.text.trim()
               : null,
-          pastParticiple: _pastParticipleController.text.trim().isNotEmpty 
-              ? _pastParticipleController.text.trim() 
+          pastParticiple: _pastParticipleController.text.trim().isNotEmpty
+              ? _pastParticipleController.text.trim()
               : null,
         );
       case WordType.noun:
         if (_nounGender == null) return null;
         return WordData.noun(
           gender: _nounGender!,
-          plural: _pluralController.text.trim().isNotEmpty 
-              ? _pluralController.text.trim() 
+          plural: _pluralController.text.trim().isNotEmpty
+              ? _pluralController.text.trim()
               : null,
-          genitive: _genitiveController.text.trim().isNotEmpty 
-              ? _genitiveController.text.trim() 
+          genitive: _genitiveController.text.trim().isNotEmpty
+              ? _genitiveController.text.trim()
               : null,
         );
       case WordType.adjective:
         return WordData.adjective(
-          comparative: _comparativeController.text.trim().isNotEmpty 
-              ? _comparativeController.text.trim() 
+          comparative: _comparativeController.text.trim().isNotEmpty
+              ? _comparativeController.text.trim()
               : null,
-          superlative: _superlativeController.text.trim().isNotEmpty 
-              ? _superlativeController.text.trim() 
+          superlative: _superlativeController.text.trim().isNotEmpty
+              ? _superlativeController.text.trim()
               : null,
         );
       case WordType.adverb:
         return WordData.adverb(
-          usageNote: _usageNoteController.text.trim().isNotEmpty 
-              ? _usageNoteController.text.trim() 
+          usageNote: _usageNoteController.text.trim().isNotEmpty
+              ? _usageNoteController.text.trim()
               : null,
         );
       case WordType.phrase:
@@ -205,16 +202,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     context.read<IconProvider>().clearSelection();
     // Use English translation (back) for icon search since Iconify uses English keywords
     final searchQuery = _getIconSearchQuery();
-    
+
     final selectedIcon = await Navigator.push<IconModel>(
       context,
       MaterialPageRoute(
-        builder: (context) => IconSearchScreen(
-          initialSearchQuery: searchQuery,
-        ),
+        builder: (context) => IconSearchScreen(initialSearchQuery: searchQuery),
       ),
     );
-    
+
     if (selectedIcon != null) {
       setState(() => _selectedIcon = selectedIcon);
     }
@@ -228,13 +223,13 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       final keyword = _extractFirstKeyword(backText);
       return keyword != null ? _stripArticles(keyword) : null;
     }
-    
+
     final frontText = _frontTextController.text.trim();
     if (frontText.isNotEmpty) {
       final keyword = _extractFirstKeyword(frontText);
       return keyword != null ? _stripArticles(keyword) : null;
     }
-    
+
     return null;
   }
 
@@ -249,18 +244,20 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     return words.first.trim();
   }
 
-  // This is a really dumb way of doing this. 
+  // This is a really dumb way of doing this.
   /// Strips common article prefixes from search terms
   String _stripArticles(String text) {
     // German articles
-    const articles = ['der ', 'die ', 'das ', 'ein ', 'eine ', 'einen ', 'einem ', 'einer ',
+    const articles = [
+      'der ', 'die ', 'das ', 'ein ', 'eine ', 'einen ', 'einem ', 'einer ',
       // Spanish articles
       'el ', 'la ', 'los ', 'las ', 'un ', 'una ', 'unos ', 'unas ',
-      // French articles  
+      // French articles
       'le ', 'la ', 'les ', 'un ', 'une ', 'des ',
       // English articles
-      'the ', 'a ', 'an '];
-    
+      'the ', 'a ', 'an ',
+    ];
+
     var result = text.toLowerCase();
     for (final article in articles) {
       if (result.startsWith(article)) {
@@ -316,28 +313,28 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
         setState(() {
           // Set word type
           _selectedWordType = result.wordType;
-          
+
           // Set translation from AI result (override existing)
           if (result.translation != null) {
             _backTextController.text = result.translation!;
           }
-          
+
           // Set word-specific data
           if (result.wordData != null) {
             _applyWordData(result.wordData!);
           }
-          
+
           // Add examples
           if (result.examples.isNotEmpty) {
             _examples = List.from(result.examples);
           }
-          
+
           // Set notes
           if (result.notes != null && _notesController.text.isEmpty) {
             _notesController.text = result.notes!;
           }
         });
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -387,7 +384,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     final aiProvider = context.read<CardEnrichmentProvider>();
     var selectedProvider = AiProvider.gemini; // Default to Gemini (free tier)
     var selectedModel = selectedProvider.defaultModel;
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -410,10 +407,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                     labelText: 'Provider',
                     border: OutlineInputBorder(),
                   ),
-                  items: AiProvider.values.map((p) => DropdownMenuItem(
-                    value: p,
-                    child: Text(p.displayName),
-                  )).toList(),
+                  items: AiProvider.values
+                      .map(
+                        (p) => DropdownMenuItem(
+                          value: p,
+                          child: Text(p.displayName),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (value) {
                     if (value != null) {
                       setDialogState(() {
@@ -430,10 +431,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                     labelText: 'Model',
                     border: OutlineInputBorder(),
                   ),
-                  items: selectedProvider.availableModels.map((m) => DropdownMenuItem(
-                    value: m,
-                    child: Text(m, style: const TextStyle(fontSize: 13)),
-                  )).toList(),
+                  items: selectedProvider.availableModels
+                      .map(
+                        (m) => DropdownMenuItem(
+                          value: m,
+                          child: Text(m, style: const TextStyle(fontSize: 13)),
+                        ),
+                      )
+                      .toList(),
                   onChanged: (value) {
                     if (value != null) {
                       setDialogState(() => selectedModel = value);
@@ -445,8 +450,8 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                   controller: keyController,
                   decoration: InputDecoration(
                     labelText: 'API Key',
-                    hintText: selectedProvider == AiProvider.gemini 
-                        ? 'AIza...' 
+                    hintText: selectedProvider == AiProvider.gemini
+                        ? 'AIza...'
                         : 'sk-...',
                     border: const OutlineInputBorder(),
                   ),
@@ -482,22 +487,22 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
 
   Future<void> _saveCard() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final cardManagement = context.read<CardManagementProvider>();
       final languageProvider = context.read<LanguageProvider>();
       final activeLanguage = languageProvider.activeLanguage;
-      
+
       final tags = _tagsController.text
           .split(',')
           .map((tag) => tag.trim())
           .where((tag) => tag.isNotEmpty)
           .toList();
-      
+
       final wordData = _buildWordData();
-      
+
       if (_isEditing) {
         final updatedCard = widget.cardToEdit!.copyWith(
           frontText: _frontTextController.text.trim(),
@@ -508,36 +513,39 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           tags: tags,
           wordData: wordData,
           examples: _examples,
-          notes: _notesController.text.trim().isNotEmpty 
-              ? _notesController.text.trim() 
+          notes: _notesController.text.trim().isNotEmpty
+              ? _notesController.text.trim()
               : null,
           updatedAt: DateTime.now(),
         );
         await cardManagement.saveCard(updatedCard);
-        
+
         // Update the card in the practice session if one is active
         if (mounted) {
-          context.read<PracticeSessionProvider>().updateCardInQueue(updatedCard);
+          context.read<PracticeSessionProvider>().updateCardInQueue(
+            updatedCard,
+          );
         }
       } else {
-        final newCard = CardModel.create(
-          frontText: _frontTextController.text.trim(),
-          backText: _backTextController.text.trim(),
-          icon: _selectedIcon,
-          language: activeLanguage,
-          category: _categoryController.text.trim(),
-          tags: tags,
-        ).copyWith(
-          wordData: wordData,
-          examples: _examples,
-          notes: _notesController.text.trim().isNotEmpty 
-              ? _notesController.text.trim() 
-              : null,
-        );
-        
+        final newCard =
+            CardModel.create(
+              frontText: _frontTextController.text.trim(),
+              backText: _backTextController.text.trim(),
+              icon: _selectedIcon,
+              language: activeLanguage,
+              category: _categoryController.text.trim(),
+              tags: tags,
+            ).copyWith(
+              wordData: wordData,
+              examples: _examples,
+              notes: _notesController.text.trim().isNotEmpty
+                  ? _notesController.text.trim()
+                  : null,
+            );
+
         await cardManagement.saveCard(newCard);
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -583,13 +591,13 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     if (confirmed == true && mounted) {
       try {
         final cardId = widget.cardToEdit!.id;
-        
+
         // Remove from practice session first (if active)
         context.read<PracticeSessionProvider>().removeCardFromQueue(cardId);
-        
+
         // Then delete from storage
         await context.read<CardManagementProvider>().deleteCard(cardId);
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -602,7 +610,10 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting card: $e'), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text('Error deleting card: $e'),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       }
@@ -647,13 +658,17 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
             // Language indicator
             _buildLanguageCard(context),
             const SizedBox(height: 16),
-            
+
             // Basic info section
-            _buildSectionHeader(context, 'Basic Information', Icons.info_outline),
+            _buildSectionHeader(
+              context,
+              'Basic Information',
+              Icons.info_outline,
+            ),
             const SizedBox(height: 8),
             _buildBasicInfoSection(context),
             const SizedBox(height: 24),
-            
+
             // Word type and grammar section
             _buildSectionHeader(context, 'Word Type & Grammar', Icons.school),
             const SizedBox(height: 8),
@@ -661,30 +676,30 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
             const SizedBox(height: 12),
             _buildGrammarSection(context),
             const SizedBox(height: 24),
-            
+
             // Examples section
             _buildSectionHeader(context, 'Examples', Icons.format_quote),
             const SizedBox(height: 8),
             _buildExamplesSection(context),
             const SizedBox(height: 24),
-            
+
             // Organization section
             _buildSectionHeader(context, 'Organization', Icons.folder_outlined),
             const SizedBox(height: 8),
             _buildOrganizationSection(context),
             const SizedBox(height: 24),
-            
+
             // Notes section
             _buildSectionHeader(context, 'Notes', Icons.notes),
             const SizedBox(height: 8),
             _buildNotesSection(context),
-            
+
             // Exercise mastery section (only when editing)
-            if (_isEditing) ...[  
+            if (_isEditing) ...[
               const SizedBox(height: 24),
               ExerciseMasteryWidget(card: widget.cardToEdit!),
             ],
-            
+
             const SizedBox(height: 32),
           ],
         ),
@@ -692,7 +707,11 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon,
+  ) {
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -713,11 +732,13 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         final activeLanguage = languageProvider.activeLanguage;
-        final languageDetails = languageProvider.getLanguageDetails(activeLanguage);
+        final languageDetails = languageProvider.getLanguageDetails(
+          activeLanguage,
+        );
         if (languageDetails == null) return const SizedBox.shrink();
-        
+
         final color = languageProvider.getLanguageColor(activeLanguage);
-        
+
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -727,7 +748,10 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           ),
           child: Row(
             children: [
-              Text(languageDetails['flag'] ?? '', style: const TextStyle(fontSize: 24)),
+              Text(
+                languageDetails['flag'] ?? '',
+                style: const TextStyle(fontSize: 24),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -738,7 +762,11 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                   ),
                 ),
               ),
-              Icon(Icons.lock_outline, size: 16, color: color.withValues(alpha: 0.6)),
+              Icon(
+                Icons.lock_outline,
+                size: 16,
+                color: color.withValues(alpha: 0.6),
+              ),
             ],
           ),
         );
@@ -769,8 +797,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_selectedIcon!.name, style: Theme.of(context).textTheme.titleSmall),
-                        Text('From ${_selectedIcon!.set}', style: Theme.of(context).textTheme.bodySmall),
+                        Text(
+                          _selectedIcon!.name,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        Text(
+                          'From ${_selectedIcon!.set}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                       ],
                     ),
                   ),
@@ -790,7 +824,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Front text with Auto button
             Consumer<LanguageProvider>(
               builder: (context, lp, _) {
@@ -802,13 +836,15 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                       child: TextFormField(
                         controller: _frontTextController,
                         decoration: InputDecoration(
-                          labelText: 'Word/Phrase (${details?['name'] ?? 'Target'})',
+                          labelText:
+                              'Word/Phrase (${details?['name'] ?? 'Target'})',
                           hintText: 'Enter the word or phrase to learn',
                           border: const OutlineInputBorder(),
                           prefixIcon: const Icon(Icons.translate),
                         ),
                         textInputAction: TextInputAction.next,
-                        validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
+                        validator: (v) =>
+                            v?.trim().isEmpty ?? true ? 'Required' : null,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -822,7 +858,9 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                                 child: SizedBox(
                                   width: 24,
                                   height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               ),
                             )
@@ -837,7 +875,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             // Back text
             TextFormField(
               controller: _backTextController,
@@ -936,7 +974,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Auxiliary selector
             Row(
               children: [
@@ -955,7 +993,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                 ),
               ],
             ),
-            
+
             if (_isSeparableVerb) ...[
               const SizedBox(height: 12),
               TextFormField(
@@ -968,7 +1006,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                 ),
               ),
             ],
-            
+
             if (!_isRegularVerb) ...[
               const SizedBox(height: 16),
               Text('Irregular Forms', style: theme.textTheme.titleSmall),
@@ -1039,15 +1077,20 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, _) {
         final isGerman = languageProvider.activeLanguage == 'de';
-        final articles = isGerman ? ['der', 'die', 'das'] : ['masculine', 'feminine', 'neuter'];
-        
+        final articles = isGerman
+            ? ['der', 'die', 'das']
+            : ['masculine', 'feminine', 'neuter'];
+
         return Card(
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Gender/Article', style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  'Gender/Article',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -1055,8 +1098,11 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                     return ChoiceChip(
                       label: Text(article),
                       selected: _nounGender == article,
-                      onSelected: (v) => setState(() => _nounGender = v ? article : null),
-                      selectedColor: _getGenderColor(article).withValues(alpha: 0.3),
+                      onSelected: (v) =>
+                          setState(() => _nounGender = v ? article : null),
+                      selectedColor: _getGenderColor(
+                        article,
+                      ).withValues(alpha: 0.3),
                     );
                   }).toList(),
                 ),
@@ -1112,7 +1158,10 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Comparison Forms', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              'Comparison Forms',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -1203,7 +1252,11 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.format_quote, size: 16, color: theme.colorScheme.primary),
+                      Icon(
+                        Icons.format_quote,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(

@@ -45,7 +45,9 @@ class ThemeProvider with ChangeNotifier {
         break;
       case ThemeMode.system:
         await _prefs.remove(_themeModeKey);
-        LoggerService.debug('ThemeProvider: removed theme from storage (system)');
+        LoggerService.debug(
+          'ThemeProvider: removed theme from storage (system)',
+        );
         break;
     }
   }
@@ -54,15 +56,17 @@ class ThemeProvider with ChangeNotifier {
   /// Pass the current visual brightness to handle ThemeMode.system correctly
   Future<void> toggleTheme({Brightness? currentBrightness}) async {
     final ThemeMode newMode;
-    
+
     if (_themeMode == ThemeMode.system && currentBrightness != null) {
       // When in system mode, toggle based on what's actually displayed
-      newMode = currentBrightness == Brightness.dark ? ThemeMode.light : ThemeMode.dark;
+      newMode = currentBrightness == Brightness.dark
+          ? ThemeMode.light
+          : ThemeMode.dark;
     } else {
       // Otherwise toggle based on stored mode
       newMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     }
-    
+
     await setThemeMode(newMode);
   }
 

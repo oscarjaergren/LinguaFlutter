@@ -208,11 +208,15 @@ void main() {
 
         expect(updated.lastPracticed, isNotNull);
         expect(
-          updated.lastPracticed!.isAfter(before.subtract(const Duration(seconds: 1))),
+          updated.lastPracticed!.isAfter(
+            before.subtract(const Duration(seconds: 1)),
+          ),
           true,
         );
         expect(
-          updated.lastPracticed!.isBefore(after.add(const Duration(seconds: 1))),
+          updated.lastPracticed!.isBefore(
+            after.add(const Duration(seconds: 1)),
+          ),
           true,
         );
       });
@@ -227,14 +231,17 @@ void main() {
 
       test('should increase interval with more correct answers', () {
         var score = ExerciseScore.initial(ExerciseType.readingRecognition);
-        
+
         final first = score.recordCorrect();
         final firstInterval = first.nextReview!.difference(DateTime.now());
-        
+
         final second = first.recordCorrect();
         final secondInterval = second.nextReview!.difference(DateTime.now());
 
-        expect(secondInterval.inDays, greaterThanOrEqualTo(firstInterval.inDays));
+        expect(
+          secondInterval.inDays,
+          greaterThanOrEqualTo(firstInterval.inDays),
+        );
       });
     });
 
@@ -255,11 +262,15 @@ void main() {
 
         expect(updated.lastPracticed, isNotNull);
         expect(
-          updated.lastPracticed!.isAfter(before.subtract(const Duration(seconds: 1))),
+          updated.lastPracticed!.isAfter(
+            before.subtract(const Duration(seconds: 1)),
+          ),
           true,
         );
         expect(
-          updated.lastPracticed!.isBefore(after.add(const Duration(seconds: 1))),
+          updated.lastPracticed!.isBefore(
+            after.add(const Duration(seconds: 1)),
+          ),
           true,
         );
       });
@@ -269,7 +280,9 @@ void main() {
         final updated = score.recordIncorrect();
 
         expect(updated.nextReview, isNotNull);
-        final daysDifference = updated.nextReview!.difference(DateTime.now()).inDays;
+        final daysDifference = updated.nextReview!
+            .difference(DateTime.now())
+            .inDays;
         expect(daysDifference, 1);
       });
     });
@@ -282,10 +295,7 @@ void main() {
           incorrectCount: 2,
         );
 
-        final copied = original.copyWith(
-          correctCount: 10,
-          incorrectCount: 3,
-        );
+        final copied = original.copyWith(correctCount: 10, incorrectCount: 3);
 
         expect(copied.type, ExerciseType.readingRecognition);
         expect(copied.correctCount, 10);

@@ -17,7 +17,8 @@ void main() {
 
     setUp(() {
       // Set up fake SharedPreferencesAsync platform
-      SharedPreferencesAsyncPlatform.instance = InMemorySharedPreferencesAsync.empty();
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.empty();
       provider = ThemeProvider();
     });
 
@@ -129,30 +130,39 @@ void main() {
         expect(provider.themeMode, ThemeMode.dark);
       });
 
-      test('should toggle from system to dark when current brightness is light', () async {
-        await provider.setThemeMode(ThemeMode.system);
+      test(
+        'should toggle from system to dark when current brightness is light',
+        () async {
+          await provider.setThemeMode(ThemeMode.system);
 
-        await provider.toggleTheme(currentBrightness: Brightness.light);
+          await provider.toggleTheme(currentBrightness: Brightness.light);
 
-        expect(provider.themeMode, ThemeMode.dark);
-      });
+          expect(provider.themeMode, ThemeMode.dark);
+        },
+      );
 
-      test('should toggle from system to light when current brightness is dark', () async {
-        await provider.setThemeMode(ThemeMode.system);
+      test(
+        'should toggle from system to light when current brightness is dark',
+        () async {
+          await provider.setThemeMode(ThemeMode.system);
 
-        await provider.toggleTheme(currentBrightness: Brightness.dark);
+          await provider.toggleTheme(currentBrightness: Brightness.dark);
 
-        expect(provider.themeMode, ThemeMode.light);
-      });
+          expect(provider.themeMode, ThemeMode.light);
+        },
+      );
 
-      test('should toggle from system to light when no brightness provided', () async {
-        await provider.setThemeMode(ThemeMode.system);
+      test(
+        'should toggle from system to light when no brightness provided',
+        () async {
+          await provider.setThemeMode(ThemeMode.system);
 
-        await provider.toggleTheme();
+          await provider.toggleTheme();
 
-        // Without currentBrightness, system mode is treated as light
-        expect(provider.themeMode, ThemeMode.dark);
-      });
+          // Without currentBrightness, system mode is treated as light
+          expect(provider.themeMode, ThemeMode.dark);
+        },
+      );
 
       test('should notify listeners on toggle', () async {
         var notified = false;
@@ -172,13 +182,16 @@ void main() {
         provider.dispose();
 
         // After dispose, we shouldn't be able to notify
-        expect(() async => await provider.setThemeMode(ThemeMode.dark), throwsA(anything));
+        expect(
+          () async => await provider.setThemeMode(ThemeMode.dark),
+          throwsA(anything),
+        );
       });
 
       test('should allow removing listeners', () async {
         var notificationCount = 0;
         void listener() => notificationCount++;
-        
+
         provider.addListener(listener);
         await provider.setThemeMode(ThemeMode.dark);
         expect(notificationCount, 1);

@@ -34,7 +34,7 @@ class IconModel {
     final parts = iconId.split(':');
     final set = parts.length > 1 ? parts[0] : 'unknown';
     final name = parts.length > 1 ? parts[1] : iconId;
-    
+
     return IconModel(
       id: iconId,
       name: name.replaceAll('-', ' ').replaceAll('_', ' '),

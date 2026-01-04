@@ -30,7 +30,7 @@ class IconDisplayWidget extends StatelessWidget {
         iconPath!,
         width: size,
         height: size,
-        colorFilter: color != null 
+        colorFilter: color != null
             ? ColorFilter.mode(color!, BlendMode.srcIn)
             : null,
         placeholderBuilder: (context) => Icon(
@@ -61,7 +61,7 @@ class IconDisplayWidget extends StatelessWidget {
             strokeWidth: 2,
             value: loadingProgress.expectedTotalBytes != null
                 ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
+                      loadingProgress.expectedTotalBytes!
                 : null,
           ),
         );

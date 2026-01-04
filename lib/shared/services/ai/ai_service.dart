@@ -9,11 +9,13 @@ class AiService {
     required AiConfig config,
   }) async {
     if (!config.isConfigured) {
-      throw AiServiceException('AI is not configured. Please add your API key.');
+      throw AiServiceException(
+        'AI is not configured. Please add your API key.',
+      );
     }
 
     final client = AiProviderFactory.getClient(config.provider);
-    
+
     return client.complete(
       prompt: prompt,
       apiKey: config.apiKey!,

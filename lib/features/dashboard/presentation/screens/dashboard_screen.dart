@@ -33,9 +33,12 @@ class DashboardScreen extends StatelessWidget {
               final brightness = Theme.of(context).brightness;
               final isVisuallyDark = brightness == Brightness.dark;
               return IconButton(
-                onPressed: () => themeProvider.toggleTheme(currentBrightness: brightness),
+                onPressed: () =>
+                    themeProvider.toggleTheme(currentBrightness: brightness),
                 icon: Icon(isVisuallyDark ? Icons.light_mode : Icons.dark_mode),
-                tooltip: isVisuallyDark ? 'Switch to light mode' : 'Switch to dark mode',
+                tooltip: isVisuallyDark
+                    ? 'Switch to light mode'
+                    : 'Switch to dark mode',
               );
             },
           ),
@@ -93,11 +96,19 @@ class DashboardScreen extends StatelessWidget {
       ),
       body: Consumer<CardManagementProvider>(
         builder: (context, cardManagement, child) {
-          final dueCount = cardManagement.filteredCards.where((c) => !c.isArchived && c.isDue).length;
-          final learningCount = cardManagement.filteredCards.where((c) => !c.isArchived && !c.isDue && c.reviewCount > 0).length;
-          final masteredCount = cardManagement.filteredCards.where((c) => !c.isArchived && c.masteryLevel == 'Mastered').length;
-          final totalCards = cardManagement.filteredCards.where((c) => !c.isArchived).length;
-          
+          final dueCount = cardManagement.filteredCards
+              .where((c) => !c.isArchived && c.isDue)
+              .length;
+          final learningCount = cardManagement.filteredCards
+              .where((c) => !c.isArchived && !c.isDue && c.reviewCount > 0)
+              .length;
+          final masteredCount = cardManagement.filteredCards
+              .where((c) => !c.isArchived && c.masteryLevel == 'Mastered')
+              .length;
+          final totalCards = cardManagement.filteredCards
+              .where((c) => !c.isArchived)
+              .length;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -133,9 +144,9 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Mascot with speech bubble
                 Consumer2<MascotProvider, StreakProvider>(
                   builder: (context, mascotProvider, streakProvider, child) {
@@ -148,39 +159,42 @@ class DashboardScreen extends StatelessWidget {
                         hasStudiedToday: streakProvider.cardsReviewedToday > 0,
                       );
                     });
-                    
+
                     return Center(
                       child: MascotWidget(
                         size: 120,
                         message: mascotProvider.currentMessage,
                         mascotState: mascotProvider.currentState,
-                        onTap: () => mascotProvider.reactToAction(MascotAction.tapped),
+                        onTap: () =>
+                            mascotProvider.reactToAction(MascotAction.tapped),
                       ),
                     );
                   },
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Primary action button
                 SizedBox(
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton.icon(
-                    onPressed: dueCount > 0 
+                    onPressed: dueCount > 0
                         ? () => _startExerciseSession(context, cardManagement)
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      disabledBackgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      disabledBackgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
                       ),
                     ),
                     icon: const Icon(Icons.play_arrow_rounded, size: 28),
                     label: Text(
-                      dueCount > 0 
+                      dueCount > 0
                           ? 'START LEARNING ($dueCount due)'
                           : 'ALL CAUGHT UP!',
                       style: const TextStyle(
@@ -190,9 +204,9 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Browse cards
                 Card(
                   child: ListTile(
@@ -203,7 +217,7 @@ class DashboardScreen extends StatelessWidget {
                     onTap: () => context.pushCards(),
                   ),
                 ),
-                
+
                 // Streak indicator (compact)
                 const SizedBox(height: 8),
                 const StreakStatusWidget(compact: true),
@@ -215,7 +229,10 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  void _startExerciseSession(BuildContext context, CardManagementProvider cardManagement) {
+  void _startExerciseSession(
+    BuildContext context,
+    CardManagementProvider cardManagement,
+  ) {
     if (cardManagement.reviewCards.isNotEmpty) {
       context.pushPractice();
     } else {
@@ -234,5 +251,4 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
-
 }

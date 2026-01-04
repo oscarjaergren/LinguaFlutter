@@ -114,9 +114,9 @@ class _CardPreview extends StatelessWidget {
         children: [
           Text(
             card.frontText,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
@@ -135,23 +135,18 @@ class _DuplicateItem extends StatelessWidget {
   final DuplicateMatch match;
   final VoidCallback? onDelete;
 
-  const _DuplicateItem({
-    required this.match,
-    this.onDelete,
-  });
+  const _DuplicateItem({required this.match, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     final duplicateCard = match.duplicateCard;
-    
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.orange.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

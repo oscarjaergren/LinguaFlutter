@@ -29,7 +29,7 @@ class _MascotWidgetState extends State<MascotWidget>
   late AnimationController _blinkController;
   late AnimationController _bounceController;
   late AnimationController _bubbleController;
-  
+
   late Animation<double> _floatAnimation;
   late Animation<double> _blinkAnimation;
   late Animation<double> _bounceAnimation;
@@ -39,66 +39,46 @@ class _MascotWidgetState extends State<MascotWidget>
   @override
   void initState() {
     super.initState();
-    
+
     // Floating animation (subtle gentle bob)
     _floatController = AnimationController(
       duration: const Duration(seconds: 4), // Slower floating
       vsync: this,
     );
-    _floatAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _floatController,
-      curve: Curves.easeInOut,
-    ));
-    
+    _floatAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+
     // Blinking animation
     _blinkController = AnimationController(
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _blinkAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.1,
-    ).animate(CurvedAnimation(
-      parent: _blinkController,
-      curve: Curves.easeInOut,
-    ));
-    
+    _blinkAnimation = Tween<double>(begin: 1.0, end: 0.1).animate(
+      CurvedAnimation(parent: _blinkController, curve: Curves.easeInOut),
+    );
+
     // Bounce animation for interactions
     _bounceController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    _bounceAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _bounceController,
-      curve: Curves.elasticOut,
-    ));
-    
+    _bounceAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _bounceController, curve: Curves.elasticOut),
+    );
+
     // Speech bubble animation
     _bubbleController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _bubbleScaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _bubbleController,
-      curve: Curves.elasticOut,
-    ));
-    _bubbleOpacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _bubbleController,
-      curve: Curves.easeOut,
-    ));
-    
+    _bubbleScaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _bubbleController, curve: Curves.elasticOut),
+    );
+    _bubbleOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _bubbleController, curve: Curves.easeOut),
+    );
+
     _startAnimations();
   }
 
@@ -106,7 +86,7 @@ class _MascotWidgetState extends State<MascotWidget>
     if (!widget.animationService.animationsEnabled) {
       return;
     }
-    
+
     // Start continuous floating
     widget.animationService.startRepeating(_floatController, reverse: true);
 
@@ -128,21 +108,24 @@ class _MascotWidgetState extends State<MascotWidget>
     if (!widget.animationService.animationsEnabled) {
       return;
     }
-    
-    widget.animationService.scheduleDelayed(Duration(seconds: 2 + math.Random().nextInt(4)), () {
-      if (mounted) {
-        widget.animationService.forward(_blinkController).then((_) {
-          widget.animationService.reverse(_blinkController);
-          _scheduleRandomBlink();
-        });
-      }
-    });
+
+    widget.animationService.scheduleDelayed(
+      Duration(seconds: 2 + math.Random().nextInt(4)),
+      () {
+        if (mounted) {
+          widget.animationService.forward(_blinkController).then((_) {
+            widget.animationService.reverse(_blinkController);
+            _scheduleRandomBlink();
+          });
+        }
+      },
+    );
   }
 
   @override
   void didUpdateWidget(MascotWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // Handle message changes
     if (widget.message != oldWidget.message) {
       if (widget.message != null) {
@@ -151,7 +134,7 @@ class _MascotWidgetState extends State<MascotWidget>
         widget.animationService.reverse(_bubbleController);
       }
     }
-    
+
     // Handle state changes
     if (widget.mascotState != oldWidget.mascotState) {
       _handleStateChange();
@@ -164,8 +147,11 @@ class _MascotWidgetState extends State<MascotWidget>
         if (!widget.animationService.animationsEnabled) {
           return;
         }
-        
-        widget.animationService.startRepeating(_bounceController, reverse: true);
+
+        widget.animationService.startRepeating(
+          _bounceController,
+          reverse: true,
+        );
         widget.animationService.scheduleDelayed(const Duration(seconds: 2), () {
           if (mounted) {
             widget.animationService.stopAndReset(_bounceController);
@@ -208,7 +194,10 @@ class _MascotWidgetState extends State<MascotWidget>
               );
 
               return Transform.translate(
-                offset: Offset(0, math.sin(_floatAnimation.value * 2 * math.pi) * 3),
+                offset: Offset(
+                  0,
+                  math.sin(_floatAnimation.value * 2 * math.pi) * 3,
+                ),
                 child: mascot,
               );
             },
@@ -220,7 +209,10 @@ class _MascotWidgetState extends State<MascotWidget>
               left: 0,
               right: 0,
               child: AnimatedBuilder(
-                animation: Listenable.merge([_bubbleScaleAnimation, _bubbleOpacityAnimation]),
+                animation: Listenable.merge([
+                  _bubbleScaleAnimation,
+                  _bubbleOpacityAnimation,
+                ]),
                 builder: (context, child) {
                   return Transform.scale(
                     scale: _bubbleScaleAnimation.value,
@@ -275,7 +267,7 @@ class _MascotWidgetState extends State<MascotWidget>
               textAlign: TextAlign.center,
             ),
           ),
-          
+
           // Bubble tail (centered and pointing down to mascot)
           Positioned(
             bottom: -12,
@@ -285,9 +277,7 @@ class _MascotWidgetState extends State<MascotWidget>
               child: SizedBox(
                 width: 20,
                 height: 12,
-                child: CustomPaint(
-                  painter: _BubbleTailPainter(),
-                ),
+                child: CustomPaint(painter: _BubbleTailPainter()),
               ),
             ),
           ),
@@ -322,13 +312,13 @@ class _BubbleTailPainter extends CustomPainter {
     final paint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.fill;
-    
+
     final path = Path();
     path.moveTo(0, 0);
     path.lineTo(size.width / 2, size.height);
     path.lineTo(size.width, 0);
     path.close();
-    
+
     canvas.drawPath(path, paint);
   }
 
@@ -337,9 +327,4 @@ class _BubbleTailPainter extends CustomPainter {
 }
 
 /// Enum for different mascot states
-enum MascotState {
-  idle,
-  excited,
-  celebrating,
-  thinking,
-}
+enum MascotState { idle, excited, celebrating, thinking }

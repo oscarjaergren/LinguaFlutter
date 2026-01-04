@@ -20,7 +20,9 @@ class SupabaseTestHelper {
   /// Get the Supabase client for tests
   static SupabaseClient get client {
     if (_client == null) {
-      throw StateError('SupabaseTestHelper not initialized. Call initialize() first.');
+      throw StateError(
+        'SupabaseTestHelper not initialized. Call initialize() first.',
+      );
     }
     return _client!;
   }
@@ -43,10 +45,7 @@ class SupabaseTestHelper {
     await _ensureContainersRunning();
 
     // Create pure Supabase client (no Flutter dependencies)
-    _client = SupabaseClient(
-      TestConfig.supabaseUrl,
-      TestConfig.anonKey,
-    );
+    _client = SupabaseClient(TestConfig.supabaseUrl, TestConfig.anonKey);
 
     _isInitialized = true;
   }
@@ -86,19 +85,13 @@ class SupabaseTestHelper {
   /// Clean up all test cards for the current user
   static Future<void> cleanTestUserCards() async {
     if (_currentUserId == null) return;
-    await client
-        .from('cards')
-        .delete()
-        .eq('user_id', _currentUserId!);
+    await client.from('cards').delete().eq('user_id', _currentUserId!);
   }
 
   /// Clean up all test streaks for the current user
   static Future<void> cleanTestUserStreaks() async {
     if (_currentUserId == null) return;
-    await client
-        .from('streaks')
-        .delete()
-        .eq('user_id', _currentUserId!);
+    await client.from('streaks').delete().eq('user_id', _currentUserId!);
   }
 
   /// Reset the test environment
@@ -128,10 +121,13 @@ class SupabaseTestHelper {
 
     try {
       // Check if containers are already running
-      final result = await Process.run(
-        'docker',
-        ['ps', '--filter', 'name=lingua_test', '--format', '{{.Names}}'],
-      );
+      final result = await Process.run('docker', [
+        'ps',
+        '--filter',
+        'name=lingua_test',
+        '--format',
+        '{{.Names}}',
+      ]);
 
       final runningContainers = (result.stdout as String).trim().split('\n');
       final allRunning = requiredContainers.every(
@@ -158,11 +154,12 @@ class SupabaseTestHelper {
     // Find project root by looking for docker-compose.test.yml
     final projectRoot = await _findProjectRoot();
 
-    final result = await Process.run(
-      'docker-compose',
-      ['-f', 'docker-compose.test.yml', 'up', '-d'],
-      workingDirectory: projectRoot,
-    );
+    final result = await Process.run('docker-compose', [
+      '-f',
+      'docker-compose.test.yml',
+      'up',
+      '-d',
+    ], workingDirectory: projectRoot);
 
     if (result.exitCode != 0) {
       throw StateError(
@@ -188,7 +185,9 @@ class SupabaseTestHelper {
       }
       dir = dir.parent;
     }
-    throw StateError('Could not find project root with docker-compose.test.yml');
+    throw StateError(
+      'Could not find project root with docker-compose.test.yml',
+    );
   }
 
   /// Wait for containers to be healthy
@@ -198,10 +197,13 @@ class SupabaseTestHelper {
 
     while (stopwatch.elapsed < timeout) {
       try {
-        final result = await Process.run(
-          'docker',
-          ['exec', 'lingua_test_db', 'pg_isready', '-U', 'postgres'],
-        );
+        final result = await Process.run('docker', [
+          'exec',
+          'lingua_test_db',
+          'pg_isready',
+          '-U',
+          'postgres',
+        ]);
         if (result.exitCode == 0) {
           // Give other services a moment to start
           await Future.delayed(const Duration(seconds: 5));
@@ -213,7 +215,9 @@ class SupabaseTestHelper {
       await Future.delayed(const Duration(seconds: 2));
     }
 
-    throw StateError('Containers did not become healthy within ${timeout.inSeconds}s');
+    throw StateError(
+      'Containers did not become healthy within ${timeout.inSeconds}s',
+    );
   }
 
   /// Ensure test user exists in GoTrue

@@ -108,19 +108,19 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               children: [
                 // Main streak display
                 const StreakStatusWidget(compact: false),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Weekly progress (placeholder for future implementation)
                 _buildWeeklyProgress(context, provider),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Additional statistics
                 _buildAdditionalStats(context, provider),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Tips section
                 _buildTipsSection(context),
               ],
@@ -134,7 +134,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
   Widget _buildWeeklyProgress(BuildContext context, StreakProvider provider) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -148,7 +148,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Week days
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -157,7 +157,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                 final dateKey = _formatDate(date);
                 final cardsReviewed = provider.dailyReviewCounts[dateKey] ?? 0;
                 final isToday = _isToday(date);
-                
+
                 return Column(
                   children: [
                     Text(
@@ -169,11 +169,11 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: cardsReviewed > 0 
+                        color: cardsReviewed > 0
                             ? colorScheme.primary
                             : colorScheme.surfaceContainerHighest,
                         shape: BoxShape.circle,
-                        border: isToday 
+                        border: isToday
                             ? Border.all(color: colorScheme.secondary, width: 2)
                             : null,
                       ),
@@ -181,7 +181,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                         child: Text(
                           cardsReviewed > 0 ? cardsReviewed.toString() : '',
                           style: TextStyle(
-                            color: cardsReviewed > 0 
+                            color: cardsReviewed > 0
                                 ? colorScheme.onPrimary
                                 : colorScheme.onSurfaceVariant,
                             fontSize: 12,
@@ -202,7 +202,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
 
   Widget _buildAdditionalStats(BuildContext context, StreakProvider provider) {
     final theme = Theme.of(context);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -216,7 +216,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -231,7 +231,9 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                   child: _buildStatItem(
                     context,
                     'Days Active',
-                    provider.currentStreak > 0 ? '${provider.currentStreak}' : '0',
+                    provider.currentStreak > 0
+                        ? '${provider.currentStreak}'
+                        : '0',
                     Icons.calendar_today,
                   ),
                 ),
@@ -250,7 +252,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
     IconData icon,
   ) {
     final theme = Theme.of(context);
-    
+
     return Column(
       children: [
         Icon(icon, size: 24),
@@ -272,7 +274,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
 
   Widget _buildTipsSection(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -286,7 +288,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             _buildTip(
               context,
               'Set a daily goal',
@@ -294,7 +296,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               Icons.flag,
             ),
             const SizedBox(height: 12),
-            
+
             _buildTip(
               context,
               'Create a routine',
@@ -302,7 +304,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               Icons.schedule,
             ),
             const SizedBox(height: 12),
-            
+
             _buildTip(
               context,
               'Start small',
@@ -322,15 +324,11 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
     IconData icon,
   ) {
     final theme = Theme.of(context);
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: theme.colorScheme.primary,
-        ),
+        Icon(icon, size: 20, color: theme.colorScheme.primary),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -342,10 +340,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                description,
-                style: theme.textTheme.bodySmall,
-              ),
+              Text(description, style: theme.textTheme.bodySmall),
             ],
           ),
         ),
@@ -418,7 +413,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
   bool _isToday(DateTime date) {
     final now = DateTime.now();
     return date.year == now.year &&
-           date.month == now.month &&
-           date.day == now.day;
+        date.month == now.month &&
+        date.day == now.day;
   }
 }

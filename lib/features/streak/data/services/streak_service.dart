@@ -1,7 +1,7 @@
 import '../../domain/models/streak_model.dart';
 
 /// Abstract interface for streak data operations.
-/// 
+///
 /// This allows for different implementations (Supabase, local storage, mock)
 /// and enables proper dependency injection for testing.
 abstract class StreakService {

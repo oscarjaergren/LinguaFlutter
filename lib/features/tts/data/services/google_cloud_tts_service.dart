@@ -6,12 +6,13 @@ import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 /// Google Cloud Text-to-Speech service with high-quality Neural2 voices
 class GoogleCloudTtsService {
-  static final GoogleCloudTtsService _instance = GoogleCloudTtsService._internal();
+  static final GoogleCloudTtsService _instance =
+      GoogleCloudTtsService._internal();
   factory GoogleCloudTtsService() => _instance;
   GoogleCloudTtsService._internal();
 
   final AudioPlayer _audioPlayer = AudioPlayer();
-  
+
   String? _googleApiKey;
   bool _isInitialized = false;
   bool _isEnabled = false;
@@ -33,7 +34,9 @@ class GoogleCloudTtsService {
   Future<void> _loadGoogleCloudApiKey() async {
     try {
       LoggerService.debug('Attempting to load Google Cloud API key...');
-      final apiKey = await rootBundle.loadString('assets/google_tts_api_key.txt');
+      final apiKey = await rootBundle.loadString(
+        'assets/google_tts_api_key.txt',
+      );
       _googleApiKey = apiKey.trim();
       _isEnabled = _googleApiKey!.isNotEmpty;
       if (_isEnabled) {
@@ -69,19 +72,18 @@ class GoogleCloudTtsService {
   Future<void> _speakWithGoogleCloud(String text, String languageCode) async {
     final voiceName = _getGoogleVoiceName(languageCode);
     final mappedLang = _mapLanguageCode(languageCode);
-    
-    LoggerService.debug('TTS request: lang=$languageCode, mapped=$mappedLang, voice=$voiceName');
-    
-    final url = Uri.parse(
-      'https://texttospeech.googleapis.com/v1/text:synthesize?key=$_googleApiKey'
+
+    LoggerService.debug(
+      'TTS request: lang=$languageCode, mapped=$mappedLang, voice=$voiceName',
     );
-    
+
+    final url = Uri.parse(
+      'https://texttospeech.googleapis.com/v1/text:synthesize?key=$_googleApiKey',
+    );
+
     final body = jsonEncode({
       'input': {'text': text},
-      'voice': {
-        'languageCode': mappedLang,
-        'name': voiceName,
-      },
+      'voice': {'languageCode': mappedLang, 'name': voiceName},
       'audioConfig': {
         'audioEncoding': 'MP3',
         'pitch': 0.0,
@@ -93,16 +95,18 @@ class GoogleCloudTtsService {
     const maxRetries = 3;
     for (var attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        final response = await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: body,
-        ).timeout(const Duration(seconds: 10));
-        
+        final response = await http
+            .post(
+              url,
+              headers: {'Content-Type': 'application/json'},
+              body: body,
+            )
+            .timeout(const Duration(seconds: 10));
+
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
           final audioContent = jsonResponse['audioContent'] as String;
-          
+
           // Use data URL - works cross-platform without temp files
           final dataUrl = 'data:audio/mp3;base64,$audioContent';
           await _audioPlayer.play(UrlSource(dataUrl));
@@ -133,7 +137,7 @@ class GoogleCloudTtsService {
       // Spanish - Studio voice available
       'es': 'es-ES-Studio-C',
       'es-ES': 'es-ES-Studio-C',
-      // French - Studio voice available  
+      // French - Studio voice available
       'fr': 'fr-FR-Studio-A',
       'fr-FR': 'fr-FR-Studio-A',
       // English - Studio voice available
@@ -170,8 +174,8 @@ class GoogleCloudTtsService {
       'sv-SE': 'sv-SE-Neural2-A',
     };
 
-    return voiceMap[languageCode.toLowerCase()] ?? 
-           '${_mapLanguageCode(languageCode)}-Neural2-A';
+    return voiceMap[languageCode.toLowerCase()] ??
+        '${_mapLanguageCode(languageCode)}-Neural2-A';
   }
 
   /// Map simplified language codes to full locale codes
@@ -208,4 +212,3 @@ class GoogleCloudTtsService {
     _audioPlayer.dispose();
   }
 }
-

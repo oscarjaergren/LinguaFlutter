@@ -4,6 +4,7 @@ import '../../../../shared/domain/models/exercise_type.dart';
 enum ExerciseCategory {
   /// Recognition exercises - passive recall
   recognition,
+
   /// Production exercises - active recall/output
   production,
 }
@@ -84,9 +85,7 @@ class ExercisePreferences {
   /// Create default preferences with all implemented types enabled
   factory ExercisePreferences.defaults() {
     return ExercisePreferences(
-      enabledTypes: ExerciseType.values
-          .where((t) => t.isImplemented)
-          .toSet(),
+      enabledTypes: ExerciseType.values.where((t) => t.isImplemented).toSet(),
     );
   }
 
@@ -102,8 +101,11 @@ class ExercisePreferences {
   /// Check if a category is partially enabled
   bool isCategoryPartiallyEnabled(ExerciseCategory category) {
     final typesInCategory = category.exerciseTypes;
-    final enabledInCategory = typesInCategory.where((t) => enabledTypes.contains(t));
-    return enabledInCategory.isNotEmpty && enabledInCategory.length < typesInCategory.length;
+    final enabledInCategory = typesInCategory.where(
+      (t) => enabledTypes.contains(t),
+    );
+    return enabledInCategory.isNotEmpty &&
+        enabledInCategory.length < typesInCategory.length;
   }
 
   /// Check if any exercise type is enabled
@@ -124,7 +126,10 @@ class ExercisePreferences {
   }
 
   /// Create a copy with a category enabled/disabled
-  ExercisePreferences toggleCategory(ExerciseCategory category, {required bool enabled}) {
+  ExercisePreferences toggleCategory(
+    ExerciseCategory category, {
+    required bool enabled,
+  }) {
     final newSet = Set<ExerciseType>.from(enabledTypes);
     for (final type in category.exerciseTypes) {
       if (enabled) {
@@ -172,9 +177,9 @@ class ExercisePreferences {
 
   /// Create from JSON
   factory ExercisePreferences.fromJson(Map<String, dynamic> json) {
-    final enabledTypeNames = (json['enabledTypes'] as List<dynamic>?)
-        ?.cast<String>() ?? [];
-    
+    final enabledTypeNames =
+        (json['enabledTypes'] as List<dynamic>?)?.cast<String>() ?? [];
+
     final enabledTypes = <ExerciseType>{};
     for (final name in enabledTypeNames) {
       try {
@@ -190,7 +195,8 @@ class ExercisePreferences {
     return ExercisePreferences(
       enabledTypes: enabledTypes,
       prioritizeWeaknesses: json['prioritizeWeaknesses'] as bool? ?? true,
-      weaknessThreshold: (json['weaknessThreshold'] as num?)?.toDouble() ?? 70.0,
+      weaknessThreshold:
+          (json['weaknessThreshold'] as num?)?.toDouble() ?? 70.0,
     );
   }
 

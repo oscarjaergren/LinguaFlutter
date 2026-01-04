@@ -18,7 +18,8 @@ class SentenceBuildingExercise extends StatefulWidget {
   });
 
   @override
-  State<SentenceBuildingExercise> createState() => _SentenceBuildingExerciseState();
+  State<SentenceBuildingExercise> createState() =>
+      _SentenceBuildingExerciseState();
 }
 
 class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
@@ -49,7 +50,7 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
 
   void _selectWord(String word) {
     if (widget.answerState == AnswerState.answered) return;
-    
+
     setState(() {
       _availableWords.remove(word);
       _selectedWords.add(word);
@@ -58,7 +59,7 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
 
   void _unselectWord(String word) {
     if (widget.answerState == AnswerState.answered) return;
-    
+
     setState(() {
       _selectedWords.remove(word);
       _availableWords.add(word);
@@ -67,8 +68,9 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
 
   void _checkAnswer() {
     final userSentence = _selectedWords.join(' ');
-    final isCorrect = userSentence.toLowerCase().trim() == 
-                      _correctSentence!.toLowerCase().trim();
+    final isCorrect =
+        userSentence.toLowerCase().trim() ==
+        _correctSentence!.toLowerCase().trim();
     widget.onCheckAnswer(isCorrect);
   }
 
@@ -87,7 +89,7 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        
+
         // Translation hint
         Text(
           widget.card.backText,
@@ -97,9 +99,9 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
           ),
           textAlign: TextAlign.center,
         ),
-        
+
         const SizedBox(height: 32),
-        
+
         // Selected words area (answer being built)
         Container(
           width: double.infinity,
@@ -108,15 +110,15 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
           decoration: BoxDecoration(
             color: isAnswered
                 ? (widget.currentAnswerCorrect == true
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.1))
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1))
                 : colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isAnswered
                   ? (widget.currentAnswerCorrect == true
-                      ? Colors.green
-                      : Colors.red)
+                        ? Colors.green
+                        : Colors.red)
                   : colorScheme.outline.withValues(alpha: 0.3),
               width: 2,
             ),
@@ -144,9 +146,9 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
                   }).toList(),
                 ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Available words area
         if (_availableWords.isNotEmpty) ...[
           Text(
@@ -170,21 +172,23 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
             }).toList(),
           ),
         ],
-        
+
         const SizedBox(height: 24),
-        
+
         // Check answer button
         if (!isAnswered)
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: _selectedWords.length == _correctSentence!.split(RegExp(r'\s+')).length
+              onPressed:
+                  _selectedWords.length ==
+                      _correctSentence!.split(RegExp(r'\s+')).length
                   ? _checkAnswer
                   : null,
               child: const Text('Check Answer'),
             ),
           ),
-        
+
         // Show correct answer if wrong
         if (isAnswered && widget.currentAnswerCorrect == false) ...[
           const SizedBox(height: 16),

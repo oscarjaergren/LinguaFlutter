@@ -28,7 +28,7 @@ void main() async {
   final streakProvider = StreakProvider();
   final themeProvider = ThemeProvider();
   final exercisePreferencesProvider = ExercisePreferencesProvider();
-  
+
   // Create feature-specific providers (VSA architecture)
   final cardManagementProvider = CardManagementProvider(
     languageProvider: languageProvider,
@@ -40,11 +40,13 @@ void main() async {
   await themeProvider.initialize();
   await cardEnrichmentProvider.initialize();
   await exercisePreferencesProvider.initialize();
-  
+
   // Wire up auth state change callback to initialize data providers
   authProvider.onAuthStateChanged = (isAuthenticated) async {
     if (isAuthenticated) {
-      LoggerService.info('🔐 User authenticated, initializing data providers...');
+      LoggerService.info(
+        '🔐 User authenticated, initializing data providers...',
+      );
       try {
         await cardManagementProvider.initialize();
         await streakProvider.loadStreak();
@@ -56,13 +58,13 @@ void main() async {
       LoggerService.info('🔓 User signed out');
     }
   };
-  
+
   // If already authenticated (e.g., session restored), initialize now
   if (authProvider.isAuthenticated) {
     await cardManagementProvider.initialize();
     await streakProvider.loadStreak();
   }
-  
+
   LoggerService.info('✅ Core providers initialized successfully');
 
   runApp(
@@ -73,21 +75,24 @@ void main() async {
         ChangeNotifierProvider.value(value: languageProvider),
         ChangeNotifierProvider.value(value: streakProvider),
         ChangeNotifierProvider.value(value: themeProvider),
-        
+
         // Feature-specific providers (VSA)
         ChangeNotifierProvider.value(value: cardManagementProvider),
         ChangeNotifierProvider.value(value: duplicateDetectionProvider),
         ChangeNotifierProvider.value(value: cardEnrichmentProvider),
-        
+
         // UI providers
         ChangeNotifierProvider(create: (_) => MascotProvider()),
         ChangeNotifierProvider(create: (_) => IconProvider()),
-        
+
         // Exercise preferences provider
         ChangeNotifierProvider.value(value: exercisePreferencesProvider),
-        
+
         // Practice session provider
-        ChangeNotifierProxyProvider<CardManagementProvider, PracticeSessionProvider>(
+        ChangeNotifierProxyProvider<
+          CardManagementProvider,
+          PracticeSessionProvider
+        >(
           create: (context) {
             final cm = context.read<CardManagementProvider>();
             return PracticeSessionProvider(
@@ -97,7 +102,8 @@ void main() async {
             );
           },
           update: (context, cardManagement, previous) =>
-              previous ?? PracticeSessionProvider(
+              previous ??
+              PracticeSessionProvider(
                 getReviewCards: () => cardManagement.reviewCards,
                 getAllCards: () => cardManagement.allCards,
                 updateCard: cardManagement.updateCard,

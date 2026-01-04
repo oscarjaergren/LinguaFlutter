@@ -21,10 +21,10 @@ class CardCreationViewModel extends ChangeNotifier {
   IconModel? _selectedIcon;
   String? _notes;
   List<String> _examples = [];
-  
+
   // Word type state
   WordType _wordType = WordType.other;
-  
+
   // Verb-specific state
   bool _isRegularVerb = true;
   bool _isSeparableVerb = false;
@@ -34,19 +34,19 @@ class CardCreationViewModel extends ChangeNotifier {
   String? _presentEr;
   String? _pastSimple;
   String? _pastParticiple;
-  
+
   // Noun-specific state
   String? _nounGender;
   String? _plural;
   String? _genitive;
-  
+
   // Adjective-specific state
   String? _comparative;
   String? _superlative;
-  
+
   // Adverb-specific state
   String? _usageNote;
-  
+
   // UI state
   bool _isLoading = false;
   bool _isEditing = false;
@@ -57,10 +57,10 @@ class CardCreationViewModel extends ChangeNotifier {
     required LanguageProvider languageProvider,
     required IconProvider iconProvider,
     CardModel? cardToEdit,
-  })  : _cardManagement = cardManagement,
-        _languageProvider = languageProvider,
-        _iconProvider = iconProvider,
-        _cardToEdit = cardToEdit {
+  }) : _cardManagement = cardManagement,
+       _languageProvider = languageProvider,
+       _iconProvider = iconProvider,
+       _cardToEdit = cardToEdit {
     _isEditing = cardToEdit != null;
     if (_isEditing) {
       _initializeFromCard(cardToEdit!);
@@ -82,7 +82,7 @@ class CardCreationViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isEditing => _isEditing;
   String? get errorMessage => _errorMessage;
-  
+
   // Basic form getters
   String get frontText => _frontText;
   String get backText => _backText;
@@ -92,10 +92,10 @@ class CardCreationViewModel extends ChangeNotifier {
   IconModel? get selectedIcon => _selectedIcon;
   String? get notes => _notes;
   List<String> get examples => List.unmodifiable(_examples);
-  
+
   // Word type getters
   WordType get wordType => _wordType;
-  
+
   // Verb getters
   bool get isRegularVerb => _isRegularVerb;
   bool get isSeparableVerb => _isSeparableVerb;
@@ -105,24 +105,22 @@ class CardCreationViewModel extends ChangeNotifier {
   String? get presentEr => _presentEr;
   String? get pastSimple => _pastSimple;
   String? get pastParticiple => _pastParticiple;
-  
+
   // Noun getters
   String? get nounGender => _nounGender;
   String? get plural => _plural;
   String? get genitive => _genitive;
-  
+
   // Adjective getters
   String? get comparative => _comparative;
   String? get superlative => _superlative;
-  
+
   // Adverb getters
   String? get usageNote => _usageNote;
 
   // Validation
-  bool get isFormValid => 
-      _frontText.isNotEmpty && 
-      _backText.isNotEmpty && 
-      _category.isNotEmpty;
+  bool get isFormValid =>
+      _frontText.isNotEmpty && _backText.isNotEmpty && _category.isNotEmpty;
 
   // Language getters
   String get activeLanguage => _languageProvider.activeLanguage;
@@ -150,7 +148,11 @@ class CardCreationViewModel extends ChangeNotifier {
   }
 
   void updateTags(String value) {
-    _tags = value.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+    _tags = value
+        .split(',')
+        .map((t) => t.trim())
+        .where((t) => t.isNotEmpty)
+        .toList();
     _clearError();
     notifyListeners();
   }
@@ -307,10 +309,10 @@ class CardCreationViewModel extends ChangeNotifier {
     }
 
     _setLoading(true);
-    
+
     try {
       final wordData = _buildWordData();
-      
+
       final CardModel card;
       if (_isEditing) {
         card = _cardToEdit!.copyWith(
@@ -333,13 +335,9 @@ class CardCreationViewModel extends ChangeNotifier {
           language: activeLanguage,
           category: _category,
           tags: _tags,
-        ).copyWith(
-          wordData: wordData,
-          examples: _examples,
-          notes: _notes,
-        );
+        ).copyWith(wordData: wordData, examples: _examples, notes: _notes);
       }
-      
+
       await _cardManagement.saveCard(card);
       _setLoading(false);
       return true;
@@ -397,7 +395,7 @@ class CardCreationViewModel extends ChangeNotifier {
     _selectedIcon = card.icon;
     _notes = card.notes;
     _examples = List.from(card.examples);
-    
+
     // Initialize word data
     if (card.wordData != null) {
       _initializeWordData(card.wordData!);

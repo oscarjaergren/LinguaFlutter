@@ -57,9 +57,7 @@ class CardsScreen extends StatelessWidget {
                 // Streak status
                 const StreakStatusWidget(),
                 // Main content
-                Expanded(
-                  child: CardListView(viewModel: viewModel),
-                ),
+                Expanded(child: CardListView(viewModel: viewModel)),
               ],
             ),
             floatingActionButton: Column(
@@ -93,7 +91,9 @@ class CardsScreen extends StatelessWidget {
     return Consumer<LanguageProvider>(
       builder: (context, languageProvider, child) {
         final activeLanguage = languageProvider.activeLanguage;
-        final languageDetails = languageProvider.getLanguageDetails(activeLanguage)!;
+        final languageDetails = languageProvider.getLanguageDetails(
+          activeLanguage,
+        )!;
 
         return PopupMenuButton<String>(
           onSelected: (String languageCode) {
@@ -108,10 +108,7 @@ class CardsScreen extends StatelessWidget {
                 value: code,
                 child: Row(
                   children: [
-                    Text(
-                      details['flag'],
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    Text(details['flag'], style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 8),
                     Text(details['name']),
                     if (code == activeLanguage) ...[

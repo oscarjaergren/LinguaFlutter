@@ -15,7 +15,7 @@ void main() {
 
     test('loadPreferences returns defaults when no data stored', () async {
       final prefs = await service.loadPreferences();
-      
+
       final defaults = ExercisePreferences.defaults();
       expect(prefs.enabledTypes.length, defaults.enabledTypes.length);
       expect(prefs.prioritizeWeaknesses, defaults.prioritizeWeaknesses);
@@ -24,13 +24,16 @@ void main() {
 
     test('savePreferences stores data correctly', () async {
       final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.readingRecognition, ExerciseType.writingTranslation},
+        enabledTypes: {
+          ExerciseType.readingRecognition,
+          ExerciseType.writingTranslation,
+        },
         prioritizeWeaknesses: false,
         weaknessThreshold: 80.0,
       );
-      
+
       await service.savePreferences(prefs);
-      
+
       final loaded = await service.loadPreferences();
       expect(loaded.enabledTypes.length, 2);
       expect(loaded.isEnabled(ExerciseType.readingRecognition), true);
@@ -42,9 +45,9 @@ void main() {
     test('loadPreferences handles corrupted data gracefully', () async {
       final sp = await SharedPreferences.getInstance();
       await sp.setString('exercise_preferences', 'invalid json');
-      
+
       final prefs = await service.loadPreferences();
-      
+
       // Should return defaults on error
       final defaults = ExercisePreferences.defaults();
       expect(prefs.enabledTypes.length, defaults.enabledTypes.length);
@@ -58,14 +61,14 @@ void main() {
         weaknessThreshold: 50.0,
       );
       await service.savePreferences(custom);
-      
+
       // Reset to defaults
       final defaults = await service.resetToDefaults();
-      
+
       expect(defaults.enabledTypes.length, greaterThan(1));
       expect(defaults.prioritizeWeaknesses, true);
       expect(defaults.weaknessThreshold, 70.0);
-      
+
       // Verify it was saved
       final loaded = await service.loadPreferences();
       expect(loaded.enabledTypes.length, defaults.enabledTypes.length);
@@ -77,10 +80,10 @@ void main() {
         enabledTypes: {ExerciseType.readingRecognition},
       );
       await service.savePreferences(prefs);
-      
+
       // Clear
       await service.clearPreferences();
-      
+
       // Should return defaults after clear
       final loaded = await service.loadPreferences();
       final defaults = ExercisePreferences.defaults();
@@ -93,10 +96,10 @@ void main() {
           enabledTypes: {ExerciseType.values[i]},
           weaknessThreshold: 60.0 + i * 10,
         );
-        
+
         await service.savePreferences(prefs);
         final loaded = await service.loadPreferences();
-        
+
         expect(loaded.enabledTypes.length, 1);
         expect(loaded.weaknessThreshold, 60.0 + i * 10);
       }

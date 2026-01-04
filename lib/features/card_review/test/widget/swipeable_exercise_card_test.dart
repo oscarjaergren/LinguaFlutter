@@ -12,10 +12,7 @@ void main() {
       swipedLeft = false;
     });
 
-    Widget buildTestWidget({
-      bool canSwipe = true,
-      Widget? child,
-    }) {
+    Widget buildTestWidget({bool canSwipe = true, Widget? child}) {
       return MaterialApp(
         home: Scaffold(
           body: Center(
@@ -23,11 +20,13 @@ void main() {
               canSwipe: canSwipe,
               onSwipeRight: () => swipedRight = true,
               onSwipeLeft: () => swipedLeft = true,
-              child: child ?? const SizedBox(
-                width: 300,
-                height: 400,
-                child: Center(child: Text('Test Content')),
-              ),
+              child:
+                  child ??
+                  const SizedBox(
+                    width: 300,
+                    height: 400,
+                    child: Center(child: Text('Test Content')),
+                  ),
             ),
           ),
         ),
@@ -35,9 +34,9 @@ void main() {
     }
 
     testWidgets('should render child content', (tester) async {
-      await tester.pumpWidget(buildTestWidget(
-        child: const Text('Exercise Content'),
-      ));
+      await tester.pumpWidget(
+        buildTestWidget(child: const Text('Exercise Content')),
+      );
 
       expect(find.text('Exercise Content'), findsOneWidget);
     });
@@ -52,17 +51,19 @@ void main() {
     testWidgets('should respond to tap when onTap provided', (tester) async {
       var tapped = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: SwipeableExerciseCard(
-            canSwipe: true,
-            onSwipeRight: () {},
-            onSwipeLeft: () {},
-            onTap: () => tapped = true,
-            child: const SizedBox(width: 300, height: 400),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SwipeableExerciseCard(
+              canSwipe: true,
+              onSwipeRight: () {},
+              onSwipeLeft: () {},
+              onTap: () => tapped = true,
+              child: const SizedBox(width: 300, height: 400),
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.tap(find.byType(SwipeableExerciseCard));
       await tester.pump();
@@ -74,18 +75,27 @@ void main() {
       await tester.pumpWidget(buildTestWidget(canSwipe: false));
 
       // Try to swipe right
-      await tester.drag(find.byType(SwipeableExerciseCard), const Offset(200, 0));
+      await tester.drag(
+        find.byType(SwipeableExerciseCard),
+        const Offset(200, 0),
+      );
       await tester.pumpAndSettle();
 
       expect(swipedRight, false);
       expect(swipedLeft, false);
     });
 
-    testWidgets('should trigger onSwipeRight on significant right swipe', (tester) async {
+    testWidgets('should trigger onSwipeRight on significant right swipe', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(canSwipe: true));
 
       // Perform a significant right swipe
-      await tester.fling(find.byType(SwipeableExerciseCard), const Offset(300, 0), 1000);
+      await tester.fling(
+        find.byType(SwipeableExerciseCard),
+        const Offset(300, 0),
+        1000,
+      );
       // Allow animation to complete
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(const Duration(milliseconds: 500));
@@ -94,11 +104,17 @@ void main() {
       expect(swipedLeft, false);
     });
 
-    testWidgets('should trigger onSwipeLeft on significant left swipe', (tester) async {
+    testWidgets('should trigger onSwipeLeft on significant left swipe', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(canSwipe: true));
 
       // Perform a significant left swipe
-      await tester.fling(find.byType(SwipeableExerciseCard), const Offset(-300, 0), 1000);
+      await tester.fling(
+        find.byType(SwipeableExerciseCard),
+        const Offset(-300, 0),
+        1000,
+      );
       // Allow animation to complete
       await tester.pump(const Duration(milliseconds: 500));
       await tester.pump(const Duration(milliseconds: 500));
@@ -111,7 +127,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget(canSwipe: true));
 
       // Perform a small drag that shouldn't trigger swipe
-      await tester.drag(find.byType(SwipeableExerciseCard), const Offset(50, 0));
+      await tester.drag(
+        find.byType(SwipeableExerciseCard),
+        const Offset(50, 0),
+      );
       await tester.pumpAndSettle();
 
       expect(swipedRight, false);
@@ -119,27 +138,33 @@ void main() {
     });
 
     testWidgets('should apply custom background color', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: SwipeableExerciseCard(
-            canSwipe: true,
-            onSwipeRight: () {},
-            onSwipeLeft: () {},
-            backgroundColor: Colors.blue,
-            child: const SizedBox(width: 300, height: 400),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SwipeableExerciseCard(
+              canSwipe: true,
+              onSwipeRight: () {},
+              onSwipeLeft: () {},
+              backgroundColor: Colors.blue,
+              child: const SizedBox(width: 300, height: 400),
+            ),
           ),
         ),
-      ));
+      );
 
       // Widget should build without errors
       expect(find.byType(SwipeableExerciseCard), findsOneWidget);
     });
 
-    testWidgets('should show swipe indicators during drag when canSwipe', (tester) async {
+    testWidgets('should show swipe indicators during drag when canSwipe', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget(canSwipe: true));
 
       // Start dragging right
-      final gesture = await tester.startGesture(tester.getCenter(find.byType(SwipeableExerciseCard)));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(SwipeableExerciseCard)),
+      );
       await gesture.moveBy(const Offset(100, 0));
       await tester.pump();
 
@@ -153,7 +178,9 @@ void main() {
       await tester.pumpWidget(buildTestWidget(canSwipe: true));
 
       // Start dragging left
-      final gesture = await tester.startGesture(tester.getCenter(find.byType(SwipeableExerciseCard)));
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byType(SwipeableExerciseCard)),
+      );
       await gesture.moveBy(const Offset(-100, 0));
       await tester.pump();
 
@@ -166,17 +193,19 @@ void main() {
     testWidgets('should expose handleKeyboardSwipe via state', (tester) async {
       final key = GlobalKey<SwipeableExerciseCardState>();
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: SwipeableExerciseCard(
-            key: key,
-            canSwipe: true,
-            onSwipeRight: () => swipedRight = true,
-            onSwipeLeft: () => swipedLeft = true,
-            child: const SizedBox(width: 300, height: 400),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SwipeableExerciseCard(
+              key: key,
+              canSwipe: true,
+              onSwipeRight: () => swipedRight = true,
+              onSwipeLeft: () => swipedLeft = true,
+              child: const SizedBox(width: 300, height: 400),
+            ),
           ),
         ),
-      ));
+      );
 
       // Trigger keyboard swipe via state
       key.currentState?.handleKeyboardSwipe(true);

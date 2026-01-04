@@ -6,14 +6,13 @@ import '../models/exercise_preferences.dart';
 /// Provider for managing exercise type preferences
 class ExercisePreferencesProvider extends ChangeNotifier {
   final ExercisePreferencesService _service;
-  
+
   ExercisePreferences _preferences = ExercisePreferences.defaults();
   bool _isLoading = false;
   bool _isInitialized = false;
 
-  ExercisePreferencesProvider({
-    ExercisePreferencesService? service,
-  }) : _service = service ?? ExercisePreferencesService();
+  ExercisePreferencesProvider({ExercisePreferencesService? service})
+    : _service = service ?? ExercisePreferencesService();
 
   /// Current exercise preferences
   ExercisePreferences get preferences => _preferences;
@@ -36,10 +35,10 @@ class ExercisePreferencesProvider extends ChangeNotifier {
   /// Initialize by loading preferences from storage
   Future<void> initialize() async {
     if (_isInitialized) return;
-    
+
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       _preferences = await _service.loadPreferences();
       _isInitialized = true;
@@ -57,7 +56,10 @@ class ExercisePreferencesProvider extends ChangeNotifier {
   }
 
   /// Toggle an entire category
-  Future<void> toggleCategory(ExerciseCategory category, {required bool enabled}) async {
+  Future<void> toggleCategory(
+    ExerciseCategory category, {
+    required bool enabled,
+  }) async {
     _preferences = _preferences.toggleCategory(category, enabled: enabled);
     notifyListeners();
     await _service.savePreferences(_preferences);

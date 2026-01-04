@@ -14,11 +14,9 @@ class MilestoneCelebrationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -49,9 +47,9 @@ class MilestoneCelebrationDialog extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Title
             Text(
               'Milestone Achieved!',
@@ -61,9 +59,9 @@ class MilestoneCelebrationDialog extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Milestone text
             Text(
               '$milestone Day Streak!',
@@ -72,18 +70,18 @@ class MilestoneCelebrationDialog extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Congratulations message
             Text(
               _getCongratulationsMessage(milestone),
               style: theme.textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Continue button
             SizedBox(
               width: double.infinity,
@@ -102,10 +100,7 @@ class MilestoneCelebrationDialog extends StatelessWidget {
                 ),
                 child: const Text(
                   'Continue Learning!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),
             ),

@@ -63,7 +63,7 @@ void main() {
       testWidgets('should start session with cards', (tester) async {
         // Start session before building widget
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
@@ -74,7 +74,7 @@ void main() {
 
       testWidgets('should show progress indicator', (tester) async {
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
@@ -83,7 +83,7 @@ void main() {
 
       testWidgets('should display current card content', (tester) async {
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
@@ -95,7 +95,7 @@ void main() {
     group('Exercise Completion Flow', () {
       testWidgets('should complete exercise and update stats', (tester) async {
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
@@ -105,7 +105,7 @@ void main() {
         // Check answer - handle different exercise types
         final tapToReveal = find.text('Tap to reveal the answer');
         final checkButton = find.text('Check Answer');
-        
+
         if (tapToReveal.evaluate().isNotEmpty) {
           // Reading recognition - tap to reveal
           await tester.tap(tapToReveal);
@@ -117,7 +117,10 @@ void main() {
         } else if (checkButton.evaluate().isNotEmpty) {
           // Writing exercise
           if (find.byType(TextField).evaluate().isNotEmpty) {
-            await tester.enterText(find.byType(TextField), provider.currentCard!.backText);
+            await tester.enterText(
+              find.byType(TextField),
+              provider.currentCard!.backText,
+            );
             await tester.pump();
           }
           await tester.tap(checkButton);
@@ -135,7 +138,7 @@ void main() {
 
         // Stats should update
         expect(provider.correctCount, initialCorrectCount + 1);
-        
+
         // Should advance or complete
         if (provider.isSessionActive) {
           expect(provider.currentIndex, initialIndex + 1);
@@ -144,7 +147,7 @@ void main() {
 
       testWidgets('should persist card update after answer', (tester) async {
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
@@ -153,7 +156,7 @@ void main() {
         // Complete one exercise - handle different exercise types
         final tapToReveal = find.text('Tap to reveal the answer');
         final checkButton = find.text('Check Answer');
-        
+
         if (tapToReveal.evaluate().isNotEmpty) {
           // Reading recognition - tap to reveal
           await tester.tap(tapToReveal);
@@ -165,7 +168,10 @@ void main() {
         } else if (checkButton.evaluate().isNotEmpty) {
           // Writing exercise
           if (find.byType(TextField).evaluate().isNotEmpty) {
-            await tester.enterText(find.byType(TextField), provider.currentCard!.backText);
+            await tester.enterText(
+              find.byType(TextField),
+              provider.currentCard!.backText,
+            );
             await tester.pump();
           }
           await tester.tap(checkButton);
@@ -173,7 +179,11 @@ void main() {
         }
 
         // Swipe to confirm
-        await tester.fling(find.byType(SwipeableExerciseCard), const Offset(300, 0), 1000);
+        await tester.fling(
+          find.byType(SwipeableExerciseCard),
+          const Offset(300, 0),
+          1000,
+        );
         await tester.pump(const Duration(milliseconds: 500));
         await tester.pump(const Duration(milliseconds: 500));
 
@@ -185,14 +195,14 @@ void main() {
     group('Answer Override', () {
       testWidgets('should allow overriding answer', (tester) async {
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 
         // Complete answer check - handle different exercise types
         final tapToReveal = find.text('Tap to reveal the answer');
         final checkButton = find.text('Check Answer');
-        
+
         if (tapToReveal.evaluate().isNotEmpty) {
           // Reading recognition - tap to reveal
           await tester.tap(tapToReveal);
@@ -204,7 +214,10 @@ void main() {
         } else if (checkButton.evaluate().isNotEmpty) {
           // Writing exercise
           if (find.byType(TextField).evaluate().isNotEmpty) {
-            await tester.enterText(find.byType(TextField), provider.currentCard!.backText);
+            await tester.enterText(
+              find.byType(TextField),
+              provider.currentCard!.backText,
+            );
             await tester.pump();
           }
           await tester.tap(checkButton);
@@ -230,7 +243,9 @@ void main() {
     });
 
     group('Session Completion', () {
-      testWidgets('should end session after completing all exercises', (tester) async {
+      testWidgets('should end session after completing all exercises', (
+        tester,
+      ) async {
         // Use single card for quick completion
         final singleCardProvider = PracticeSessionProvider(
           getReviewCards: () => [testCards.first],
@@ -238,7 +253,7 @@ void main() {
           updateCard: (card) async {},
         );
         singleCardProvider.startSession();
-        
+
         expect(singleCardProvider.isSessionActive, true);
         expect(singleCardProvider.totalCount, 1);
 
@@ -255,7 +270,7 @@ void main() {
     group('Keyboard Navigation', () {
       testWidgets('should have keyboard focus', (tester) async {
         provider.startSession();
-        
+
         await tester.pumpWidget(buildTestApp());
         await tester.pumpAndSettle();
 

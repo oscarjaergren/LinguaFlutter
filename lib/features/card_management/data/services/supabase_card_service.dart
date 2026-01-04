@@ -28,10 +28,7 @@ class SupabaseCardService {
   /// Load all cards for current user
   Future<List<CardModel>> loadCards({String? languageCode}) async {
     try {
-      var query = _client
-          .from(_tableName)
-          .select()
-          .eq('user_id', _userId);
+      var query = _client.from(_tableName).select().eq('user_id', _userId);
 
       if (languageCode != null) {
         query = query.eq('language_code', languageCode);
@@ -53,7 +50,7 @@ class SupabaseCardService {
     try {
       final data = _cardToSupabase(card);
       LoggerService.debug('Saving card to Supabase: $data');
-      
+
       final response = await _client
           .from(_tableName)
           .upsert(data)
@@ -76,10 +73,8 @@ class SupabaseCardService {
   Future<void> saveCards(List<CardModel> cards) async {
     try {
       final data = cards.map(_cardToSupabase).toList();
-      
-      await _client
-          .from(_tableName)
-          .upsert(data);
+
+      await _client.from(_tableName).upsert(data);
 
       LoggerService.debug('Saved ${cards.length} cards to Supabase');
     } catch (e) {
@@ -107,10 +102,7 @@ class SupabaseCardService {
   /// Delete all cards for current user
   Future<void> clearAllCards() async {
     try {
-      await _client
-          .from(_tableName)
-          .delete()
-          .eq('user_id', _userId);
+      await _client.from(_tableName).delete().eq('user_id', _userId);
 
       LoggerService.debug('All cards cleared from Supabase');
     } catch (e) {
@@ -194,7 +186,8 @@ class SupabaseCardService {
   /// Convert exercise scores map to JSON for storage
   /// Uses exercise type's JSON value as key for consistency
   Map<String, dynamic> _exerciseScoresToJson(
-      Map<ExerciseType, ExerciseScore> scores) {
+    Map<ExerciseType, ExerciseScore> scores,
+  ) {
     final json = <String, dynamic>{};
     for (final entry in scores.entries) {
       // Use the JsonValue annotation value as key
@@ -213,14 +206,16 @@ class SupabaseCardService {
     }
 
     // Parse tags
-    final tags = (json['tags'] as List<dynamic>?)
-        ?.map((e) => e as String)
-        .toList() ?? [];
+    final tags =
+        (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+        [];
 
     // Parse examples
-    final examples = (json['examples'] as List<dynamic>?)
-        ?.map((e) => e as String)
-        .toList() ?? [];
+    final examples =
+        (json['examples'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ??
+        [];
 
     // Parse exercise scores from JSONB
     final exerciseScores = _exerciseScoresFromJson(
@@ -237,7 +232,7 @@ class SupabaseCardService {
       examples: examples,
       notes: json['notes'] as String?,
       wordData: wordData,
-      nextReview: json['next_review'] != null 
+      nextReview: json['next_review'] != null
           ? DateTime.parse(json['next_review'] as String)
           : null,
       reviewCount: json['review_count'] as int? ?? 0,
@@ -252,16 +247,17 @@ class SupabaseCardService {
 
   /// Parse exercise scores from JSON, falling back to defaults for missing types
   Map<ExerciseType, ExerciseScore> _exerciseScoresFromJson(
-      Map<String, dynamic>? json) {
+    Map<String, dynamic>? json,
+  ) {
     final scores = <ExerciseType, ExerciseScore>{};
-    
+
     // Initialize all implemented types with defaults first
     for (final type in ExerciseType.values) {
       if (type.isImplemented) {
         scores[type] = ExerciseScore.initial(type);
       }
     }
-    
+
     // Override with persisted scores if available
     if (json != null && json.isNotEmpty) {
       for (final entry in json.entries) {
@@ -271,7 +267,7 @@ class SupabaseCardService {
             (t) => t.name == entry.key,
             orElse: () => throw StateError('Unknown type: ${entry.key}'),
           );
-          
+
           if (entry.value is Map<String, dynamic>) {
             scores[type] = ExerciseScore.fromJson(
               entry.value as Map<String, dynamic>,
@@ -284,7 +280,7 @@ class SupabaseCardService {
         }
       }
     }
-    
+
     return scores;
   }
 
@@ -293,5 +289,4 @@ class SupabaseCardService {
     if (card.nextReview == null || card.lastReviewed == null) return 0;
     return card.nextReview!.difference(card.lastReviewed!).inDays;
   }
-
 }

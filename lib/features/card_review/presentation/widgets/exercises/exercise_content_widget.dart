@@ -46,7 +46,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     // Listen to text changes to update button state
     _textController.addListener(_onTextChanged);
   }
-  
+
   void _onTextChanged() {
     // Trigger rebuild to update button enabled state
     setState(() {});
@@ -81,14 +81,14 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         children: [
           // Question/prompt section
           _buildPromptSection(context),
-          
+
           const SizedBox(height: 24),
-          
+
           // Answer section based on exercise type
           _buildAnswerSection(context),
-          
+
           const SizedBox(height: 24),
-          
+
           // Action button (Check Answer or Override buttons)
           _buildActionSection(context),
         ],
@@ -98,33 +98,30 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   Widget _buildPromptSection(BuildContext context) {
     final card = widget.card;
-    
+
     // New exercise types handle their own prompts
     if (widget.exerciseType == ExerciseType.sentenceBuilding ||
         widget.exerciseType == ExerciseType.conjugationPractice ||
         widget.exerciseType == ExerciseType.articleSelection) {
       return const SizedBox.shrink();
     }
-    
+
     // Determine what to show based on exercise type
     final isReverse = widget.exerciseType == ExerciseType.reverseTranslation;
     final promptText = isReverse ? card.backText : card.frontText;
     final promptLanguage = isReverse ? 'en' : card.language;
-    
+
     return Column(
       children: [
         // Instruction text
         Text(
           _getInstructionText(),
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Main prompt with speaker button
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -145,11 +142,12 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
               text: promptText,
               languageCode: promptLanguage,
               size: 28,
-              autoPlay: !isReverse, // Only auto-play for foreign language prompts
+              autoPlay:
+                  !isReverse, // Only auto-play for foreign language prompts
             ),
           ],
         ),
-        
+
         // German article if applicable
         if (card.germanArticle != null && !isReverse) ...[
           const SizedBox(height: 8),
@@ -222,16 +220,16 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     final options = widget.multipleChoiceOptions ?? [];
     final correctAnswer = widget.card.backText;
     final hasAnswered = widget.answerState == AnswerState.answered;
-    
+
     return Column(
       children: options.map((option) {
         final isSelected = _selectedAnswer == option;
         final isCorrect = option == correctAnswer;
-        
+
         Color? backgroundColor;
         Color? borderColor;
         IconData? icon;
-        
+
         if (hasAnswered) {
           if (isCorrect) {
             backgroundColor = Colors.green.withValues(alpha: 0.1);
@@ -243,14 +241,18 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
             icon = Icons.cancel;
           }
         } else if (isSelected) {
-          backgroundColor = Theme.of(context).primaryColor.withValues(alpha: 0.1);
+          backgroundColor = Theme.of(
+            context,
+          ).primaryColor.withValues(alpha: 0.1);
           borderColor = Theme.of(context).primaryColor;
         }
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: InkWell(
-            onTap: hasAnswered ? null : () => _selectAndCheckAnswer(option, correctAnswer),
+            onTap: hasAnswered
+                ? null
+                : () => _selectAndCheckAnswer(option, correctAnswer),
             borderRadius: BorderRadius.circular(12),
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -291,40 +293,39 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     final correctAnswer = widget.exerciseType == ExerciseType.reverseTranslation
         ? widget.card.frontText
         : widget.card.backText;
-    
+
     // Check if this is a noun to show gender selector
     final isNoun = widget.card.wordData is NounData;
     final nounData = isNoun ? widget.card.wordData as NounData : null;
-    
+
     return Column(
       children: [
         // Gender selector for nouns (only when translating to German)
-        if (isNoun && widget.exerciseType == ExerciseType.reverseTranslation) ...[
+        if (isNoun &&
+            widget.exerciseType == ExerciseType.reverseTranslation) ...[
           _buildGenderSelector(context, hasAnswered, nounData?.gender),
           const SizedBox(height: 12),
         ],
-        
+
         TextField(
           controller: _textController,
           focusNode: _textFocusNode,
           enabled: !hasAnswered,
           decoration: InputDecoration(
             hintText: 'Type your answer...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
-            fillColor: hasAnswered 
-                ? (widget.currentAnswerCorrect == true 
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.1))
+            fillColor: hasAnswered
+                ? (widget.currentAnswerCorrect == true
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.red.withValues(alpha: 0.1))
                 : null,
           ),
           style: const TextStyle(fontSize: 18),
           onChanged: (value) {},
           onSubmitted: hasAnswered ? null : (_) => _checkWritingAnswer(),
         ),
-        
+
         if (hasAnswered) ...[
           const SizedBox(height: 16),
           Container(
@@ -344,10 +345,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
                     children: [
                       const Text(
                         'Correct answer:',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.green),
                       ),
                       Text(
                         correctAnswer,
@@ -371,7 +369,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
   Widget _buildReadingSection(BuildContext context) {
     final hasAnswered = widget.answerState == AnswerState.answered;
     final answer = widget.card.backText;
-    
+
     if (!hasAnswered) {
       return InkWell(
         onTap: _onCheckAnswer,
@@ -397,7 +395,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         ),
       );
     }
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -411,10 +409,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
           const SizedBox(height: 16),
           Text(
             answer,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         ],
@@ -424,38 +419,40 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   Widget _buildActionSection(BuildContext context) {
     final hasAnswered = widget.answerState == AnswerState.answered;
-    
+
     // New exercise types handle their own action buttons
     if (widget.exerciseType == ExerciseType.sentenceBuilding ||
         widget.exerciseType == ExerciseType.conjugationPractice ||
         widget.exerciseType == ExerciseType.articleSelection) {
       return const SizedBox.shrink();
     }
-    
+
     // For reading recognition, the tap-to-reveal is on the card itself
-    if (!hasAnswered && widget.exerciseType == ExerciseType.readingRecognition) {
+    if (!hasAnswered &&
+        widget.exerciseType == ExerciseType.readingRecognition) {
       return const SizedBox.shrink();
     }
-    
+
     // For multiple choice, answer is checked on selection - no button needed
-    if (!hasAnswered && (widget.exerciseType == ExerciseType.multipleChoiceText ||
-        widget.exerciseType == ExerciseType.multipleChoiceIcon)) {
+    if (!hasAnswered &&
+        (widget.exerciseType == ExerciseType.multipleChoiceText ||
+            widget.exerciseType == ExerciseType.multipleChoiceIcon)) {
       return const SizedBox.shrink();
     }
-    
+
     if (!hasAnswered) {
       return _buildCheckAnswerButton(context);
     }
-    
+
     return _buildOverrideButtons(context);
   }
 
   Widget _buildCheckAnswerButton(BuildContext context) {
     final canCheck = _canCheckAnswer();
-    
+
     String buttonText;
     IconData buttonIcon;
-    
+
     switch (widget.exerciseType) {
       case ExerciseType.readingRecognition:
         buttonText = 'Reveal Answer';
@@ -465,16 +462,14 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         buttonText = 'Check Answer';
         buttonIcon = Icons.check;
     }
-    
+
     return ElevatedButton.icon(
       onPressed: canCheck ? _onCheckAnswer : null,
       icon: Icon(buttonIcon),
       label: Text(buttonText),
       style: ElevatedButton.styleFrom(
         minimumSize: const Size(double.infinity, 56),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -495,7 +490,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
 
   void _onCheckAnswer() {
     bool isCorrect;
-    
+
     switch (widget.exerciseType) {
       case ExerciseType.multipleChoiceText:
       case ExerciseType.multipleChoiceIcon:
@@ -512,7 +507,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         // For reading recognition, we just reveal - user decides if correct
         isCorrect = true; // Default to correct, user can override
     }
-    
+
     widget.onCheckAnswer(isCorrect);
   }
 
@@ -525,20 +520,23 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
   bool _checkReverseAnswer() {
     final userAnswer = _textController.text.trim().toLowerCase();
     var correctAnswer = widget.card.frontText.trim().toLowerCase();
-    
+
     // For nouns, strip the article from correct answer since user selects it separately
     if (widget.card.wordData is NounData) {
       final nounData = widget.card.wordData as NounData;
-      
+
       // Remove article prefix (der/die/das) from correct answer
-      correctAnswer = correctAnswer.replaceFirst(RegExp(r'^(der|die|das)\s+'), '');
-      
+      correctAnswer = correctAnswer.replaceFirst(
+        RegExp(r'^(der|die|das)\s+'),
+        '',
+      );
+
       final genderCorrect = _selectedGender == nounData.gender;
       final textCorrect = userAnswer == correctAnswer;
-      
+
       return textCorrect && genderCorrect;
     }
-    
+
     return userAnswer == correctAnswer;
   }
 
@@ -549,17 +547,21 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     widget.onCheckAnswer(isCorrect);
   }
 
-  Widget _buildGenderSelector(BuildContext context, bool hasAnswered, String? correctGender) {
+  Widget _buildGenderSelector(
+    BuildContext context,
+    bool hasAnswered,
+    String? correctGender,
+  ) {
     const genders = ['der', 'die', 'das'];
-    
+
     return Row(
       children: genders.map((gender) {
         final isSelected = _selectedGender == gender;
         final isCorrect = gender == correctGender;
-        
+
         Color? backgroundColor;
         Color? borderColor;
-        
+
         if (hasAnswered) {
           if (isCorrect) {
             backgroundColor = Colors.green.withValues(alpha: 0.1);
@@ -572,7 +574,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
           backgroundColor = _getGenderColor(gender).withValues(alpha: 0.2);
           borderColor = _getGenderColor(gender);
         }
-        
+
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -585,9 +587,13 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
                 ),
               ),
               selected: isSelected,
-              onSelected: hasAnswered ? null : (selected) {
-                setState(() => _selectedGender = selected ? gender : null);
-              },
+              onSelected: hasAnswered
+                  ? null
+                  : (selected) {
+                      setState(
+                        () => _selectedGender = selected ? gender : null,
+                      );
+                    },
               selectedColor: backgroundColor,
               backgroundColor: Colors.grey[100],
               side: BorderSide(
@@ -601,7 +607,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       }).toList(),
     );
   }
-  
+
   Color _getGenderColor(String gender) {
     return switch (gender) {
       'der' => Colors.blue,
@@ -651,7 +657,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         ),
         const SizedBox(height: 12),
         Text(
-          widget.currentAnswerCorrect == true 
+          widget.currentAnswerCorrect == true
               ? 'Auto-validated as correct • Swipe to continue'
               : 'Auto-validated as incorrect • Swipe to continue',
           style: TextStyle(

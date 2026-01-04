@@ -19,7 +19,9 @@ class IconGridItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: isSelected ? 4.0 : 1.0,
-      color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
+      color: isSelected
+          ? Theme.of(context).primaryColor.withValues(alpha: 0.1)
+          : null,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8.0),
@@ -33,9 +35,9 @@ class IconGridItem extends StatelessWidget {
                 child: IconifyIcon(
                   icon: icon,
                   size: 32.0,
-                  color: isSelected 
-                    ? Theme.of(context).primaryColor 
-                    : Theme.of(context).iconTheme.color,
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Theme.of(context).iconTheme.color,
                 ),
               ),
               const SizedBox(height: 4.0),
@@ -44,9 +46,7 @@ class IconGridItem extends StatelessWidget {
                 child: Text(
                   icon.name,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: isSelected 
-                      ? Theme.of(context).primaryColor 
-                      : null,
+                    color: isSelected ? Theme.of(context).primaryColor : null,
                     fontWeight: isSelected ? FontWeight.bold : null,
                   ),
                   textAlign: TextAlign.center,

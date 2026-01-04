@@ -18,7 +18,7 @@ class PracticeCompletionScreen extends StatelessWidget {
   });
 
   int get totalCount => correctCount + incorrectCount;
-  
+
   double get accuracy => totalCount == 0 ? 0.0 : correctCount / totalCount;
 
   String get _formattedDuration {
@@ -33,7 +33,7 @@ class PracticeCompletionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -54,9 +54,9 @@ class PracticeCompletionScreen extends StatelessWidget {
                 color: Colors.amber,
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Title
             Text(
               'Session Complete!',
@@ -64,9 +64,9 @@ class PracticeCompletionScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Stats cards
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -88,9 +88,9 @@ class PracticeCompletionScreen extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Accuracy
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -110,26 +110,25 @@ class PracticeCompletionScreen extends StatelessWidget {
                   Text(
                     'Accuracy',
                     style: TextStyle(
-                      color: theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                      color: theme.colorScheme.onPrimaryContainer.withValues(
+                        alpha: 0.7,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Duration
             Text(
               'Time: $_formattedDuration',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
             ),
-            
+
             const SizedBox(height: 48),
-            
+
             // Action buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -193,10 +192,7 @@ class PracticeCompletionScreen extends StatelessWidget {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: color.withValues(alpha: 0.8),
-            ),
+            style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.8)),
           ),
         ],
       ),

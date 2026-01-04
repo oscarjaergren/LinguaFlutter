@@ -3,7 +3,8 @@ import 'ai_provider_client.dart';
 
 /// Google Gemini API client implementation
 class GeminiClient extends BaseAiProviderClient {
-  static const String _baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+  static const String _baseUrl =
+      'https://generativelanguage.googleapis.com/v1beta';
 
   GeminiClient({super.client});
 
@@ -17,25 +18,22 @@ class GeminiClient extends BaseAiProviderClient {
     String? model,
   }) async {
     final effectiveModel = model ?? defaultModel;
-    final uri = Uri.parse('$_baseUrl/models/$effectiveModel:generateContent?key=$apiKey');
+    final uri = Uri.parse(
+      '$_baseUrl/models/$effectiveModel:generateContent?key=$apiKey',
+    );
 
     final response = await post(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: {
         'contents': [
           {
             'parts': [
-              {'text': prompt}
-            ]
-          }
+              {'text': prompt},
+            ],
+          },
         ],
-        'generationConfig': {
-          'temperature': 0.3,
-          'maxOutputTokens': 1000,
-        },
+        'generationConfig': {'temperature': 0.3, 'maxOutputTokens': 1000},
       },
     );
 
