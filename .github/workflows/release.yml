@@ -1,16 +1,36 @@
+# ============================================================================
+# Release Build Pipeline
+# ============================================================================
+# Purpose: Create official release builds for all platforms
+# Triggers: Git tags starting with 'v' (e.g., v1.0.0) OR GitHub release published
+# 
+# What it does:
+# 1. Builds release versions for Web, Windows, and macOS
+# 2. Creates compressed archives of each build
+# 3. Uploads archives as GitHub release assets
+#
+# Usage:
+# 1. Create a git tag: git tag v1.0.0
+# 2. Push the tag: git push origin v1.0.0
+# 3. Or create a GitHub release - this workflow will attach the builds
+#
+# Note: Android releases use android-beta-release.yml instead
+# ============================================================================
+
 name: Release
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
   release:
-    types: [published]
+    types: [published]  # Also triggers when a GitHub release is published
 
 jobs:
   create-release-builds:
     name: Create Release Builds
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}  # Uses different OS for each platform
+    
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]

@@ -1,10 +1,26 @@
+# ============================================================================
+# Development CI - Quick Checks
+# ============================================================================
+# Purpose: Fast feedback for development branches
+# Triggers: Push to develop/feature/* branches, PRs to develop
+# 
+# What it does:
+# 1. Quick formatting check
+# 2. Code analysis
+# 3. Run unit tests (no integration tests)
+# 4. Quick web build in debug mode (faster than release)
+#
+# This is a LIGHTER workflow than ci-cd.yml - designed for rapid feedback
+# during development without consuming too many GitHub Actions minutes
+# ============================================================================
+
 name: Development CI
 
 on:
   push:
-    branches: [ develop, feature/* ]
+    branches: [ develop, feature/* ]  # Triggers on dev and feature branches
   pull_request:
-    branches: [ develop ]
+    branches: [ develop ]  # Triggers on PRs to develop
 
 jobs:
   quick-check:

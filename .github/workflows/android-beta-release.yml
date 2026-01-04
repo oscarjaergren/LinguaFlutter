@@ -1,12 +1,32 @@
+# ============================================================================
+# Android Beta Release Pipeline
+# ============================================================================
+# Purpose: Automatically deploy Android app to Google Play Store Beta track
+# Triggers: Every push to master branch
+# 
+# What it does:
+# 1. Runs tests to ensure code quality
+# 2. Builds signed Android App Bundle (.aab)
+# 3. Uploads to Play Store Beta track for internal testing
+# 4. Saves build artifact for 30 days
+#
+# Required Secrets:
+# - ANDROID_KEYSTORE_BASE64: Base64-encoded keystore file
+# - ANDROID_KEYSTORE_PASSWORD: Keystore password
+# - ANDROID_KEY_PASSWORD: Key password
+# - ANDROID_KEY_ALIAS: Key alias
+# - GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: Service account for Play Store API
+# ============================================================================
+
 name: Android Beta Release
 
 on:
   push:
-    branches: [main]
+    branches: [master]  # Triggers on push to master branch
 
 env:
-  FLUTTER_VERSION: '3.32.5'
-  JAVA_VERSION: '17'
+  FLUTTER_VERSION: '3.32.5'  # Flutter SDK version
+  JAVA_VERSION: '17'          # Java version required for Android builds
 
 jobs:
   deploy-beta:
@@ -38,6 +58,7 @@ jobs:
     - name: Run tests
       run: flutter test
       
+    # Keystore is stored as base64 to avoid binary file issues
     - name: Decode keystore
       run: |
         echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks

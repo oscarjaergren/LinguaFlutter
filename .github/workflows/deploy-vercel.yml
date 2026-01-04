@@ -1,0 +1,70 @@
+# ============================================================================
+# Vercel Deployment Pipeline
+# ============================================================================
+# Purpose: Deploy Flutter web app to Vercel hosting
+# Triggers: Push to master (production), PRs to master (preview)
+# 
+# What it does:
+# 1. Builds Flutter web app in release mode
+# 2. Deploys to Vercel production (on master push)
+# 3. Creates preview deployment (on pull requests)
+#
+# Required Setup:
+# 1. Run 'vercel link' locally to create .vercel directory
+# 2. Commit .vercel directory to repository
+# 3. Add VERCEL_TOKEN secret to GitHub repository settings
+#
+# See .github/workflows/SETUP.md for detailed setup instructions
+# ============================================================================
+
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - master  # Production deployment on push to master
+  pull_request:
+    branches:
+      - master  # Preview deployment for PRs
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./build/web
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./build/web
+
+      - name: Deploy to Vercel (Production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./build/web
+
+      - name: Deploy to Vercel (Preview)
+        if: github.event_name == 'pull_request'
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./build/web

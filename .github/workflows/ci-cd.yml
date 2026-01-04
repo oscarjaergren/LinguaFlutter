@@ -1,10 +1,27 @@
+# ============================================================================
+# Full CI/CD Pipeline
+# ============================================================================
+# Purpose: Comprehensive testing and building for all platforms
+# Triggers: Push to master/develop branches, PRs to master
+# 
+# What it does:
+# 1. Analyze & Lint: Check code quality and formatting
+# 2. Test: Run unit tests with coverage reporting
+# 3. Build: Create builds for Web, Windows, Android, iOS
+# 4. Integration Tests: Run integration tests with Docker infrastructure
+# 5. Security Scan: Check for dependency vulnerabilities
+#
+# WARNING: This is a HEAVY workflow - runs on every push to master/develop
+# Consider using dev-ci.yml for lighter checks on feature branches
+# ============================================================================
+
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]  # Triggers on push to master or develop
   pull_request:
-    branches: [ main ]
+    branches: [ master ]  # Triggers on PRs targeting master
 
 jobs:
   analyze:
@@ -156,6 +173,7 @@ jobs:
     - name: Build Android APK
       run: flutter build apk --release
       
+    # Unsigned AAB - use android-beta-release.yml for signed builds
     - name: Build Android App Bundle
       run: flutter build appbundle --release
       
@@ -192,6 +210,7 @@ jobs:
     - name: Generate code
       run: dart run build_runner build --delete-conflicting-outputs
       
+    # No code signing - for App Store submission you need proper certificates
     - name: Build iOS (no signing)
       run: flutter build ios --release --no-codesign
       
