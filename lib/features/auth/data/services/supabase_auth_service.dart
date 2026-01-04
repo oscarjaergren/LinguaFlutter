@@ -15,22 +15,26 @@ class SupabaseAuthService {
     if (_initialized) return;
 
     try {
-      // Try to load .env file (will fail silently in web/production)
-      try {
+      String? url;
+      String? anonKey;
+
+      if (kIsWeb) {
+        // Web: Use compile-time environment variables (set via --dart-define)
+        url = const String.fromEnvironment('SUPABASE_URL');
+        anonKey = const String.fromEnvironment('SUPABASE_ANON_KEY');
+      } else {
+        // Mobile/Desktop: Use .env file
         await dotenv.load(fileName: '.env');
-      } catch (e) {
-        // .env file not found - this is expected in web builds
-        LoggerService.info('.env file not found, using environment variables');
+        url = dotenv.env['SUPABASE_URL'];
+        anonKey = dotenv.env['SUPABASE_ANON_KEY'];
       }
 
-      // Get credentials from .env or environment variables
-      final url = dotenv.env['SUPABASE_URL'] ?? 
-                  const String.fromEnvironment('SUPABASE_URL');
-      final anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? 
-                      const String.fromEnvironment('SUPABASE_ANON_KEY');
-
-      if (url.isEmpty || anonKey.isEmpty) {
-        throw Exception('Missing Supabase configuration. Set SUPABASE_URL and SUPABASE_ANON_KEY environment variables.');
+      if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
+        throw Exception(
+          'Missing Supabase configuration. '
+          'Web: Set via --dart-define during build. '
+          'Mobile: Add SUPABASE_URL and SUPABASE_ANON_KEY to .env file.',
+        );
       }
 
       await Supabase.initialize(
