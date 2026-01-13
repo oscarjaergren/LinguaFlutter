@@ -49,7 +49,7 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build web
-        run: flutter build web --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+        run: flutter build web --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -66,6 +66,31 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         working-directory: ./build/web
+
+      - name: Create Sentry Release (Production)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          # Get version from pubspec.yaml
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
+          
+          # Create Sentry release (CLI auto-detects org/project from token)
+          npx @sentry/cli releases new \
+            --auth-token=${{ secrets.SENTRY_AUTH_TOKEN }} \
+            lingua_flutter@$VERSION \
+            --environment=production
+          
+          # Associate commits
+          npx @sentry/cli releases set-commits \
+            --auth-token=${{ secrets.SENTRY_AUTH_TOKEN }} \
+            lingua_flutter@$VERSION \
+            --auto
+          
+          # Finalize release
+          npx @sentry/cli releases finalize \
+            --auth-token=${{ secrets.SENTRY_AUTH_TOKEN }} \
+            lingua_flutter@$VERSION
+          
+          echo "✅ Sentry release created: lingua_flutter@$VERSION"
 
       - name: Deploy to Vercel (Preview)
         if: github.event_name == 'pull_request'
