@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/services/supabase_auth_service.dart';
 import '../../../shared/services/logger_service.dart';
+import '../../../shared/services/sentry_service.dart';
 
 /// Callback type for when auth state changes
 typedef OnAuthStateChanged = Future<void> Function(bool isAuthenticated);
@@ -24,6 +25,16 @@ class AuthProvider extends ChangeNotifier {
       _user = data.session?.user;
       final isNowAuthenticated = _user != null;
 
+      // Update Sentry user context
+      if (isNowAuthenticated && _user != null) {
+        SentryService.setUser(
+          id: _user!.id,
+          email: _user!.email,
+        );
+      } else {
+        SentryService.clearUser();
+      }
+
       // Notify data providers when auth state changes
       if (wasAuthenticated != isNowAuthenticated &&
           onAuthStateChanged != null) {
@@ -35,6 +46,14 @@ class AuthProvider extends ChangeNotifier {
 
     // Initialize with current user
     _user = SupabaseAuthService.client.auth.currentUser;
+    
+    // Set initial Sentry user context if already authenticated
+    if (_user != null) {
+      SentryService.setUser(
+        id: _user!.id,
+        email: _user!.email,
+      );
+    }
   }
 
   // Getters
@@ -160,6 +179,14 @@ class AuthProvider extends ChangeNotifier {
       if (response.user != null) {
         LoggerService.info('User signed in: ${response.user!.email}');
         _user = response.user;
+        
+        // Add breadcrumb for successful sign-in
+        SentryService.addBreadcrumb(
+          message: 'User signed in',
+          category: 'auth',
+          data: {'email': response.user!.email},
+        );
+        
         notifyListeners();
         return true;
       } else {
@@ -187,6 +214,13 @@ class AuthProvider extends ChangeNotifier {
     try {
       await SupabaseAuthService.signOut();
       _user = null;
+      
+      // Add breadcrumb for sign-out
+      SentryService.addBreadcrumb(
+        message: 'User signed out',
+        category: 'auth',
+      );
+      
       LoggerService.info('User signed out');
       notifyListeners();
     } on AuthException catch (e) {

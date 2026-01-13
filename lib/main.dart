@@ -1,5 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'features/icon_search/icon_search.dart';
 import 'features/streak/streak.dart';
 import 'features/language/language.dart';
@@ -11,13 +14,24 @@ import 'features/auth/auth.dart';
 import 'features/duplicate_detection/duplicate_detection.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
+import 'shared/services/sentry_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (e) {
+    debugPrint('⚠️ .env file not found, continuing without environment variables');
+  }
+
   // Initialize logging first
   LoggerService.initialize();
   LoggerService.info('🚀 LinguaFlutter app starting...');
+
+  // Initialize Sentry for error tracking
+  await SentryService.initialize();
 
   // Initialize Supabase auth
   await SupabaseAuthService.initialize();
@@ -66,6 +80,22 @@ void main() async {
   }
 
   LoggerService.info('✅ Core providers initialized successfully');
+
+  // Set up Flutter error handlers to capture errors in Sentry
+  FlutterError.onError = (FlutterErrorDetails details) {
+    LoggerService.error(
+      'Flutter error caught',
+      details.exception,
+      details.stack,
+    );
+    FlutterError.presentError(details);
+  };
+
+  // Capture errors in async code
+  PlatformDispatcher.instance.onError = (error, stack) {
+    LoggerService.error('Uncaught async error', error, stack);
+    return true;
+  };
 
   runApp(
     MultiProvider(

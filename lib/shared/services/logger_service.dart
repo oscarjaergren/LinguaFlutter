@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'sentry_service.dart';
 
-/// Centralized logging service using Talker
+/// Centralized logging service using Talker with Sentry integration
 class LoggerService {
   static late final Talker _talker;
 
@@ -51,6 +53,22 @@ class LoggerService {
     StackTrace? stackTrace,
   ]) {
     _talker.error(message, exception, stackTrace);
+    
+    // Send errors to Sentry in production
+    if (SentryService.isInitialized) {
+      if (exception != null) {
+        SentryService.captureException(
+          exception,
+          stackTrace: stackTrace,
+          hint: message,
+        );
+      } else {
+        SentryService.captureMessage(
+          message,
+          level: SentryLevel.error,
+        );
+      }
+    }
   }
 
   static void critical(
@@ -59,5 +77,21 @@ class LoggerService {
     StackTrace? stackTrace,
   ]) {
     _talker.critical(message, exception, stackTrace);
+    
+    // Send critical errors to Sentry
+    if (SentryService.isInitialized) {
+      if (exception != null) {
+        SentryService.captureException(
+          exception,
+          stackTrace: stackTrace,
+          hint: message,
+        );
+      } else {
+        SentryService.captureMessage(
+          message,
+          level: SentryLevel.fatal,
+        );
+      }
+    }
   }
 }

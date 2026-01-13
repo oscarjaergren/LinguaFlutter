@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../features/auth/auth.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/card_management/card_management.dart';
@@ -23,6 +24,9 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation:
         auth, // Start at auth - redirect will handle if already logged in
+    observers: [
+      SentryNavigatorObserver(),
+    ],
     redirect: (context, state) {
       final isAuthenticated = SupabaseAuthService.isAuthenticated;
       final path = state.matchedLocation;
