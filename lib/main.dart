@@ -18,91 +18,64 @@ import 'shared/services/sentry_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables (only for non-web platforms)
-  // Web uses --dart-define at build time
+  await _initializeServices();
+  LoggerService.info('App startup: services ready');
+
+  final error = await _initializeSupabase();
+  if (error != null) {
+    LoggerService.error('App startup failed: Supabase error');
+    runApp(_ErrorApp(error: error));
+    return;
+  }
+  LoggerService.info('App startup: Supabase ready');
+
+  runApp(await _buildApp());
+  LoggerService.info('App startup complete');
+}
+
+Future<void> _initializeServices() async {
   if (!kIsWeb) {
     try {
       await dotenv.load(fileName: '.env');
     } catch (_) {
-      debugPrint(
-        '⚠️ .env file not found, continuing without environment variables',
-      );
+      // .env not required on all platforms
     }
   }
 
-  final sentryDsn = const String.fromEnvironment('SENTRY_DSN').trim().isNotEmpty
-      ? const String.fromEnvironment('SENTRY_DSN').trim()
-      : (kIsWeb ? null : dotenv.env['SENTRY_DSN']?.trim());
-
-  final sentryEnvironment =
-      const String.fromEnvironment('SENTRY_ENVIRONMENT').trim().isNotEmpty
-          ? const String.fromEnvironment('SENTRY_ENVIRONMENT').trim()
-          : (kIsWeb
-                  ? null
-                  : dotenv.env['SENTRY_ENVIRONMENT']?.trim()) ??
-              (kReleaseMode
-                  ? 'production'
-                  : kProfileMode
-                      ? 'profile'
-                      : 'development');
-
-  final sentryRelease =
-      const String.fromEnvironment('SENTRY_RELEASE').trim().isNotEmpty
-          ? const String.fromEnvironment('SENTRY_RELEASE').trim()
-          : (kIsWeb ? null : dotenv.env['SENTRY_RELEASE']?.trim());
-
-  // Initialize Sentry as early as possible, using already-loaded configuration
   await SentryService.initialize(
-    dsn: sentryDsn,
-    environment: sentryEnvironment,
-    release: sentryRelease,
+    dsn: _getEnvVar('SENTRY_DSN'),
+    environment: _getEnvVar('SENTRY_ENVIRONMENT') ?? _defaultEnvironment,
+    release: _getEnvVar('SENTRY_RELEASE'),
   );
 
-  // Initialize logging first
   LoggerService.initialize();
-  LoggerService.info('🚀 LinguaFlutter app starting...');
+}
 
-  // Initialize Supabase auth - capture early errors in Sentry
+Future<String?> _initializeSupabase() async {
   try {
     await SupabaseAuthService.initialize();
+    return null;
   } catch (e, stackTrace) {
-    LoggerService.error('Failed to initialize Supabase', e, stackTrace);
-    await SentryService.captureException(
-      e,
-      stackTrace: stackTrace,
-      hint: 'Supabase initialization failed - likely missing environment variables',
-    );
-    // Show error screen instead of crashing
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Configuration Error',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    kDebugMode ? e.toString() : 'Failed to connect to the server. Please try again later.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-    return;
+    LoggerService.error('Supabase initialization failed', e, stackTrace);
+    await SentryService.captureException(e, stackTrace: stackTrace);
+    return e.toString();
   }
+}
 
+String? _getEnvVar(String key) {
+  final buildTime = String.fromEnvironment(key).trim();
+  if (buildTime.isNotEmpty) return buildTime;
+  if (kIsWeb) return null;
+  return dotenv.env[key]?.trim();
+}
+
+String get _defaultEnvironment {
+  if (kReleaseMode) return 'production';
+  if (kProfileMode) return 'profile';
+  return 'development';
+}
+
+Future<Widget> _buildApp() async {
   // Create core providers
   final authProvider = AuthProvider();
   final languageProvider = LanguageProvider();
@@ -146,26 +119,11 @@ void main() async {
     await streakProvider.loadStreak();
   }
 
-  LoggerService.info('✅ Core providers initialized successfully');
+  LoggerService.info('App startup: providers ready');
 
-  // Set up Flutter error handlers to capture errors in Sentry
-  FlutterError.onError = (FlutterErrorDetails details) {
-    LoggerService.error(
-      'Flutter error caught',
-      details.exception,
-      details.stack,
-    );
-    FlutterError.presentError(details);
-  };
+  _setupErrorHandlers();
 
-  // Capture errors in async code
-  PlatformDispatcher.instance.onError = (error, stack) {
-    LoggerService.error('Uncaught async error', error, stack);
-    return true;
-  };
-
-  runApp(
-    MultiProvider(
+  return MultiProvider(
       providers: [
         // Core providers
         ChangeNotifierProvider.value(value: authProvider),
@@ -207,9 +165,55 @@ void main() async {
               ),
         ),
       ],
-      child: const LinguaFlutterApp(),
-    ),
+    child: const LinguaFlutterApp(),
   );
+}
+
+void _setupErrorHandlers() {
+  FlutterError.onError = (details) {
+    LoggerService.error('Flutter error', details.exception, details.stack);
+    FlutterError.presentError(details);
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    LoggerService.error('Uncaught async error', error, stack);
+    return true;
+  };
+}
+
+class _ErrorApp extends StatelessWidget {
+  const _ErrorApp({required this.error});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Configuration Error',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  kDebugMode ? error : 'Unable to connect. Please try again.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class LinguaFlutterApp extends StatelessWidget {
