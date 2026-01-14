@@ -10,14 +10,23 @@ class SentryService {
   static Future<void> initialize() async {
     // Try dart-define first (for production builds), then fall back to .env
     const dartDefineDsn = String.fromEnvironment('SENTRY_DSN');
-    final sentryDsn = dartDefineDsn.isNotEmpty 
-        ? dartDefineDsn 
-        : dotenv.env['SENTRY_DSN'];
+    
+    // On web, only use dart-define. On other platforms, fall back to .env
+    String? sentryDsn;
+    if (dartDefineDsn.isNotEmpty) {
+      sentryDsn = dartDefineDsn;
+    } else if (!kIsWeb) {
+      // Only access dotenv on non-web platforms
+      sentryDsn = dotenv.env['SENTRY_DSN'];
+    }
     
     if (kDebugMode) {
       debugPrint('🔍 Sentry DSN check:');
+      debugPrint('  - Platform: ${kIsWeb ? "web" : "native"}');
       debugPrint('  - dart-define: ${dartDefineDsn.isEmpty ? "empty" : "found"}');
-      debugPrint('  - dotenv: ${dotenv.env['SENTRY_DSN']?.isEmpty ?? true ? "empty" : "found"}');
+      if (!kIsWeb) {
+        debugPrint('  - dotenv: ${dotenv.env['SENTRY_DSN']?.isEmpty ?? true ? "empty" : "found"}');
+      }
       debugPrint('  - final DSN: ${sentryDsn?.isEmpty ?? true ? "empty" : "found"}');
     }
     
