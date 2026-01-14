@@ -35,10 +35,10 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 
 ```
 SENTRY_DSN=your_sentry_dsn_here
-SENTRY_ORG=your_organization_slug
-SENTRY_PROJECT=your_project_slug
-SENTRY_AUTH_TOKEN=your_auth_token_here
+SENTRY_AUTH_TOKEN=your_sentry_auth_token_here
 ```
+
+Note: `SENTRY_ORG` and `SENTRY_PROJECT` are not required - the Sentry CLI auto-detects these from your auth token.
 
 ### 3. Environment Variables
 
@@ -73,7 +73,7 @@ flutter build web --release --dart-define=SENTRY_DSN=your_dsn_here
 vercel --prod
 
 # 4. Create Sentry release (optional)
-npx @sentry/cli releases new --org=your-org --project=your-project lingua_flutter@1.0.0
+npx @sentry/cli releases new lingua_flutter@1.0.0
 ```
 
 ## What Gets Tracked
