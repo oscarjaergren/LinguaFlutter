@@ -98,7 +98,7 @@ jobs:
           npx @sentry/cli releases new lingua_flutter@$VERSION
           
           # Upload source maps for readable stack traces
-          npx @sentry/cli releases files lingua_flutter@$VERSION upload-sourcemaps build/web --ext js --ext map
+          npx @sentry/cli sourcemaps upload build/web --release lingua_flutter@$VERSION
           
           # Associate commits
           npx @sentry/cli releases set-commits lingua_flutter@$VERSION --auto
