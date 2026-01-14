@@ -12,7 +12,8 @@ class LoggerService {
     _talker = TalkerFlutter.init(
       settings: TalkerSettings(
         enabled: true,
-        useConsoleLogs: kDebugMode,
+        // Enable console logs in debug mode OR on web (for production debugging)
+        useConsoleLogs: kDebugMode || kIsWeb,
         useHistory: true,
         maxHistoryItems: 1000,
       ),
@@ -37,6 +38,10 @@ class LoggerService {
     StackTrace? stackTrace,
   ]) {
     _talker.info(message, exception, stackTrace);
+    // Add as Sentry breadcrumb for debugging
+    if (SentryService.isInitialized) {
+      SentryService.addBreadcrumb(message: message, category: 'app', level: SentryLevel.info);
+    }
   }
 
   static void warning(

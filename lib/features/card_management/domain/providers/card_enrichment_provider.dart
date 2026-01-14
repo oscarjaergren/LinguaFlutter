@@ -57,8 +57,8 @@ class CardEnrichmentProvider extends ChangeNotifier {
       debugPrint('Failed to load AI config: $e');
     }
 
-    // Auto-load from .env if not configured (for easier debugging)
-    if (!_config.isConfigured) {
+    // Auto-load from .env if not configured (for easier debugging, non-web only)
+    if (!_config.isConfigured && !kIsWeb) {
       final envKey = dotenv.env['GEMINI_API_KEY'];
       if (envKey != null && envKey.isNotEmpty) {
         _config = _config.copyWith(apiKey: envKey, provider: AiProvider.gemini);
