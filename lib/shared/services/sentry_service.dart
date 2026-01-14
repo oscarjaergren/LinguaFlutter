@@ -1,82 +1,91 @@
 import 'package:flutter/foundation.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Centralized Sentry configuration and error tracking service
 class SentryService {
   static bool _isInitialized = false;
+  static bool _isInitializing = false;
+
+  static String? _normalizeEnvValue(String? value) {
+    final trimmed = value?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+    return trimmed;
+  }
 
   /// Initialize Sentry with configuration from environment variables
-  static Future<void> initialize() async {
-    // Try dart-define first (for production builds), then fall back to .env
-    const dartDefineDsn = String.fromEnvironment('SENTRY_DSN');
-    
-    // On web, only use dart-define. On other platforms, fall back to .env
-    String? sentryDsn;
-    if (dartDefineDsn.isNotEmpty) {
-      sentryDsn = dartDefineDsn;
-    } else if (!kIsWeb) {
-      // Only access dotenv on non-web platforms
-      sentryDsn = dotenv.env['SENTRY_DSN'];
-    }
-    
-    if (kDebugMode) {
-      debugPrint('🔍 Sentry DSN check:');
-      debugPrint('  - Platform: ${kIsWeb ? "web" : "native"}');
-      debugPrint('  - dart-define: ${dartDefineDsn.isEmpty ? "empty" : "found"}');
-      if (!kIsWeb) {
-        debugPrint('  - dotenv: ${dotenv.env['SENTRY_DSN']?.isEmpty ?? true ? "empty" : "found"}');
-      }
-      debugPrint('  - final DSN: ${sentryDsn?.isEmpty ?? true ? "empty" : "found"}');
-    }
-    
-    if (sentryDsn == null || sentryDsn.isEmpty) {
-      debugPrint('⚠️ Sentry DSN not found in environment variables. Sentry will not be initialized.');
+  static Future<void> initialize({
+    required String? dsn,
+    required String environment,
+    String? release,
+  }) async {
+    if (_isInitialized || _isInitializing) {
       return;
     }
 
-    await SentryFlutter.init(
-      (options) {
-        options.dsn = sentryDsn;
-        
-        // Environment configuration
-        options.environment = kDebugMode ? 'development' : 'production';
-        
-        // Sample rate for performance monitoring (1.0 = 100%)
-        options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
-        
-        // Enable automatic breadcrumbs
-        options.enableAutoSessionTracking = true;
-        
-        // Capture failed HTTP requests
-        options.captureFailedRequests = true;
-        
-        // Debug options
-        options.debug = kDebugMode;
-        
-        // Attach stack traces to messages
-        options.attachStacktrace = true;
-        
-        // Set release version
-        options.release = 'lingua_flutter@1.0.0+1';
-        
-        // Filter out sensitive data
-        options.beforeSend = (event, hint) {
-          // Add custom filtering logic here if needed
-          return event;
-        };
-      },
-    );
+    _isInitializing = true;
 
-    _isInitialized = true;
-    
-    // Set platform tag
-    Sentry.configureScope((scope) {
-      scope.setTag('platform', defaultTargetPlatform.name);
-    });
-    
-    if (kDebugMode) {
-      print('✅ Sentry initialized successfully');
+    try {
+      final normalizedDsn = _normalizeEnvValue(dsn);
+      if (normalizedDsn == null) {
+        debugPrint('⚠️ Sentry DSN not configured. Skipping initialization.');
+        return;
+      }
+
+      final trimmedRelease = release?.trim();
+
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = normalizedDsn;
+
+          // Environment configuration
+          options.environment = environment;
+
+          // Sample rate for performance monitoring (1.0 = 100%)
+          options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
+
+          // Enable automatic breadcrumbs
+          options.enableAutoSessionTracking = true;
+
+          // Capture failed HTTP requests
+          options.captureFailedRequests = true;
+
+          // Debug options
+          options.debug = kDebugMode;
+
+          // Attach stack traces to messages
+          options.attachStacktrace = true;
+
+          if (trimmedRelease != null && trimmedRelease.isNotEmpty) {
+            options.release = trimmedRelease;
+          }
+
+          // Filter out sensitive data
+          options.beforeSend = (event, hint) {
+            // Add custom filtering logic here if needed
+            return event;
+          };
+        },
+      );
+
+      _isInitialized = true;
+
+      // Set platform tag
+      Sentry.configureScope((scope) {
+        scope.setTag('platform', kIsWeb ? 'web' : defaultTargetPlatform.name);
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ Sentry initialized successfully');
+      }
+    } catch (error, stackTrace) {
+      debugPrint('⚠️ Sentry initialization failed: $error');
+      if (kDebugMode) {
+        debugPrint(stackTrace.toString());
+      }
+    } finally {
+      _isInitializing = false;
     }
   }
 
@@ -85,10 +94,10 @@ class SentryService {
 
   /// Capture an exception with optional context
   static Future<void> captureException(
-    dynamic exception, {
-    dynamic stackTrace,
+    Object exception, {
+    StackTrace? stackTrace,
     String? hint,
-    Map<String, dynamic>? extras,
+    Map<String, Object?>? extras,
   }) async {
     if (!_isInitialized) return;
 
@@ -98,9 +107,9 @@ class SentryService {
       hint: hint != null ? Hint.withMap({'message': hint}) : null,
       withScope: (scope) {
         if (extras != null) {
-          extras.forEach((key, value) {
-            scope.setExtra(key, value);
-          });
+          for (final entry in extras.entries) {
+            scope.setExtra(entry.key, entry.value);
+          }
         }
       },
     );
@@ -110,7 +119,7 @@ class SentryService {
   static Future<void> captureMessage(
     String message, {
     SentryLevel level = SentryLevel.info,
-    Map<String, dynamic>? extras,
+    Map<String, Object?>? extras,
   }) async {
     if (!_isInitialized) return;
 
@@ -119,9 +128,9 @@ class SentryService {
       level: level,
       withScope: (scope) {
         if (extras != null) {
-          extras.forEach((key, value) {
-            scope.setExtra(key, value);
-          });
+          for (final entry in extras.entries) {
+            scope.setExtra(entry.key, entry.value);
+          }
         }
       },
     );
@@ -132,7 +141,7 @@ class SentryService {
     required String message,
     String? category,
     SentryLevel level = SentryLevel.info,
-    Map<String, dynamic>? data,
+    Map<String, Object?>? data,
   }) {
     if (!_isInitialized) return;
 
@@ -151,7 +160,7 @@ class SentryService {
     String? id,
     String? email,
     String? username,
-    Map<String, dynamic>? extras,
+    Map<String, Object?>? extras,
   }) {
     if (!_isInitialized) return;
 
@@ -177,7 +186,7 @@ class SentryService {
   }
 
   /// Set custom context/tags
-  static void setContext(String key, dynamic value) {
+  static void setContext(String key, Object? value) {
     if (!_isInitialized) return;
 
     Sentry.configureScope((scope) {
@@ -216,5 +225,6 @@ class SentryService {
     if (!_isInitialized) return;
     await Sentry.close();
     _isInitialized = false;
+    _isInitializing = false;
   }
 }

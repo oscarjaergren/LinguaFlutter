@@ -18,18 +18,45 @@ import 'shared/services/sentry_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Sentry FIRST to catch all errors
-  await SentryService.initialize();
-
   // Load environment variables (only for non-web platforms)
   // Web uses --dart-define at build time
   if (!kIsWeb) {
     try {
       await dotenv.load(fileName: '.env');
-    } catch (e) {
-      debugPrint('⚠️ .env file not found, continuing without environment variables');
+    } catch (_) {
+      debugPrint(
+        '⚠️ .env file not found, continuing without environment variables',
+      );
     }
   }
+
+  final sentryDsn = const String.fromEnvironment('SENTRY_DSN').trim().isNotEmpty
+      ? const String.fromEnvironment('SENTRY_DSN').trim()
+      : (kIsWeb ? null : dotenv.env['SENTRY_DSN']?.trim());
+
+  final sentryEnvironment =
+      const String.fromEnvironment('SENTRY_ENVIRONMENT').trim().isNotEmpty
+          ? const String.fromEnvironment('SENTRY_ENVIRONMENT').trim()
+          : (kIsWeb
+                  ? null
+                  : dotenv.env['SENTRY_ENVIRONMENT']?.trim()) ??
+              (kReleaseMode
+                  ? 'production'
+                  : kProfileMode
+                      ? 'profile'
+                      : 'development');
+
+  final sentryRelease =
+      const String.fromEnvironment('SENTRY_RELEASE').trim().isNotEmpty
+          ? const String.fromEnvironment('SENTRY_RELEASE').trim()
+          : (kIsWeb ? null : dotenv.env['SENTRY_RELEASE']?.trim());
+
+  // Initialize Sentry as early as possible, using already-loaded configuration
+  await SentryService.initialize(
+    dsn: sentryDsn,
+    environment: sentryEnvironment,
+    release: sentryRelease,
+  );
 
   // Initialize logging first
   LoggerService.initialize();
