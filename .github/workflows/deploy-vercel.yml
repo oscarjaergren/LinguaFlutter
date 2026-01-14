@@ -60,11 +60,13 @@ jobs:
 
       - name: Build web
         run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d ' ')
           flutter build web --release --source-maps \
             --dart-define="SUPABASE_URL=${{ secrets.SUPABASE_URL }}" \
             --dart-define="SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" \
             --dart-define="SENTRY_DSN=${{ secrets.SENTRY_DSN }}" \
-            --dart-define="SENTRY_ENVIRONMENT=production"
+            --dart-define="SENTRY_ENVIRONMENT=production" \
+            --dart-define="SENTRY_RELEASE=lingua_flutter@$VERSION"
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -94,6 +96,9 @@ jobs:
           
           # Create Sentry release
           npx @sentry/cli releases new lingua_flutter@$VERSION
+          
+          # Upload source maps for readable stack traces
+          npx @sentry/cli releases files lingua_flutter@$VERSION upload-sourcemaps build/web --ext js --ext map
           
           # Associate commits
           npx @sentry/cli releases set-commits lingua_flutter@$VERSION --auto
