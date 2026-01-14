@@ -88,9 +88,10 @@ class ExerciseScore {
     final newBestStreak = newStreak > bestStreak ? newStreak : bestStreak;
 
     // Calculate next review using spaced repetition
-    final multiplier = (correctCount + 1) / (totalAttempts + 1);
+    // Use currentStreak for progressive intervals, not overall correctCount
+    final streakMultiplier = (currentStreak + 1) / 1.0;
     final baseDays = 1;
-    final intervalDays = (baseDays * (1 + multiplier * 2)).round();
+    final intervalDays = (baseDays * (1 + streakMultiplier * 2)).round();
     final nextReviewDate = now.add(Duration(days: intervalDays));
 
     return copyWith(
