@@ -14,10 +14,15 @@ class SentryService {
         ? dartDefineDsn 
         : dotenv.env['SENTRY_DSN'];
     
+    if (kDebugMode) {
+      debugPrint('🔍 Sentry DSN check:');
+      debugPrint('  - dart-define: ${dartDefineDsn.isEmpty ? "empty" : "found"}');
+      debugPrint('  - dotenv: ${dotenv.env['SENTRY_DSN']?.isEmpty ?? true ? "empty" : "found"}');
+      debugPrint('  - final DSN: ${sentryDsn?.isEmpty ?? true ? "empty" : "found"}');
+    }
+    
     if (sentryDsn == null || sentryDsn.isEmpty) {
-      if (kDebugMode) {
-        print('⚠️ Sentry DSN not found in environment variables. Sentry will not be initialized.');
-      }
+      debugPrint('⚠️ Sentry DSN not found in environment variables. Sentry will not be initialized.');
       return;
     }
 
