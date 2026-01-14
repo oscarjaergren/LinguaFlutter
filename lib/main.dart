@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -18,11 +18,14 @@ import 'shared/services/sentry_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (e) {
-    debugPrint('⚠️ .env file not found, continuing without environment variables');
+  // Load environment variables (only for non-web platforms)
+  // Web uses --dart-define at build time
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: '.env');
+    } catch (e) {
+      debugPrint('⚠️ .env file not found, continuing without environment variables');
+    }
   }
 
   // Initialize logging first
