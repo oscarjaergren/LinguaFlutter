@@ -20,8 +20,12 @@ class SupabaseAuthService {
 
       if (kIsWeb) {
         // Web: Use compile-time environment variables (set via --dart-define)
-        url = const String.fromEnvironment('SUPABASE_URL');
-        anonKey = const String.fromEnvironment('SUPABASE_ANON_KEY');
+        const webUrl = String.fromEnvironment('SUPABASE_URL');
+        const webKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+        url = webUrl;
+        anonKey = webKey;
+        // Log to Sentry breadcrumb for debugging
+        LoggerService.info('Supabase web config: URL=${url.length} chars, Key=${anonKey.length} chars');
       } else {
         // Mobile/Desktop: Use .env file
         await dotenv.load(fileName: '.env');
@@ -29,21 +33,17 @@ class SupabaseAuthService {
         anonKey = dotenv.env['SUPABASE_ANON_KEY'];
       }
 
-      final missingVars = <String>[
-        if (url == null || url.isEmpty) 'SUPABASE_URL',
-        if (anonKey == null || anonKey.isEmpty) 'SUPABASE_ANON_KEY',
-      ];
-
-      if (missingVars.isNotEmpty) {
-        throw Exception(
-          'Missing Supabase configuration: ${missingVars.join(', ')}. '
-          '${kIsWeb ? 'Set via --dart-define during build.' : 'Add to .env file.'}',
-        );
+      if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
+        final urlStatus = (url == null || url.isEmpty) ? 'MISSING' : 'OK';
+        final keyStatus = (anonKey == null || anonKey.isEmpty) ? 'MISSING' : 'OK';
+        final msg = 'Supabase config error: URL=$urlStatus, KEY=$keyStatus';
+        LoggerService.error(msg);
+        throw StateError(msg);
       }
 
       await Supabase.initialize(
-        url: url!,
-        anonKey: anonKey!,
+        url: url,
+        anonKey: anonKey,
         authOptions: FlutterAuthClientOptions(
           // Use implicit flow for web (handles URL fragments with tokens)
           authFlowType: kIsWeb ? AuthFlowType.implicit : AuthFlowType.pkce,
