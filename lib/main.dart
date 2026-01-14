@@ -18,6 +18,9 @@ import 'shared/services/sentry_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Sentry FIRST to catch all errors
+  await SentryService.initialize();
+
   // Load environment variables (only for non-web platforms)
   // Web uses --dart-define at build time
   if (!kIsWeb) {
@@ -31,9 +34,6 @@ void main() async {
   // Initialize logging first
   LoggerService.initialize();
   LoggerService.info('🚀 LinguaFlutter app starting...');
-
-  // Initialize Sentry for error tracking
-  await SentryService.initialize();
 
   // Initialize Supabase auth
   await SupabaseAuthService.initialize();
