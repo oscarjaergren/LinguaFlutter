@@ -62,8 +62,46 @@ void main() async {
   LoggerService.initialize();
   LoggerService.info('🚀 LinguaFlutter app starting...');
 
-  // Initialize Supabase auth
-  await SupabaseAuthService.initialize();
+  // Initialize Supabase auth - capture early errors in Sentry
+  try {
+    await SupabaseAuthService.initialize();
+  } catch (e, stackTrace) {
+    LoggerService.error('Failed to initialize Supabase', e, stackTrace);
+    await SentryService.captureException(
+      e,
+      stackTrace: stackTrace,
+      hint: 'Supabase initialization failed - likely missing environment variables',
+    );
+    // Show error screen instead of crashing
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Configuration Error',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    kDebugMode ? e.toString() : 'Failed to connect to the server. Please try again later.',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return;
+  }
 
   // Create core providers
   final authProvider = AuthProvider();

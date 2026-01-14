@@ -51,7 +51,12 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build web
-        run: flutter build web --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }}
+        run: |
+          flutter build web --release \
+            --dart-define="SUPABASE_URL=${{ secrets.SUPABASE_URL }}" \
+            --dart-define="SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" \
+            --dart-define="SENTRY_DSN=${{ secrets.SENTRY_DSN }}" \
+            --dart-define="SENTRY_ENVIRONMENT=production"
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest

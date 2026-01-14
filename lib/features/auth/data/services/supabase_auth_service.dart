@@ -29,17 +29,21 @@ class SupabaseAuthService {
         anonKey = dotenv.env['SUPABASE_ANON_KEY'];
       }
 
-      if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
+      final missingVars = <String>[
+        if (url == null || url.isEmpty) 'SUPABASE_URL',
+        if (anonKey == null || anonKey.isEmpty) 'SUPABASE_ANON_KEY',
+      ];
+
+      if (missingVars.isNotEmpty) {
         throw Exception(
-          'Missing Supabase configuration. '
-          'Web: Set via --dart-define during build. '
-          'Mobile: Add SUPABASE_URL and SUPABASE_ANON_KEY to .env file.',
+          'Missing Supabase configuration: ${missingVars.join(', ')}. '
+          '${kIsWeb ? 'Set via --dart-define during build.' : 'Add to .env file.'}',
         );
       }
 
       await Supabase.initialize(
-        url: url,
-        anonKey: anonKey,
+        url: url!,
+        anonKey: anonKey!,
         authOptions: FlutterAuthClientOptions(
           // Use implicit flow for web (handles URL fragments with tokens)
           authFlowType: kIsWeb ? AuthFlowType.implicit : AuthFlowType.pkce,
