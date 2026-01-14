@@ -36,9 +36,9 @@ Add these secrets to your GitHub repository (Settings → Secrets and variables 
 ```
 SENTRY_DSN=your_sentry_dsn_here
 SENTRY_AUTH_TOKEN=your_sentry_auth_token_here
+SENTRY_ORG=your_organization_slug
+SENTRY_PROJECT=your_project_slug
 ```
-
-Note: `SENTRY_ORG` and `SENTRY_PROJECT` are not required - the Sentry CLI auto-detects these from your auth token.
 
 ### 3. Environment Variables
 
