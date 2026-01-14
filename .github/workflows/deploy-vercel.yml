@@ -76,14 +76,19 @@ jobs:
           # Create Sentry release (CLI auto-detects org/project from token)
           npx @sentry/cli releases new \
             --auth-token=${{ secrets.SENTRY_AUTH_TOKEN }} \
-            lingua_flutter@$VERSION \
-            --environment=production
+            lingua_flutter@$VERSION
           
           # Associate commits
           npx @sentry/cli releases set-commits \
             --auth-token=${{ secrets.SENTRY_AUTH_TOKEN }} \
             lingua_flutter@$VERSION \
             --auto
+          
+          # Deploy release to production environment
+          npx @sentry/cli releases deploys \
+            --auth-token=${{ secrets.SENTRY_AUTH_TOKEN }} \
+            lingua_flutter@$VERSION \
+            new --env production
           
           # Finalize release
           npx @sentry/cli releases finalize \
