@@ -40,6 +40,11 @@ void main() async {
   }
 }
 
+// Build-time constants - must be const for String.fromEnvironment
+const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
+const _sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
+const _sentryRelease = String.fromEnvironment('SENTRY_RELEASE');
+
 Future<void> _initializeServices() async {
   if (!kIsWeb) {
     try {
@@ -50,9 +55,9 @@ Future<void> _initializeServices() async {
   }
 
   await SentryService.initialize(
-    dsn: _getEnvVar('SENTRY_DSN'),
-    environment: _getEnvVar('SENTRY_ENVIRONMENT') ?? _defaultEnvironment,
-    release: _getEnvVar('SENTRY_RELEASE'),
+    dsn: _getEnvVar(_sentryDsn, 'SENTRY_DSN'),
+    environment: _getEnvVar(_sentryEnvironment, 'SENTRY_ENVIRONMENT') ?? _defaultEnvironment,
+    release: _getEnvVar(_sentryRelease, 'SENTRY_RELEASE'),
   );
 
   LoggerService.initialize();
@@ -69,11 +74,10 @@ Future<String?> _initializeSupabase() async {
   }
 }
 
-String? _getEnvVar(String key) {
-  final buildTime = String.fromEnvironment(key).trim();
-  if (buildTime.isNotEmpty) return buildTime;
+String? _getEnvVar(String buildTimeValue, String envKey) {
+  if (buildTimeValue.trim().isNotEmpty) return buildTimeValue.trim();
   if (kIsWeb) return null;
-  return dotenv.env[key]?.trim();
+  return dotenv.env[envKey]?.trim();
 }
 
 String get _defaultEnvironment {
