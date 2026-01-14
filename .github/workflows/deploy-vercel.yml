@@ -50,6 +50,14 @@ jobs:
       - name: Generate code
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Verify secrets
+        run: |
+          if [ -z "${{ secrets.SUPABASE_URL }}" ]; then echo "❌ SUPABASE_URL is empty"; else echo "✅ SUPABASE_URL is set (${#SUPABASE_URL_CHECK} chars)"; fi
+          if [ -z "${{ secrets.SUPABASE_ANON_KEY }}" ]; then echo "❌ SUPABASE_ANON_KEY is empty"; else echo "✅ SUPABASE_ANON_KEY is set"; fi
+          if [ -z "${{ secrets.SENTRY_DSN }}" ]; then echo "⚠️ SENTRY_DSN is empty (optional)"; else echo "✅ SENTRY_DSN is set"; fi
+        env:
+          SUPABASE_URL_CHECK: ${{ secrets.SUPABASE_URL }}
+
       - name: Build web
         run: |
           flutter build web --release \
