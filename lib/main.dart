@@ -16,21 +16,28 @@ import 'shared/services/logger_service.dart';
 import 'shared/services/sentry_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  await _initializeServices();
-  LoggerService.info('App startup: services ready');
+    await _initializeServices();
+    LoggerService.info('App startup: services ready');
 
-  final error = await _initializeSupabase();
-  if (error != null) {
-    LoggerService.error('App startup failed: Supabase error');
-    runApp(_ErrorApp(error: error));
-    return;
+    final error = await _initializeSupabase();
+    if (error != null) {
+      LoggerService.error('App startup failed: Supabase error');
+      runApp(_ErrorApp(error: error));
+      return;
+    }
+    LoggerService.info('App startup: Supabase ready');
+
+    runApp(await _buildApp());
+    LoggerService.info('App startup complete');
+  } catch (e, stackTrace) {
+    // Capture any early startup failures before services are ready
+    debugPrint('Fatal startup error: $e');
+    SentryService.captureException(e, stackTrace: stackTrace);
+    runApp(_ErrorApp(error: e.toString()));
   }
-  LoggerService.info('App startup: Supabase ready');
-
-  runApp(await _buildApp());
-  LoggerService.info('App startup complete');
 }
 
 Future<void> _initializeServices() async {
