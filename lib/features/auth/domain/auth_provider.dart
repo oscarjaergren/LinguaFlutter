@@ -206,6 +206,30 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Sign in with Google OAuth
+  Future<bool> signInWithGoogle() async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final success = await SupabaseAuthService.signInWithGoogle();
+      if (success) {
+        LoggerService.info('Google OAuth flow initiated');
+        SentryService.addBreadcrumb(
+          message: 'Google OAuth initiated',
+          category: 'auth',
+        );
+      }
+      return success;
+    } catch (e) {
+      LoggerService.error('Google sign in error', e);
+      _setError('Google sign in failed');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   /// Sign out
   Future<void> signOut() async {
     _setLoading(true);

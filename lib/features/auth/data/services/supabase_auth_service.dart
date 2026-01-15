@@ -135,6 +135,21 @@ class SupabaseAuthService {
     }
   }
 
+  /// Sign in with Google OAuth
+  static Future<bool> signInWithGoogle() async {
+    try {
+      final response = await client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: kIsWeb ? null : 'io.supabase.linguaflutter://login-callback',
+      );
+      LoggerService.info('Google OAuth initiated: $response');
+      return response;
+    } catch (e) {
+      LoggerService.error('Google sign in failed', e);
+      rethrow;
+    }
+  }
+
   /// Listen to auth state changes
   static Stream<AuthState> get authStateChanges =>
       client.auth.onAuthStateChange;

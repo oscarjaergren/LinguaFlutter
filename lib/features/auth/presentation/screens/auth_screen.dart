@@ -315,6 +315,58 @@ class _AuthScreenState extends State<AuthScreen>
                           },
                         ),
 
+                        const SizedBox(height: 16),
+
+                        // Divider with "or"
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'or',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Google sign-in button
+                        SizedBox(
+                          height: 56,
+                          child: OutlinedButton.icon(
+                            onPressed: authProvider.isLoading
+                                ? null
+                                : () => _signInWithGoogle(authProvider),
+                            icon: Image.network(
+                              'https://www.google.com/favicon.ico',
+                              height: 24,
+                              width: 24,
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata),
+                            ),
+                            label: const Text(
+                              'Continue with Google',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(
+                                color: theme.colorScheme.outline,
+                              ),
+                            ),
+                          ),
+                        ),
+
                         // Debug quick login (only in debug mode)
                         if (kDebugMode) ...[
                           const SizedBox(height: 24),
@@ -367,6 +419,13 @@ class _AuthScreenState extends State<AuthScreen>
 
     if (success && mounted) {
       context.go('/'); // Navigate to dashboard
+    }
+  }
+
+  Future<void> _signInWithGoogle(AuthProvider authProvider) async {
+    final success = await authProvider.signInWithGoogle();
+    if (success && mounted) {
+      context.go('/');
     }
   }
 

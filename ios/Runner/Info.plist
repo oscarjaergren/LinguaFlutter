@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Deep link URL scheme for OAuth callback -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>io.supabase.linguaflutter</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.linguaflutter</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
