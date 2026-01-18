@@ -8,6 +8,7 @@ import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/card_management/card_management.dart';
 import '../../features/card_review/presentation/screens/practice_screen.dart';
 import '../../features/debug/presentation/screens/debug_menu_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../services/logger_service.dart';
 
 /// Application routes configuration using go_router
@@ -20,6 +21,7 @@ class AppRouter {
   static const String practice = '/practice';
   static const String debug = '/debug';
   static const String logs = '/logs';
+  static const String settings = '/settings';
 
   static final GoRouter router = GoRouter(
     initialLocation:
@@ -148,6 +150,13 @@ class AppRouter {
         builder: (context, state) =>
             TalkerScreen(talker: LoggerService.instance),
       ),
+
+      // Settings Screen
+      GoRoute(
+        path: settings,
+        name: 'settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
     ],
 
     // Error handling - redirect unknown routes appropriately
@@ -234,4 +243,10 @@ extension AppRouterExtension on BuildContext {
 
   /// Push cards screen
   void pushCards() => push(AppRouter.cards);
+
+  /// Navigate to settings screen
+  void goToSettings() => go(AppRouter.settings);
+
+  /// Push settings screen
+  void pushSettings() => push(AppRouter.settings);
 }

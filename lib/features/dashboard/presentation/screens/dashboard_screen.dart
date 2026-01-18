@@ -50,7 +50,9 @@ class DashboardScreen extends StatelessWidget {
                   icon: const Icon(Icons.account_circle),
                   tooltip: 'Account',
                   onSelected: (value) {
-                    if (value == 'signout') {
+                    if (value == 'settings') {
+                      context.pushSettings();
+                    } else if (value == 'signout') {
                       authProvider.signOut();
                     }
                   },
@@ -66,6 +68,16 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ),
                     const PopupMenuDivider(),
+                    const PopupMenuItem(
+                      value: 'settings',
+                      child: Row(
+                        children: [
+                          Icon(Icons.settings),
+                          SizedBox(width: 8),
+                          Text('Settings'),
+                        ],
+                      ),
+                    ),
                     const PopupMenuItem(
                       value: 'signout',
                       child: Row(

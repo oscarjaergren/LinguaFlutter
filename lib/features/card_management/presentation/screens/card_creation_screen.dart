@@ -6,7 +6,7 @@ import '../../../icon_search/icon_search.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../../shared/domain/models/word_data.dart';
-import '../../../../shared/services/ai/ai.dart';
+import '../../../../shared/widgets/ai_config_widget.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../domain/providers/card_management_provider.dart';
 import '../../domain/providers/card_enrichment_provider.dart';
@@ -296,7 +296,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
 
     final aiProvider = context.read<CardEnrichmentProvider>();
     if (!aiProvider.isConfigured) {
-      _showApiKeyDialog();
+      showAiConfigDialog(context, onSaved: _autoFillWithAI);
       return;
     }
 
@@ -377,112 +377,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       case AdverbData():
         _usageNoteController.text = wordData.usageNote ?? '';
     }
-  }
-
-  void _showApiKeyDialog() {
-    final keyController = TextEditingController();
-    final aiProvider = context.read<CardEnrichmentProvider>();
-    var selectedProvider = AiProvider.gemini; // Default to Gemini (free tier)
-    var selectedModel = selectedProvider.defaultModel;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('AI Configuration'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Select a provider and enter your API key.\n'
-                  'Gemini offers a free tier - get a key at ai.google.dev',
-                  style: TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<AiProvider>(
-                  value: selectedProvider,
-                  decoration: const InputDecoration(
-                    labelText: 'Provider',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: AiProvider.values
-                      .map(
-                        (p) => DropdownMenuItem(
-                          value: p,
-                          child: Text(p.displayName),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() {
-                        selectedProvider = value;
-                        selectedModel = value.defaultModel;
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: selectedModel,
-                  decoration: const InputDecoration(
-                    labelText: 'Model',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: selectedProvider.availableModels
-                      .map(
-                        (m) => DropdownMenuItem(
-                          value: m,
-                          child: Text(m, style: const TextStyle(fontSize: 13)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    if (value != null) {
-                      setDialogState(() => selectedModel = value);
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: keyController,
-                  decoration: InputDecoration(
-                    labelText: 'API Key',
-                    hintText: selectedProvider == AiProvider.gemini
-                        ? 'AIza...'
-                        : 'sk-...',
-                    border: const OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                if (keyController.text.trim().isNotEmpty) {
-                  await aiProvider.setProvider(selectedProvider);
-                  await aiProvider.setModel(selectedModel);
-                  await aiProvider.setApiKey(keyController.text.trim());
-                  if (dialogContext.mounted) {
-                    Navigator.pop(dialogContext);
-                    _autoFillWithAI();
-                  }
-                }
-              },
-              child: const Text('Save & Continue'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _saveCard() async {
