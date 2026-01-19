@@ -103,7 +103,15 @@ jobs:
       run: dart run build_runner build --delete-conflicting-outputs
       
     - name: Build web
-      run: flutter build web --release
+      run: |
+        flutter build web --release \
+          --dart-define="SUPABASE_URL=test_url" \
+          --dart-define="SUPABASE_ANON_KEY=test_key" \
+          --dart-define="GEMINI_API_KEY=" \
+          --dart-define="GOOGLE_CLOUD_TTS_API_KEY=" \
+          --dart-define="SENTRY_DSN=" \
+          --dart-define="SENTRY_ENVIRONMENT=ci" \
+          --dart-define="SENTRY_RELEASE=test"
       
     - name: Upload web build artifacts
       uses: actions/upload-artifact@v6
