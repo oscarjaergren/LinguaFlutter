@@ -8,7 +8,8 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "windows",
-      "cwd": "${workspaceFolder}"
+      "cwd": "${workspaceFolder}",
+      "toolArgs": ["--dart-define-from-file=.env.json"]
     },
     {
       "name": "Windows (Release)",
@@ -16,7 +17,8 @@
       "type": "dart",
       "program": "lib/main.dart",
       "flutterMode": "release",
-      "deviceId": "windows"
+      "deviceId": "windows",
+      "toolArgs": ["--dart-define-from-file=.env.json"]
     },
     {
       "name": "Web (Chrome)",
@@ -25,7 +27,8 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "chrome",
-      "args": ["--web-port=8080"]
+      "args": ["--web-port=8080"],
+      "toolArgs": ["--dart-define-from-file=.env.json"]
     },
     {
       "name": "Web (Edge)",
@@ -34,7 +37,8 @@
       "program": "lib/main.dart",
       "flutterMode": "debug",
       "deviceId": "edge",
-      "args": ["--web-port=8080"]
+      "args": ["--web-port=8080"],
+      "toolArgs": ["--dart-define-from-file=.env.json"]
     }
   ]
 }

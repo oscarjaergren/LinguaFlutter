@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../shared/services/ai/ai.dart';
 import '../models/word_enrichment_result.dart';
+
+// Build-time constant - must be const for String.fromEnvironment
+const _geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
 
 /// Abstract interface for config storage (for testability)
 abstract class AiConfigStorage {
@@ -57,13 +59,10 @@ class CardEnrichmentProvider extends ChangeNotifier {
       debugPrint('Failed to load AI config: $e');
     }
 
-    // Auto-load from .env if not configured (for easier debugging, non-web only)
-    if (!_config.isConfigured && !kIsWeb) {
-      final envKey = dotenv.env['GEMINI_API_KEY'];
-      if (envKey != null && envKey.isNotEmpty) {
-        _config = _config.copyWith(apiKey: envKey, provider: AiProvider.gemini);
-        debugPrint('Loaded Gemini API key from .env');
-      }
+    // Auto-load from build-time env var if not configured
+    if (!_config.isConfigured && _geminiApiKey.isNotEmpty) {
+      _config = _config.copyWith(apiKey: _geminiApiKey, provider: AiProvider.gemini);
+      debugPrint('Loaded Gemini API key from environment');
     }
 
     _isInitialized = true;

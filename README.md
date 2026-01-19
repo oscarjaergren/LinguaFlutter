@@ -47,27 +47,33 @@ flutter pub get
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env
-# Edit .env with your Supabase and Sentry credentials
+cp .env.json.example .env.json
+# Edit .env.json with your Supabase credentials
 ```
 
 4. Run the app:
 ```bash
-flutter run
+# Desktop (automatically uses .env.json via launch config)
+flutter run -d windows
+
+# Web (automatically uses .env.json via launch config)  
+flutter run -d chrome
+
+# Or from VS Code: Select a launch configuration and press F5
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
+Create a `.env.json` file in the root directory:
 
-```env
-# Supabase Configuration
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Sentry Configuration (optional)
-SENTRY_DSN=your_sentry_dsn
+```json
+{
+  "SUPABASE_URL": "your_supabase_url_here",
+  "SUPABASE_ANON_KEY": "your_supabase_anon_key_here"
+}
 ```
+
+The app uses `--dart-define-from-file=.env.json` to inject credentials at compile time for all platforms (web, desktop, mobile).
 
 ## Project Structure
 

@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'features/icon_search/icon_search.dart';
 import 'features/streak/streak.dart';
 import 'features/language/language.dart';
@@ -46,18 +45,10 @@ const _sentryEnvironment = String.fromEnvironment('SENTRY_ENVIRONMENT');
 const _sentryRelease = String.fromEnvironment('SENTRY_RELEASE');
 
 Future<void> _initializeServices() async {
-  if (!kIsWeb) {
-    try {
-      await dotenv.load(fileName: '.env');
-    } catch (_) {
-      // .env not required on all platforms
-    }
-  }
-
   await SentryService.initialize(
-    dsn: _getEnvVar(_sentryDsn, 'SENTRY_DSN'),
-    environment: _getEnvVar(_sentryEnvironment, 'SENTRY_ENVIRONMENT') ?? _defaultEnvironment,
-    release: _getEnvVar(_sentryRelease, 'SENTRY_RELEASE'),
+    dsn: _sentryDsn.trim().isEmpty ? null : _sentryDsn.trim(),
+    environment: _sentryEnvironment.trim().isEmpty ? _defaultEnvironment : _sentryEnvironment.trim(),
+    release: _sentryRelease.trim().isEmpty ? null : _sentryRelease.trim(),
   );
 
   LoggerService.initialize();
@@ -74,11 +65,6 @@ Future<String?> _initializeSupabase() async {
   }
 }
 
-String? _getEnvVar(String buildTimeValue, String envKey) {
-  if (buildTimeValue.trim().isNotEmpty) return buildTimeValue.trim();
-  if (kIsWeb) return null;
-  return dotenv.env[envKey]?.trim();
-}
 
 String get _defaultEnvironment {
   if (kReleaseMode) return 'production';

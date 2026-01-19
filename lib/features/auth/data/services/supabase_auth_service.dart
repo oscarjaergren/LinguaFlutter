@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 
@@ -15,27 +14,13 @@ class SupabaseAuthService {
     if (_initialized) return;
 
     try {
-      String? url;
-      String? anonKey;
+      // Use compile-time environment variables (set via --dart-define-from-file=.env.json)
+      const url = String.fromEnvironment('SUPABASE_URL');
+      const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
-      if (kIsWeb) {
-        // Web: Use compile-time environment variables (set via --dart-define)
-        const webUrl = String.fromEnvironment('SUPABASE_URL');
-        const webKey = String.fromEnvironment('SUPABASE_ANON_KEY');
-        url = webUrl;
-        anonKey = webKey;
-        // Log to Sentry breadcrumb for debugging
-        LoggerService.info('Supabase web config: URL=${url.length} chars, Key=${anonKey.length} chars');
-      } else {
-        // Mobile/Desktop: Use .env file
-        await dotenv.load(fileName: '.env');
-        url = dotenv.env['SUPABASE_URL'];
-        anonKey = dotenv.env['SUPABASE_ANON_KEY'];
-      }
-
-      if (url == null || url.isEmpty || anonKey == null || anonKey.isEmpty) {
-        final urlStatus = (url == null || url.isEmpty) ? 'MISSING' : 'OK';
-        final keyStatus = (anonKey == null || anonKey.isEmpty) ? 'MISSING' : 'OK';
+      if (url.isEmpty || anonKey.isEmpty) {
+        final urlStatus = url.isEmpty ? 'MISSING' : 'OK';
+        final keyStatus = anonKey.isEmpty ? 'MISSING' : 'OK';
         final msg = 'Supabase config error: URL=$urlStatus, KEY=$keyStatus';
         LoggerService.error(msg);
         throw StateError(msg);

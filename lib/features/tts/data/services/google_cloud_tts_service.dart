@@ -1,8 +1,10 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
+
+// Build-time constant - must be const for String.fromEnvironment
+const _googleCloudTtsApiKey = String.fromEnvironment('GOOGLE_CLOUD_TTS_API_KEY');
 
 /// Google Cloud Text-to-Speech service with high-quality Neural2 voices
 class GoogleCloudTtsService {
@@ -21,33 +23,16 @@ class GoogleCloudTtsService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    try {
-      await _loadGoogleCloudApiKey();
-    } catch (e) {
-      LoggerService.error('Failed to load Google Cloud TTS API key', e);
+    _googleApiKey = _googleCloudTtsApiKey.isEmpty ? null : _googleCloudTtsApiKey;
+    _isEnabled = _googleApiKey != null && _googleApiKey!.isNotEmpty;
+    
+    if (_isEnabled) {
+      LoggerService.info('Google Cloud TTS enabled');
+    } else {
+      LoggerService.warning('Google Cloud TTS not configured');
     }
 
     _isInitialized = true;
-  }
-
-  /// Load Google Cloud API key from assets
-  Future<void> _loadGoogleCloudApiKey() async {
-    try {
-      LoggerService.debug('Attempting to load Google Cloud API key...');
-      final apiKey = await rootBundle.loadString(
-        'assets/google_tts_api_key.txt',
-      );
-      _googleApiKey = apiKey.trim();
-      _isEnabled = _googleApiKey!.isNotEmpty;
-      if (_isEnabled) {
-        LoggerService.info('Google Cloud TTS enabled');
-      } else {
-        LoggerService.warning('API key file exists but is empty');
-      }
-    } catch (e) {
-      _isEnabled = false;
-      LoggerService.error('Google Cloud TTS not configured: $e');
-    }
   }
 
   /// Speak text using Google Cloud TTS

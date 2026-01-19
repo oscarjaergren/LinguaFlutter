@@ -72,12 +72,10 @@ linux/flutter/generated_*
 pubspec.lock
 
 # API Keys and credentials (keep secure!)
-assets/google_tts_api_key.txt
 assets/*_credentials.json
 
-# Environment files
-.env
-.env.*
+# Environment files (credentials)
+.env.json
 
 # Supabase CLI binary (downloaded locally)
 supabase.exe

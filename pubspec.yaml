@@ -65,9 +65,6 @@ dependencies:
   # Supabase backend
   supabase_flutter: ^2.8.0
   
-  # Environment variables
-  flutter_dotenv: ^6.0.0
-  
   # Error tracking and monitoring
   sentry_flutter: ^8.11.0
 
