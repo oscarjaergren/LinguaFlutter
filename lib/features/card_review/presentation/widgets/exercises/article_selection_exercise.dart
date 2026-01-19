@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/domain/models/card_model.dart';
+import '../../../../tts/presentation/widgets/speaker_button.dart';
 import '../../../domain/providers/practice_session_provider.dart';
 
 /// Exercise widget for article selection - choose correct German article
@@ -119,13 +120,26 @@ class _ArticleSelectionExerciseState extends State<ArticleSelectionExercise> {
                 ),
               ),
               const SizedBox(height: 8),
-              Text(
-                _nounWithoutArticle,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    _nounWithoutArticle,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(width: 12),
+                  SpeakerButton(
+                    text: _nounWithoutArticle,
+                    languageCode: widget.card.language,
+                    size: 28,
+                    color: colorScheme.onPrimaryContainer,
+                  ),
+                ],
               ),
             ],
           ),

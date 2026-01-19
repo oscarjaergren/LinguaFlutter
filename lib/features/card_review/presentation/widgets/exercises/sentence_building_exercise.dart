@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/domain/models/card_model.dart';
+import '../../../../tts/presentation/widgets/speaker_button.dart';
 import '../../../domain/providers/practice_session_provider.dart';
 
 /// Exercise widget for sentence building - arrange scrambled words
@@ -82,11 +83,25 @@ class _SentenceBuildingExerciseState extends State<SentenceBuildingExercise> {
 
     return Column(
       children: [
-        // Prompt
-        Text(
-          'Arrange the words to form a correct sentence:',
-          style: theme.textTheme.titleMedium,
-          textAlign: TextAlign.center,
+        // Prompt with speaker button
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                'Arrange the words to form a correct sentence:',
+                style: theme.textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(width: 12),
+            SpeakerButton(
+              text: widget.card.frontText,
+              languageCode: widget.card.language,
+              size: 24,
+            ),
+          ],
         ),
         const SizedBox(height: 8),
 
