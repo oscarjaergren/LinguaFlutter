@@ -1200,7 +1200,8 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
             border: OutlineInputBorder(),
             alignLabelWithHint: true,
           ),
-          maxLines: 4,
+          minLines: 4,
+          maxLines: null,
         ),
       ),
     );
