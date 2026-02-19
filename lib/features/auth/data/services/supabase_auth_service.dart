@@ -125,7 +125,9 @@ class SupabaseAuthService {
     try {
       final response = await client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: kIsWeb ? null : 'io.supabase.linguaflutter://login-callback',
+        redirectTo: kIsWeb
+            ? null
+            : 'io.supabase.linguaflutter://login-callback',
       );
       LoggerService.info('Google OAuth initiated: $response');
       return response;

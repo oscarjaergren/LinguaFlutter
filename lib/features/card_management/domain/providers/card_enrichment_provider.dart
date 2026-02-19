@@ -61,7 +61,10 @@ class CardEnrichmentProvider extends ChangeNotifier {
 
     // Auto-load from build-time env var if not configured
     if (!_config.isConfigured && _geminiApiKey.isNotEmpty) {
-      _config = _config.copyWith(apiKey: _geminiApiKey, provider: AiProvider.gemini);
+      _config = _config.copyWith(
+        apiKey: _geminiApiKey,
+        provider: AiProvider.gemini,
+      );
       debugPrint('Loaded Gemini API key from environment');
     }
 

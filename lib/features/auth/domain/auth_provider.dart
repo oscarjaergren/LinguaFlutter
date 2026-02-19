@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/services/supabase_auth_service.dart';
 import '../../../shared/services/logger_service.dart';
 import '../../../shared/services/sentry_service.dart';
+import '../../../shared/utils/rate_limiter.dart';
 
 /// Callback type for when auth state changes
 typedef OnAuthStateChanged = Future<void> Function(bool isAuthenticated);
@@ -14,45 +17,41 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
+  StreamSubscription<AuthState>? _authSubscription;
 
   /// Callback to initialize data providers after auth
   OnAuthStateChanged? onAuthStateChanged;
 
   AuthProvider() {
     // Listen to auth state changes
-    SupabaseAuthService.client.auth.onAuthStateChange.listen((data) async {
-      final wasAuthenticated = _user != null;
-      _user = data.session?.user;
-      final isNowAuthenticated = _user != null;
+    _authSubscription = SupabaseAuthService.client.auth.onAuthStateChange
+        .listen((data) async {
+          final wasAuthenticated = _user != null;
+          _user = data.session?.user;
+          final isNowAuthenticated = _user != null;
 
-      // Update Sentry user context
-      if (isNowAuthenticated && _user != null) {
-        SentryService.setUser(
-          id: _user!.id,
-          email: _user!.email,
-        );
-      } else {
-        SentryService.clearUser();
-      }
+          // Update Sentry user context
+          if (isNowAuthenticated && _user != null) {
+            SentryService.setUser(id: _user!.id, email: _user!.email);
+          } else {
+            SentryService.clearUser();
+          }
 
-      // Notify data providers when auth state changes
-      if (wasAuthenticated != isNowAuthenticated &&
-          onAuthStateChanged != null) {
-        await onAuthStateChanged!(isNowAuthenticated);
-      }
+          // Notify data providers when auth state changes
+          if (wasAuthenticated != isNowAuthenticated &&
+              onAuthStateChanged != null) {
+            await onAuthStateChanged!(isNowAuthenticated);
+          }
 
-      notifyListeners();
-    });
+          notifyListeners();
+        });
 
     // Initialize with current user
     _user = SupabaseAuthService.client.auth.currentUser;
-    
+
     // Set initial Sentry user context if already authenticated
     if (_user != null) {
-      SentryService.setUser(
-        id: _user!.id,
-        email: _user!.email,
-      );
+      SentryService.setUser(id: _user!.id, email: _user!.email);
     }
   }
 
@@ -179,14 +178,14 @@ class AuthProvider extends ChangeNotifier {
       if (response.user != null) {
         LoggerService.info('User signed in: ${response.user!.email}');
         _user = response.user;
-        
+
         // Add breadcrumb for successful sign-in
         SentryService.addBreadcrumb(
           message: 'User signed in',
           category: 'auth',
           data: {'email': response.user!.email},
         );
-        
+
         notifyListeners();
         return true;
       } else {
@@ -236,15 +235,18 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
+      final userId = _user?.id;
       await SupabaseAuthService.signOut();
       _user = null;
-      
+
+      // Clear rate limit data for this user
+      if (userId != null) {
+        RateLimiter().clearUser(userId);
+      }
+
       // Add breadcrumb for sign-out
-      SentryService.addBreadcrumb(
-        message: 'User signed out',
-        category: 'auth',
-      );
-      
+      SentryService.addBreadcrumb(message: 'User signed out', category: 'auth');
+
       LoggerService.info('User signed out');
       notifyListeners();
     } on AuthException catch (e) {
@@ -299,5 +301,11 @@ class AuthProvider extends ChangeNotifier {
   void clearError() {
     _clearError();
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

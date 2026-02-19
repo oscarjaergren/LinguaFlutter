@@ -95,11 +95,7 @@ void main() {
 
     test('should load cards from repository', () async {
       final testCards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
       ];
       when(mockRepository.getAllCards()).thenAnswer((_) async => testCards);
 
@@ -132,6 +128,5 @@ void main() {
 
       verify(mockRepository.deleteCard('card-id')).called(1);
     });
-
   });
 }

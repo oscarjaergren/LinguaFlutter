@@ -20,7 +20,6 @@ void main() {
           frontText: 'Hund',
           backText: 'dog',
           language: 'de',
-
         ).copyWith(examples: ['Der Hund ist groß']),
 
         // Card with verb data (for conjugation)
@@ -28,7 +27,6 @@ void main() {
           frontText: 'gehen',
           backText: 'to go',
           language: 'de',
-
         ).copyWith(
           wordData: WordData.verb(
             isRegular: false,
@@ -46,16 +44,10 @@ void main() {
           frontText: 'der Tisch',
           backText: 'table',
           language: 'de',
-
         ),
 
         // Basic card (only basic exercises)
-        CardModel.create(
-          frontText: 'Katze',
-          backText: 'cat',
-          language: 'de',
-
-        ),
+        CardModel.create(frontText: 'Katze', backText: 'cat', language: 'de'),
       ];
 
       allCards = List.from(testCards);
@@ -146,18 +138,8 @@ void main() {
     test('multiple choice skipped when not enough cards', () {
       // Only 2 cards, need 4 for multiple choice
       testCards = [
-        CardModel.create(
-          frontText: 'Hund',
-          backText: 'dog',
-          language: 'de',
-
-        ),
-        CardModel.create(
-          frontText: 'Katze',
-          backText: 'cat',
-          language: 'de',
-
-        ),
+        CardModel.create(frontText: 'Hund', backText: 'dog', language: 'de'),
+        CardModel.create(frontText: 'Katze', backText: 'cat', language: 'de'),
       ];
       allCards = List.from(testCards);
 
@@ -185,7 +167,6 @@ void main() {
             frontText: 'test',
             backText: 'test',
             language: 'de',
-  
           ).copyWith(
             exerciseScores: {
               ExerciseType.readingRecognition:

@@ -10,9 +10,7 @@ class SettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -43,10 +41,30 @@ class SettingsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHelpStep(context, '1', 'Go to Google AI Studio', 'Visit aistudio.google.com'),
-                    _buildHelpStep(context, '2', 'Sign in with Google', 'Use your Google account to sign in'),
-                    _buildHelpStep(context, '3', 'Create API Key', 'Click "Get API key" and create a new key'),
-                    _buildHelpStep(context, '4', 'Copy and paste', 'Copy the key and paste it above'),
+                    _buildHelpStep(
+                      context,
+                      '1',
+                      'Go to Google AI Studio',
+                      'Visit aistudio.google.com',
+                    ),
+                    _buildHelpStep(
+                      context,
+                      '2',
+                      'Sign in with Google',
+                      'Use your Google account to sign in',
+                    ),
+                    _buildHelpStep(
+                      context,
+                      '3',
+                      'Create API Key',
+                      'Click "Get API key" and create a new key',
+                    ),
+                    _buildHelpStep(
+                      context,
+                      '4',
+                      'Copy and paste',
+                      'Copy the key and paste it above',
+                    ),
                   ],
                 ),
               ),
@@ -57,7 +75,12 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHelpStep(BuildContext context, String number, String title, String description) {
+  Widget _buildHelpStep(
+    BuildContext context,
+    String number,
+    String title,
+    String description,
+  ) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),

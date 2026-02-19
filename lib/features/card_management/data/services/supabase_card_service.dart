@@ -182,18 +182,15 @@ class SupabaseCardService {
     };
   }
 
-  /// Convert exercise scores map to JSON for storage
-  /// Uses exercise type's JSON value as key for consistency
+  /// Convert exercise scores map to JSON for storage.
+  /// Keys use the @JsonValue snake_case strings via [ExerciseType.jsonValue].
   Map<String, dynamic> _exerciseScoresToJson(
     Map<ExerciseType, ExerciseScore> scores,
   ) {
-    final json = <String, dynamic>{};
-    for (final entry in scores.entries) {
-      // Use the JsonValue annotation value as key
-      final key = entry.key.name;
-      json[key] = entry.value.toJson();
-    }
-    return json;
+    return {
+      for (final entry in scores.entries)
+        entry.key.jsonValue: entry.value.toJson(),
+    };
   }
 
   /// Convert Supabase row to CardModel
@@ -260,9 +257,9 @@ class SupabaseCardService {
     if (json != null && json.isNotEmpty) {
       for (final entry in json.entries) {
         try {
-          // Find matching ExerciseType by name
+          // Match by @JsonValue snake_case key via [ExerciseType.jsonValue]
           final type = ExerciseType.values.firstWhere(
-            (t) => t.name == entry.key,
+            (t) => t.jsonValue == entry.key,
             orElse: () => throw StateError('Unknown type: ${entry.key}'),
           );
 

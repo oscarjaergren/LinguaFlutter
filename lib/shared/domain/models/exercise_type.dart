@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'card_model.dart';
+import 'word_data.dart';
 
 /// Types of exercises available for flashcard practice
 /// Each exercise type tests different language skills
@@ -62,6 +64,37 @@ enum ExerciseType {
 
 /// Extension methods for ExerciseType
 extension ExerciseTypeExtension on ExerciseType {
+  /// The @JsonValue snake_case string for this exercise type.
+  ///
+  /// Use this whenever you need the serialized key (e.g. for Supabase JSONB
+  /// storage) instead of duplicating the mapping elsewhere.
+  String get jsonValue {
+    switch (this) {
+      case ExerciseType.readingRecognition:
+        return 'reading_recognition';
+      case ExerciseType.writingTranslation:
+        return 'writing_translation';
+      case ExerciseType.multipleChoiceText:
+        return 'multiple_choice_text';
+      case ExerciseType.multipleChoiceIcon:
+        return 'multiple_choice_icon';
+      case ExerciseType.reverseTranslation:
+        return 'reverse_translation';
+      case ExerciseType.listeningRecognition:
+        return 'listening_recognition';
+      case ExerciseType.speakingPronunciation:
+        return 'speaking_pronunciation';
+      case ExerciseType.sentenceFill:
+        return 'sentence_fill';
+      case ExerciseType.sentenceBuilding:
+        return 'sentence_building';
+      case ExerciseType.conjugationPractice:
+        return 'conjugation_practice';
+      case ExerciseType.articleSelection:
+        return 'article_selection';
+    }
+  }
+
   /// Human-readable display name for the exercise type
   String get displayName {
     switch (this) {
@@ -135,6 +168,72 @@ extension ExerciseTypeExtension on ExerciseType {
       case ExerciseType.conjugationPractice:
       case ExerciseType.articleSelection:
         return true;
+    }
+  }
+
+  /// Returns true when this exercise type can be performed on [card].
+  ///
+  /// [hasEnoughCardsForMultipleChoice] must be true for multiple-choice
+  /// exercises that need distractor options from other cards.
+  bool canUse(CardModel card, {bool hasEnoughCardsForMultipleChoice = false}) {
+    switch (this) {
+      case ExerciseType.multipleChoiceIcon:
+        return card.icon != null && hasEnoughCardsForMultipleChoice;
+
+      case ExerciseType.multipleChoiceText:
+        return hasEnoughCardsForMultipleChoice;
+
+      case ExerciseType.sentenceBuilding:
+        return card.examples.isNotEmpty;
+
+      case ExerciseType.conjugationPractice:
+        final wordData = card.wordData;
+        if (wordData is VerbData) {
+          return wordData.presentDu != null ||
+              wordData.presentEr != null ||
+              wordData.pastSimple != null ||
+              wordData.pastParticiple != null;
+        }
+        if (wordData is NounData) {
+          return wordData.gender.trim().isNotEmpty;
+        }
+        if (wordData is AdjectiveData) {
+          return wordData.comparative != null || wordData.superlative != null;
+        }
+        return false;
+
+      case ExerciseType.articleSelection:
+        if (card.germanArticle != null) return true;
+        final front = card.frontText.toLowerCase().trim();
+        return front.startsWith('der ') ||
+            front.startsWith('die ') ||
+            front.startsWith('das ');
+
+      // All other implemented types work on any card.
+      case ExerciseType.readingRecognition:
+      case ExerciseType.writingTranslation:
+      case ExerciseType.reverseTranslation:
+      case ExerciseType.sentenceFill:
+      case ExerciseType.listeningRecognition:
+      case ExerciseType.speakingPronunciation:
+        return true;
+    }
+  }
+
+  /// Whether this is a core (basic) exercise type.
+  ///
+  /// Core types are the fundamental flashcard exercises that work on every
+  /// card with no extra data requirements. They are enabled by default.
+  /// Advanced types (multiple choice, conjugation, etc.) require either
+  /// extra card data or a larger card pool, and are opt-in.
+  bool get isCore {
+    switch (this) {
+      case ExerciseType.readingRecognition:
+      case ExerciseType.writingTranslation:
+      case ExerciseType.reverseTranslation:
+        return true;
+      default:
+        return false;
     }
   }
 

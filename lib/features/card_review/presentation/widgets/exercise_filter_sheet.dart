@@ -58,10 +58,23 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
     widget.onPreferencesChanged(newPrefs);
   }
 
+  bool _advancedExpanded = false;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    final coreTypes = ExerciseType.values
+        .where((t) => t.isImplemented && t.isCore)
+        .toList();
+    final advancedTypes = ExerciseType.values
+        .where((t) => t.isImplemented && !t.isCore)
+        .toList();
+
+    final totalImplemented = ExerciseType.values
+        .where((t) => t.isImplemented)
+        .length;
 
     return Container(
       decoration: BoxDecoration(
@@ -100,7 +113,7 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
                         ),
                       ),
                       Text(
-                        '${_preferences.enabledCount} of ${ExerciseType.values.where((t) => t.isImplemented).length} enabled',
+                        '${_preferences.enabledCount} of $totalImplemented enabled',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.outline,
                         ),
@@ -108,7 +121,6 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
                     ],
                   ),
                 ),
-                // Quick actions
                 TextButton(
                   onPressed: () => _updatePreferences(_preferences.enableAll()),
                   child: const Text('All'),
@@ -124,60 +136,121 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
 
           const Divider(height: 1),
 
-          // Category toggles
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildCategoryChip(
-                    ExerciseCategory.recognition,
-                    Icons.visibility,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildCategoryChip(
-                    ExerciseCategory.production,
-                    Icons.edit,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1),
-
-          // Exercise type list
+          // Scrollable content
           ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.4,
+              maxHeight: MediaQuery.of(context).size.height * 0.55,
             ),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                for (final type in ExerciseType.values.where(
-                  (t) => t.isImplemented,
-                ))
-                  _buildExerciseTypeTile(type),
-              ],
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Core section ──────────────────────────────────────
+                  _buildSectionHeader(
+                    context,
+                    icon: Icons.star_rounded,
+                    title: 'Core',
+                    subtitle: 'Always-on basics — work with every card',
+                    color: colorScheme.primary,
+                  ),
+                  for (final type in coreTypes) _buildExerciseTypeTile(type),
+
+                  const Divider(height: 1),
+
+                  // ── Advanced section (collapsible) ────────────────────
+                  InkWell(
+                    onTap: () =>
+                        setState(() => _advancedExpanded = !_advancedExpanded),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome,
+                            size: 18,
+                            color: colorScheme.secondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Advanced',
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: colorScheme.secondary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Require extra card data or a larger deck',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: colorScheme.outline,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Count badge for enabled advanced types
+                          if (advancedTypes.any(
+                            (t) => _preferences.isEnabled(t),
+                          ))
+                            Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.secondaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${advancedTypes.where((t) => _preferences.isEnabled(t)).length} on',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: colorScheme.onSecondaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          Icon(
+                            _advancedExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            color: colorScheme.outline,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_advancedExpanded)
+                    for (final type in advancedTypes)
+                      _buildExerciseTypeTile(type),
+
+                  const Divider(height: 1),
+
+                  // Prioritize weaknesses toggle
+                  SwitchListTile(
+                    title: const Text('Prioritize Weaknesses'),
+                    subtitle: const Text(
+                      'Focus on exercise types you struggle with',
+                    ),
+                    value: _preferences.prioritizeWeaknesses,
+                    onChanged: (value) {
+                      _updatePreferences(
+                        _preferences.copyWith(prioritizeWeaknesses: value),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
 
           const Divider(height: 1),
-
-          // Prioritize weaknesses toggle
-          SwitchListTile(
-            title: const Text('Prioritize Weaknesses'),
-            subtitle: const Text('Focus on exercise types you struggle with'),
-            value: _preferences.prioritizeWeaknesses,
-            onChanged: (value) {
-              _updatePreferences(
-                _preferences.copyWith(prioritizeWeaknesses: value),
-              );
-            },
-          ),
 
           // Apply button
           Padding(
@@ -193,46 +266,46 @@ class _ExerciseFilterSheetState extends State<ExerciseFilterSheet> {
             ),
           ),
 
-          // Safe area padding
           SizedBox(height: MediaQuery.of(context).viewPadding.bottom),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryChip(ExerciseCategory category, IconData icon) {
-    final isFullyEnabled = _preferences.isCategoryFullyEnabled(category);
-    final isPartiallyEnabled = _preferences.isCategoryPartiallyEnabled(
-      category,
-    );
+  Widget _buildSectionHeader(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Row(
         children: [
-          Icon(
-            icon,
-            size: 18,
-            color: isFullyEnabled || isPartiallyEnabled
-                ? colorScheme.onSecondaryContainer
-                : colorScheme.outline,
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          Text(category.displayName),
         ],
       ),
-      selected: isFullyEnabled,
-      showCheckmark: false,
-      onSelected: (selected) {
-        _updatePreferences(
-          _preferences.toggleCategory(category, enabled: selected),
-        );
-      },
-      avatar: isPartiallyEnabled && !isFullyEnabled
-          ? Icon(Icons.remove, size: 18, color: colorScheme.outline)
-          : null,
     );
   }
 

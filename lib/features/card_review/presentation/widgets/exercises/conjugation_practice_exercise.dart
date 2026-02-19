@@ -75,7 +75,7 @@ class _ConjugationPracticeExerciseState
     final wordData = widget.card.wordData;
 
     if (wordData is VerbData) {
-      // Pick a random conjugation form to test
+      // _canDoExercise guarantees at least one conjugation field is non-null.
       final forms = <String, String>{
         if (wordData.presentDu != null) 'du (present)': wordData.presentDu!,
         if (wordData.presentEr != null)
@@ -84,52 +84,55 @@ class _ConjugationPracticeExerciseState
         if (wordData.pastParticiple != null)
           'past participle': wordData.pastParticiple!,
       };
-
-      if (forms.isNotEmpty) {
-        final entry = forms.entries.toList()..shuffle();
-        final selected = entry.first;
-        _prompt = selected.key;
-        _correctAnswer = selected.value;
-      } else {
-        // Fallback if no conjugations available
-        _prompt = 'infinitive';
-        _correctAnswer = widget.card.frontText;
-      }
+      assert(
+        forms.isNotEmpty,
+        'ConjugationPracticeExercise reached with VerbData that has no '
+        'conjugation fields — _canDoExercise should have excluded this card.',
+      );
+      final entry = forms.entries.toList()..shuffle();
+      final selected = entry.first;
+      _prompt = selected.key;
+      _correctAnswer = selected.value;
     } else if (wordData is NounData) {
-      // Test the article for nouns — only if the stored gender is a valid article
+      // _canDoExercise guarantees gender is non-empty.
       final gender = wordData.gender.toLowerCase().trim();
+      assert(
+        gender.isNotEmpty,
+        'ConjugationPracticeExercise reached with NounData that has empty '
+        'gender — _canDoExercise should have excluded this card.',
+      );
       if (_articles.contains(gender)) {
         _prompt = 'article';
         _correctAnswer = gender;
         _isArticlePrompt = true;
-      } else if (gender.isNotEmpty) {
-        // Non-standard gender value (e.g. "der Hund") — fall back to text input
+      } else {
+        // Non-standard gender value stored as text (e.g. "masculine").
         _prompt = 'gender';
         _correctAnswer = gender;
-      } else {
-        // Empty gender — fall back to base form so the answer is never empty
-        _prompt = 'base form';
-        _correctAnswer = widget.card.frontText;
       }
     } else if (wordData is AdjectiveData) {
-      // Test comparative or superlative
+      // _canDoExercise guarantees at least one comparison form is non-null.
       final forms = <String, String>{
         if (wordData.comparative != null) 'comparative': wordData.comparative!,
         if (wordData.superlative != null) 'superlative': wordData.superlative!,
       };
-
-      if (forms.isNotEmpty) {
-        final entry = forms.entries.toList()..shuffle();
-        final selected = entry.first;
-        _prompt = selected.key;
-        _correctAnswer = selected.value;
-      } else {
-        // Fallback
-        _prompt = 'base form';
-        _correctAnswer = widget.card.frontText;
-      }
+      assert(
+        forms.isNotEmpty,
+        'ConjugationPracticeExercise reached with AdjectiveData that has no '
+        'comparison forms — _canDoExercise should have excluded this card.',
+      );
+      final entry = forms.entries.toList()..shuffle();
+      final selected = entry.first;
+      _prompt = selected.key;
+      _correctAnswer = selected.value;
     } else {
-      // No word data - fallback to basic form
+      // AdverbData / null / unknown — should never reach here.
+      assert(
+        false,
+        'ConjugationPracticeExercise reached with untestable wordData '
+        '(${wordData.runtimeType}) — _canDoExercise should have excluded this card.',
+      );
+      // Safe fallback for release builds so the widget doesn't crash.
       _prompt = 'base form';
       _correctAnswer = widget.card.frontText;
     }
@@ -140,7 +143,8 @@ class _ConjugationPracticeExerciseState
 
     if (_isArticlePrompt) {
       // Check article selection
-      isCorrect = _selectedArticle?.toLowerCase() == _correctAnswer.toLowerCase();
+      isCorrect =
+          _selectedArticle?.toLowerCase() == _correctAnswer.toLowerCase();
     } else {
       // Check text input
       final userAnswer = _answerController.text.trim().toLowerCase();
@@ -243,34 +247,34 @@ class _ConjugationPracticeExerciseState
           _buildArticleSelector(context, isAnswered)
         else
           TextField(
-          controller: _answerController,
-          enabled: !isAnswered,
-          decoration: InputDecoration(
-            labelText: 'Your answer',
-            hintText: 'Type the correct form',
-            border: const OutlineInputBorder(),
-            filled: true,
-            fillColor: isAnswered
-                ? (widget.currentAnswerCorrect == true
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.red.withValues(alpha: 0.1))
-                : null,
-            prefixIcon: isAnswered
-                ? Icon(
-                    widget.currentAnswerCorrect == true
-                        ? Icons.check_circle
-                        : Icons.cancel,
-                    color: widget.currentAnswerCorrect == true
-                        ? Colors.green
-                        : Colors.red,
-                  )
-                : const Icon(Icons.edit),
+            controller: _answerController,
+            enabled: !isAnswered,
+            decoration: InputDecoration(
+              labelText: 'Your answer',
+              hintText: 'Type the correct form',
+              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: isAnswered
+                  ? (widget.currentAnswerCorrect == true
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.1))
+                  : null,
+              prefixIcon: isAnswered
+                  ? Icon(
+                      widget.currentAnswerCorrect == true
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                      color: widget.currentAnswerCorrect == true
+                          ? Colors.green
+                          : Colors.red,
+                    )
+                  : const Icon(Icons.edit),
+            ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleLarge,
+            autofocus: true,
+            onSubmitted: !isAnswered ? (_) => _checkAnswer() : null,
           ),
-          textAlign: TextAlign.center,
-          style: theme.textTheme.titleLarge,
-          autofocus: true,
-          onSubmitted: !isAnswered ? (_) => _checkAnswer() : null,
-        ),
 
         const SizedBox(height: 24),
 
@@ -281,7 +285,9 @@ class _ConjugationPracticeExerciseState
             child: FilledButton(
               onPressed: _isArticlePrompt
                   ? (_selectedArticle != null ? _checkAnswer : null)
-                  : (_answerController.text.trim().isNotEmpty ? _checkAnswer : null),
+                  : (_answerController.text.trim().isNotEmpty
+                        ? _checkAnswer
+                        : null),
               child: const Text('Check Answer'),
             ),
           ),
@@ -394,7 +400,9 @@ class _ConjugationPracticeExerciseState
                         style: theme.textTheme.headlineMedium?.copyWith(
                           color:
                               textColor ??
-                              (isSelected ? articleColor : colorScheme.onSurface),
+                              (isSelected
+                                  ? articleColor
+                                  : colorScheme.onSurface),
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,

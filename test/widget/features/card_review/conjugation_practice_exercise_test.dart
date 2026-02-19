@@ -141,7 +141,9 @@ void main() {
       expect(textField.enabled, false);
     });
 
-    testWidgets('noun shows article selector instead of text field', (tester) async {
+    testWidgets('noun shows article selector instead of text field', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -163,43 +165,48 @@ void main() {
       expect(find.text('das'), findsOneWidget);
     });
 
-    testWidgets('noun with plural "die" still shows article selector not text field', (tester) async {
-      // Regression test for Bug #2: a noun whose plural is "die" must not
-      // accidentally trigger the article-selector for the plural prompt.
-      // With the fix, nouns always use the article selector (for gender).
-      final nounWithDiePlural =
-          CardModel.create(
-            frontText: 'die Frau',
-            backText: 'woman',
-            language: 'de',
-          ).copyWith(
-            wordData: WordData.noun(
-              gender: 'die',
-              plural: 'die', // plural happens to equal an article
-            ),
-          );
+    testWidgets(
+      'noun with plural "die" still shows article selector not text field',
+      (tester) async {
+        // Regression test for Bug #2: a noun whose plural is "die" must not
+        // accidentally trigger the article-selector for the plural prompt.
+        // With the fix, nouns always use the article selector (for gender).
+        final nounWithDiePlural =
+            CardModel.create(
+              frontText: 'die Frau',
+              backText: 'woman',
+              language: 'de',
+            ).copyWith(
+              wordData: WordData.noun(
+                gender: 'die',
+                plural: 'die', // plural happens to equal an article
+              ),
+            );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ConjugationPracticeExercise(
-              card: nounWithDiePlural,
-              answerState: AnswerState.pending,
-              currentAnswerCorrect: null,
-              onCheckAnswer: (_) {},
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ConjugationPracticeExercise(
+                card: nounWithDiePlural,
+                answerState: AnswerState.pending,
+                currentAnswerCorrect: null,
+                onCheckAnswer: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Must show article selector (prompt = 'article'), not a text field
-      expect(find.byType(TextField), findsNothing);
-      expect(find.text('der'), findsOneWidget);
-      expect(find.text('die'), findsOneWidget);
-      expect(find.text('das'), findsOneWidget);
-    });
+        // Must show article selector (prompt = 'article'), not a text field
+        expect(find.byType(TextField), findsNothing);
+        expect(find.text('der'), findsOneWidget);
+        expect(find.text('die'), findsOneWidget);
+        expect(find.text('das'), findsOneWidget);
+      },
+    );
 
-    testWidgets('article selector state resets when card changes', (tester) async {
+    testWidgets('article selector state resets when card changes', (
+      tester,
+    ) async {
       // Regression test for Bug #3: _selectedArticle must clear on card swap.
       bool? lastResult;
 
@@ -252,105 +259,107 @@ void main() {
     });
 
     testWidgets(
-        'article selection resets when answerState returns to pending on same card',
-        (tester) async {
-      // A card can appear for multiple exercise types in one session
-      // (e.g. multipleChoiceText then conjugationPractice). When the session
-      // advances to the next exercise the parent rebuilds this widget with the
-      // same card.id but answerState reset to pending. The previously selected
-      // article must not carry over.
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ConjugationPracticeExercise(
-              card: nounCard,
-              answerState: AnswerState.pending,
-              currentAnswerCorrect: null,
-              onCheckAnswer: (_) {},
+      'article selection resets when answerState returns to pending on same card',
+      (tester) async {
+        // A card can appear for multiple exercise types in one session
+        // (e.g. multipleChoiceText then conjugationPractice). When the session
+        // advances to the next exercise the parent rebuilds this widget with the
+        // same card.id but answerState reset to pending. The previously selected
+        // article must not carry over.
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ConjugationPracticeExercise(
+                card: nounCard,
+                answerState: AnswerState.pending,
+                currentAnswerCorrect: null,
+                onCheckAnswer: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Select an article and submit the answer
-      await tester.tap(find.text('die'));
-      await tester.pump();
+        // Select an article and submit the answer
+        await tester.tap(find.text('die'));
+        await tester.pump();
 
-      // Parent marks the answer as answered (same card, same id)
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ConjugationPracticeExercise(
-              card: nounCard,
-              answerState: AnswerState.answered,
-              currentAnswerCorrect: false,
-              onCheckAnswer: (_) {},
+        // Parent marks the answer as answered (same card, same id)
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ConjugationPracticeExercise(
+                card: nounCard,
+                answerState: AnswerState.answered,
+                currentAnswerCorrect: false,
+                onCheckAnswer: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Session advances to the next exercise on the same card — answerState
-      // resets to pending while card.id is unchanged.
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ConjugationPracticeExercise(
-              card: nounCard,
-              answerState: AnswerState.pending,
-              currentAnswerCorrect: null,
-              onCheckAnswer: (_) {},
+        // Session advances to the next exercise on the same card — answerState
+        // resets to pending while card.id is unchanged.
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ConjugationPracticeExercise(
+                card: nounCard,
+                answerState: AnswerState.pending,
+                currentAnswerCorrect: null,
+                onCheckAnswer: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      // Check Answer must be disabled — the previous selection must be cleared
-      final checkButton = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'Check Answer'),
-      );
-      expect(checkButton.onPressed, isNull);
-    });
+        // Check Answer must be disabled — the previous selection must be cleared
+        final checkButton = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Check Answer'),
+        );
+        expect(checkButton.onPressed, isNull);
+      },
+    );
 
     testWidgets(
-        'a noun whose word data changes to empty gender shows a text field, not the article selector',
-        (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ConjugationPracticeExercise(
-              card: nounCard,
-              answerState: AnswerState.pending,
-              currentAnswerCorrect: null,
-              onCheckAnswer: (_) {},
+      'a noun whose word data changes to empty gender shows a text field, not the article selector',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ConjugationPracticeExercise(
+                card: nounCard,
+                answerState: AnswerState.pending,
+                currentAnswerCorrect: null,
+                onCheckAnswer: (_) {},
+              ),
             ),
           ),
-        ),
-      );
-      expect(find.byType(TextField), findsNothing);
+        );
+        expect(find.byType(TextField), findsNothing);
 
-      final updatedCard = nounCard.copyWith(
-        wordData: WordData.noun(gender: '', plural: 'Hunde'),
-      );
+        final updatedCard = nounCard.copyWith(
+          wordData: WordData.noun(gender: '', plural: 'Hunde'),
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ConjugationPracticeExercise(
-              card: updatedCard,
-              answerState: AnswerState.pending,
-              currentAnswerCorrect: null,
-              onCheckAnswer: (_) {},
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ConjugationPracticeExercise(
+                card: updatedCard,
+                answerState: AnswerState.pending,
+                currentAnswerCorrect: null,
+                onCheckAnswer: (_) {},
+              ),
             ),
           ),
-        ),
-      );
+        );
 
-      expect(find.byType(TextField), findsOneWidget);
-      expect(find.text('der'), findsNothing);
-      expect(find.text('die'), findsNothing);
-      expect(find.text('das'), findsNothing);
-    });
+        expect(find.byType(TextField), findsOneWidget);
+        expect(find.text('der'), findsNothing);
+        expect(find.text('die'), findsNothing);
+        expect(find.text('das'), findsNothing);
+      },
+    );
 
     testWidgets('displays form prompt', (tester) async {
       await tester.pumpWidget(

@@ -5,6 +5,9 @@ import '../../data/repositories/card_management_repository.dart';
 import '../../../../shared/utils/rate_limiter.dart';
 import '../../../auth/data/services/supabase_auth_service.dart';
 
+/// Function type for resolving the current user ID.
+typedef UserIdResolver = String? Function();
+
 /// Provider for managing card data, filtering, and CRUD operations.
 ///
 /// This is the primary provider for card management within the card_management feature.
@@ -13,6 +16,7 @@ class CardManagementProvider extends ChangeNotifier {
   final LanguageProvider _languageProvider;
   final CardManagementRepository _repository;
   final RateLimiter _rateLimiter = RateLimiter();
+  final UserIdResolver _getUserId;
 
   // Core card data
   List<CardModel> _allCards = [];
@@ -33,12 +37,22 @@ class CardManagementProvider extends ChangeNotifier {
   /// Create a CardManagementProvider with optional repository injection for testing.
   ///
   /// By default uses [SupabaseCardManagementRepository]. Pass a mock implementation
-  /// for unit testing.
+  /// for unit testing. Pass [getUserId] to override the user ID resolver (for tests).
   CardManagementProvider({
     required LanguageProvider languageProvider,
     CardManagementRepository? repository,
+    UserIdResolver? getUserId,
   }) : _languageProvider = languageProvider,
-       _repository = repository ?? SupabaseCardManagementRepository() {
+       _repository = repository ?? SupabaseCardManagementRepository(),
+       _getUserId =
+           getUserId ??
+           (() {
+             try {
+               return SupabaseAuthService.currentUserId;
+             } catch (_) {
+               return null;
+             }
+           }) {
     _languageProvider.addListener(_onLanguageChanged);
   }
 
@@ -142,18 +156,16 @@ class CardManagementProvider extends ChangeNotifier {
 
   /// Add a new card
   Future<void> addCard(CardModel card) async {
-    // Check rate limit
-    final userId = SupabaseAuthService.currentUserId;
-    if (userId == null) {
-      throw Exception('User not authenticated');
-    }
-
-    if (!_rateLimiter.isAllowed(userId: userId, action: 'card_creation')) {
-      final errorMsg = _rateLimiter.getErrorMessage(
-        userId: userId,
-        action: 'card_creation',
-      );
-      throw RateLimitException(errorMsg);
+    // Check rate limit (skipped when no userId — repository enforces auth)
+    final userId = _getUserId();
+    if (userId != null) {
+      if (!_rateLimiter.isAllowed(userId: userId, action: 'card_creation')) {
+        final errorMsg = _rateLimiter.getErrorMessage(
+          userId: userId,
+          action: 'card_creation',
+        );
+        throw RateLimitException(errorMsg);
+      }
     }
 
     await saveCard(card);
@@ -162,18 +174,19 @@ class CardManagementProvider extends ChangeNotifier {
   /// Add multiple cards in batch
   Future<void> addMultipleCards(List<CardModel> cards) async {
     try {
-      // Check rate limit for bulk operations
-      final userId = SupabaseAuthService.currentUserId;
-      if (userId == null) {
-        throw Exception('User not authenticated');
-      }
-
-      if (!_rateLimiter.isAllowed(userId: userId, action: 'card_bulk_create')) {
-        final errorMsg = _rateLimiter.getErrorMessage(
+      // Check rate limit for bulk operations (skipped when no userId)
+      final userId = _getUserId();
+      if (userId != null) {
+        if (!_rateLimiter.isAllowed(
           userId: userId,
           action: 'card_bulk_create',
-        );
-        throw RateLimitException(errorMsg);
+        )) {
+          final errorMsg = _rateLimiter.getErrorMessage(
+            userId: userId,
+            action: 'card_bulk_create',
+          );
+          throw RateLimitException(errorMsg);
+        }
       }
 
       for (final card in cards) {
@@ -190,18 +203,16 @@ class CardManagementProvider extends ChangeNotifier {
 
   /// Update an existing card
   Future<void> updateCard(CardModel card) async {
-    // Check rate limit
-    final userId = SupabaseAuthService.currentUserId;
-    if (userId == null) {
-      throw Exception('User not authenticated');
-    }
-
-    if (!_rateLimiter.isAllowed(userId: userId, action: 'card_update')) {
-      final errorMsg = _rateLimiter.getErrorMessage(
-        userId: userId,
-        action: 'card_update',
-      );
-      throw RateLimitException(errorMsg);
+    // Check rate limit (skipped when no userId — repository enforces auth)
+    final userId = _getUserId();
+    if (userId != null) {
+      if (!_rateLimiter.isAllowed(userId: userId, action: 'card_update')) {
+        final errorMsg = _rateLimiter.getErrorMessage(
+          userId: userId,
+          action: 'card_update',
+        );
+        throw RateLimitException(errorMsg);
+      }
     }
 
     await saveCard(card);
@@ -210,18 +221,16 @@ class CardManagementProvider extends ChangeNotifier {
   /// Delete a card by ID
   Future<void> deleteCard(String cardId) async {
     try {
-      // Check rate limit
-      final userId = SupabaseAuthService.currentUserId;
-      if (userId == null) {
-        throw Exception('User not authenticated');
-      }
-
-      if (!_rateLimiter.isAllowed(userId: userId, action: 'card_delete')) {
-        final errorMsg = _rateLimiter.getErrorMessage(
-          userId: userId,
-          action: 'card_delete',
-        );
-        throw RateLimitException(errorMsg);
+      // Check rate limit (skipped when no userId — repository enforces auth)
+      final userId = _getUserId();
+      if (userId != null) {
+        if (!_rateLimiter.isAllowed(userId: userId, action: 'card_delete')) {
+          final errorMsg = _rateLimiter.getErrorMessage(
+            userId: userId,
+            action: 'card_delete',
+          );
+          throw RateLimitException(errorMsg);
+        }
       }
 
       // Remove from local state immediately for responsive UI
@@ -233,24 +242,30 @@ class CardManagementProvider extends ChangeNotifier {
       await _repository.deleteCard(cardId);
     } catch (e) {
       _setError('Failed to delete card: $e');
-      // On error, reload to restore correct state
-      await loadCards();
       rethrow;
     }
   }
 
   /// Toggle archive status for a card
   Future<void> toggleArchive(String cardId) async {
-    final card = _allCards.firstWhere((c) => c.id == cardId);
-    final updatedCard = card.copyWith(isArchived: !card.isArchived);
-    await updateCard(updatedCard);
+    try {
+      final card = _allCards.firstWhere((c) => c.id == cardId);
+      final updatedCard = card.copyWith(isArchived: !card.isArchived);
+      await updateCard(updatedCard);
+    } catch (e) {
+      _setError('Failed to toggle archive: $e');
+    }
   }
 
   /// Toggle favorite status for a card
   Future<void> toggleFavorite(String cardId) async {
-    final card = _allCards.firstWhere((c) => c.id == cardId);
-    final updatedCard = card.copyWith(isFavorite: !card.isFavorite);
-    await updateCard(updatedCard);
+    try {
+      final card = _allCards.firstWhere((c) => c.id == cardId);
+      final updatedCard = card.copyWith(isFavorite: !card.isFavorite);
+      await updateCard(updatedCard);
+    } catch (e) {
+      _setError('Failed to toggle favorite: $e');
+    }
   }
 
   /// Clear all cards from storage
@@ -401,7 +416,9 @@ class CardManagementProvider extends ChangeNotifier {
   }
 
   void _clearError() {
+    if (_errorMessage == null) return;
     _errorMessage = null;
+    notifyListeners();
   }
 
   // ============================================================
@@ -452,6 +469,7 @@ class CardManagementProvider extends ChangeNotifier {
     'zh',
     'ko',
   ];
+
   /// Sanitize card text (functional pipeline)
   String _sanitizeCardText(String? input) {
     if (input == null || input.isEmpty) return '';

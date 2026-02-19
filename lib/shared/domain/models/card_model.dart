@@ -290,9 +290,13 @@ class CardModel {
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       exerciseScores: exerciseScores ?? this.exerciseScores,
-      wordData: identical(wordData, _absent) ? this.wordData : wordData as WordData?,
+      wordData: identical(wordData, _absent)
+          ? this.wordData
+          : wordData as WordData?,
       examples: examples ?? this.examples,
-      parentId: identical(parentId, _absent) ? this.parentId : parentId as String?,
+      parentId: identical(parentId, _absent)
+          ? this.parentId
+          : parentId as String?,
       notes: identical(notes, _absent) ? this.notes : notes as String?,
     );
   }

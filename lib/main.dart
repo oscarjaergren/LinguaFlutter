@@ -47,7 +47,9 @@ const _sentryRelease = String.fromEnvironment('SENTRY_RELEASE');
 Future<void> _initializeServices() async {
   await SentryService.initialize(
     dsn: _sentryDsn.trim().isEmpty ? null : _sentryDsn.trim(),
-    environment: _sentryEnvironment.trim().isEmpty ? _defaultEnvironment : _sentryEnvironment.trim(),
+    environment: _sentryEnvironment.trim().isEmpty
+        ? _defaultEnvironment
+        : _sentryEnvironment.trim(),
     release: _sentryRelease.trim().isEmpty ? null : _sentryRelease.trim(),
   );
 
@@ -64,7 +66,6 @@ Future<String?> _initializeSupabase() async {
     return e.toString();
   }
 }
-
 
 String get _defaultEnvironment {
   if (kReleaseMode) return 'production';
@@ -121,47 +122,44 @@ Future<Widget> _buildApp() async {
   _setupErrorHandlers();
 
   return MultiProvider(
-      providers: [
-        // Core providers
-        ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider.value(value: languageProvider),
-        ChangeNotifierProvider.value(value: streakProvider),
-        ChangeNotifierProvider.value(value: themeProvider),
+    providers: [
+      // Core providers
+      ChangeNotifierProvider.value(value: authProvider),
+      ChangeNotifierProvider.value(value: languageProvider),
+      ChangeNotifierProvider.value(value: streakProvider),
+      ChangeNotifierProvider.value(value: themeProvider),
 
-        // Feature-specific providers (VSA)
-        ChangeNotifierProvider.value(value: cardManagementProvider),
-        ChangeNotifierProvider.value(value: duplicateDetectionProvider),
-        ChangeNotifierProvider.value(value: cardEnrichmentProvider),
+      // Feature-specific providers (VSA)
+      ChangeNotifierProvider.value(value: cardManagementProvider),
+      ChangeNotifierProvider.value(value: duplicateDetectionProvider),
+      ChangeNotifierProvider.value(value: cardEnrichmentProvider),
 
-        // UI providers
-        ChangeNotifierProvider(create: (_) => MascotProvider()),
-        ChangeNotifierProvider(create: (_) => IconProvider()),
+      // UI providers
+      ChangeNotifierProvider(create: (_) => MascotProvider()),
+      ChangeNotifierProvider(create: (_) => IconProvider()),
 
-        // Exercise preferences provider
-        ChangeNotifierProvider.value(value: exercisePreferencesProvider),
+      // Exercise preferences provider
+      ChangeNotifierProvider.value(value: exercisePreferencesProvider),
 
-        // Practice session provider
-        ChangeNotifierProxyProvider<
-          CardManagementProvider,
-          PracticeSessionProvider
-        >(
-          create: (context) {
-            final streakProvider = context.read<StreakProvider>();
-            return PracticeSessionProvider(
-              getReviewCards: () =>
-                  context.read<CardManagementProvider>().reviewCards,
-              getAllCards: () =>
-                  context.read<CardManagementProvider>().allCards,
-              updateCard: context.read<CardManagementProvider>().updateCard,
-              onSessionComplete: (cardsReviewed) =>
-                  streakProvider.updateStreakWithReview(
-                    cardsReviewed: cardsReviewed,
-                  ),
-            );
-          },
-          update: (context, cardManagement, previous) => previous!,
-        ),
-      ],
+      // Practice session provider
+      ChangeNotifierProxyProvider<
+        CardManagementProvider,
+        PracticeSessionProvider
+      >(
+        create: (context) {
+          final streakProvider = context.read<StreakProvider>();
+          return PracticeSessionProvider(
+            getReviewCards: () =>
+                context.read<CardManagementProvider>().reviewCards,
+            getAllCards: () => context.read<CardManagementProvider>().allCards,
+            updateCard: context.read<CardManagementProvider>().updateCard,
+            onSessionComplete: (cardsReviewed) => streakProvider
+                .updateStreakWithReview(cardsReviewed: cardsReviewed),
+          );
+        },
+        update: (context, cardManagement, previous) => previous!,
+      ),
+    ],
     child: const LinguaFlutterApp(),
   );
 }

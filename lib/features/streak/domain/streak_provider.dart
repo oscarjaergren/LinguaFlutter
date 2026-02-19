@@ -47,41 +47,42 @@ class StreakProvider extends ChangeNotifier {
     _clearError();
     _setLoading(true);
 
+    // Snapshot and clear pending values while still loading so that any
+    // concurrent updateStreakWithReview call that arrives during the await
+    // below will queue itself again rather than racing with our flush.
+    final pendingToFlush = _pendingCardsReviewed;
+    final pendingDateToFlush = _pendingReviewDate;
+    if (pendingToFlush != null) {
+      _pendingCardsReviewed = null;
+      _pendingReviewDate = null;
+    }
+
     try {
       _streak = await _streakService.loadStreak();
       notifyListeners();
     } catch (e) {
       _setError('Failed to load streak data: $e');
+      // Restore the pending values so they are not silently lost.
+      if (pendingToFlush != null) {
+        _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pendingToFlush;
+        if (pendingDateToFlush != null) {
+          final existing = _pendingReviewDate;
+          _pendingReviewDate =
+              existing == null || pendingDateToFlush.isBefore(existing)
+              ? pendingDateToFlush
+              : existing;
+        }
+      }
     } finally {
       _setLoading(false);
     }
 
-    // Flush any streak update that was queued while loading.
-    // Snapshot and clear the pending values before calling, then restore them
-    // on failure so retryPendingUpdate can apply them later (mirrors the
-    // behaviour in updateStreakWithReview).
-    if (_errorMessage == null && _pendingCardsReviewed != null) {
-      final pending = _pendingCardsReviewed!;
-      final pendingDate = _pendingReviewDate;
-      _pendingCardsReviewed = null;
-      _pendingReviewDate = null;
+    // Flush any update that was queued while loading (and not restored above).
+    if (_errorMessage == null && pendingToFlush != null) {
       await updateStreakWithReview(
-        cardsReviewed: pending,
-        reviewDate: pendingDate,
+        cardsReviewed: pendingToFlush,
+        reviewDate: pendingDateToFlush,
       );
-      // If the flush call failed, restore the pending values so they are not
-      // silently lost and can be retried via retryPendingUpdate.
-      // Only add `pending` when no new concurrent call has already set
-      // _pendingCardsReviewed (which would cause double-counting — Bug 6).
-      if (_errorMessage != null) {
-        _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pending;
-        if (pendingDate != null) {
-          final existing = _pendingReviewDate;
-          _pendingReviewDate = existing == null || pendingDate.isBefore(existing)
-              ? pendingDate
-              : existing;
-        }
-      }
     }
   }
 
@@ -99,8 +100,9 @@ class StreakProvider extends ChangeNotifier {
       final incoming = reviewDate;
       if (incoming != null) {
         final existing = _pendingReviewDate;
-        _pendingReviewDate =
-            existing == null || incoming.isBefore(existing) ? incoming : existing;
+        _pendingReviewDate = existing == null || incoming.isBefore(existing)
+            ? incoming
+            : existing;
       }
       return;
     }
@@ -150,8 +152,8 @@ class StreakProvider extends ChangeNotifier {
             final existing = _pendingReviewDate;
             _pendingReviewDate =
                 existing == null || pendingDate.isBefore(existing)
-                    ? pendingDate
-                    : existing;
+                ? pendingDate
+                : existing;
           }
         }
       }

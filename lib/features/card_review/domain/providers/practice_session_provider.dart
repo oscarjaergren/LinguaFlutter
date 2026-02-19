@@ -51,6 +51,7 @@ class PracticeSessionProvider extends ChangeNotifier {
   List<PracticeItem> _sessionQueue = [];
   int _currentIndex = 0;
   bool _isSessionActive = false;
+  bool _isSessionComplete = false;
   DateTime? _sessionStartTime;
 
   // Exercise filtering
@@ -86,6 +87,7 @@ class PracticeSessionProvider extends ChangeNotifier {
   List<PracticeItem> get sessionQueue => _sessionQueue;
   int get currentIndex => _currentIndex;
   bool get isSessionActive => _isSessionActive;
+  bool get isSessionComplete => _isSessionComplete;
   DateTime? get sessionStartTime => _sessionStartTime;
   int get correctCount => _correctCount;
   int get incorrectCount => _incorrectCount;
@@ -102,8 +104,11 @@ class PracticeSessionProvider extends ChangeNotifier {
   CardModel? get currentCard => currentItem?.card;
   ExerciseType? get currentExerciseType => currentItem?.exerciseType;
 
-  double get progress =>
-      _sessionQueue.isEmpty ? 0.0 : (_currentIndex + 1) / _sessionQueue.length;
+  double get progress {
+    if (_isSessionComplete) return 1.0;
+    if (_sessionQueue.isEmpty) return 0.0;
+    return (_currentIndex + 1) / _sessionQueue.length;
+  }
 
   int get remainingCount =>
       _sessionQueue.isEmpty ? 0 : _sessionQueue.length - _currentIndex - 1;
@@ -172,6 +177,7 @@ class PracticeSessionProvider extends ChangeNotifier {
     _sessionQueue = _buildPracticeQueue(cardsToUse);
     _currentIndex = 0;
     _isSessionActive = _sessionQueue.isNotEmpty;
+    _isSessionComplete = false;
     _sessionStartTime = DateTime.now();
     _correctCount = 0;
     _incorrectCount = 0;
@@ -270,45 +276,19 @@ class PracticeSessionProvider extends ChangeNotifier {
     return rateA.compareTo(rateB);
   }
 
-  /// Check if an exercise can be performed on a card
+  /// Check if an exercise can be performed on a card.
+  ///
+  /// Delegates entirely to [ExerciseType.canUse] — each exercise type owns
+  /// its own card requirements.
   bool _canDoExercise(
     CardModel card,
     ExerciseType type,
     bool hasEnoughCardsForMultipleChoice,
   ) {
-    // Check icon requirement
-    if (type.requiresIcon && card.icon == null) {
-      return false;
-    }
-
-    // Check multiple choice card requirement
-    if ((type == ExerciseType.multipleChoiceText ||
-            type == ExerciseType.multipleChoiceIcon) &&
-        !hasEnoughCardsForMultipleChoice) {
-      return false;
-    }
-
-    // Sentence building requires examples
-    if (type == ExerciseType.sentenceBuilding) {
-      return card.examples.isNotEmpty;
-    }
-
-    // Conjugation practice requires word data
-    if (type == ExerciseType.conjugationPractice) {
-      return card.wordData != null;
-    }
-
-    // Article selection requires German article or article in front text
-    if (type == ExerciseType.articleSelection) {
-      if (card.germanArticle != null) return true;
-      // Check if front text starts with an article
-      final frontText = card.frontText.toLowerCase().trim();
-      return frontText.startsWith('der ') ||
-          frontText.startsWith('die ') ||
-          frontText.startsWith('das ');
-    }
-
-    return true;
+    return type.canUse(
+      card,
+      hasEnoughCardsForMultipleChoice: hasEnoughCardsForMultipleChoice,
+    );
   }
 
   /// Prepare the current exercise (generate options, etc.)
@@ -411,6 +391,7 @@ class PracticeSessionProvider extends ChangeNotifier {
 
       // Check if session is now complete
       if (_sessionQueue.isEmpty) {
+        _isSessionComplete = true;
         final totalReviewed = _correctCount + _incorrectCount;
         try {
           await _onSessionComplete?.call(totalReviewed);
@@ -439,6 +420,7 @@ class PracticeSessionProvider extends ChangeNotifier {
   /// End the current session
   void endSession() {
     _isSessionActive = false;
+    _isSessionComplete = false;
     _sessionQueue = [];
     _currentIndex = 0;
     _answerState = AnswerState.pending;
@@ -516,6 +498,7 @@ class PracticeSessionProvider extends ChangeNotifier {
       _prepareCurrentExercise();
       notifyListeners();
     } else {
+      _isSessionComplete = true;
       final totalReviewed = _correctCount + _incorrectCount;
       try {
         await _onSessionComplete?.call(totalReviewed);
@@ -558,6 +541,7 @@ class PracticeSessionProvider extends ChangeNotifier {
       _prepareCurrentExercise();
       notifyListeners();
     } else {
+      _isSessionComplete = true;
       final totalReviewed = _correctCount + _incorrectCount;
       try {
         await _onSessionComplete?.call(totalReviewed);

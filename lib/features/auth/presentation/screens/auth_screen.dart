@@ -322,7 +322,9 @@ class _AuthScreenState extends State<AuthScreen>
                           children: [
                             const Expanded(child: Divider()),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 'or',
                                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -347,7 +349,8 @@ class _AuthScreenState extends State<AuthScreen>
                               'https://www.google.com/favicon.ico',
                               height: 24,
                               width: 24,
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.g_mobiledata),
                             ),
                             label: const Text(
                               'Continue with Google',

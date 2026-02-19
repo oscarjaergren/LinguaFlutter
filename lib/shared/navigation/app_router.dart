@@ -26,9 +26,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation:
         auth, // Start at auth - redirect will handle if already logged in
-    observers: [
-      SentryNavigatorObserver(),
-    ],
+    observers: [SentryNavigatorObserver()],
     redirect: (context, state) {
       final isAuthenticated = SupabaseAuthService.isAuthenticated;
       final path = state.matchedLocation;
@@ -121,11 +119,33 @@ class AppRouter {
         builder: (context, state) {
           final cardId = state.pathParameters['cardId']!;
           final cardManagement = context.read<CardManagementProvider>();
-          final card = cardManagement.allCards.firstWhere(
-            (c) => c.id == cardId,
-            orElse: () => throw Exception('Card not found'),
-          );
-          return CreationCreationScreen(cardToEdit: card);
+          final cards = cardManagement.allCards;
+          final index = cards.indexWhere((c) => c.id == cardId);
+          if (index == -1) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Card Not Found')),
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('This card no longer exists.'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.go(AppRouter.cards),
+                      child: const Text('Back to Cards'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          return CreationCreationScreen(cardToEdit: cards[index]);
         },
       ),
 

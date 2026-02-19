@@ -230,7 +230,6 @@ void main() {
       expect(practiceProvider.incorrectCount, 0);
       expect(practiceProvider.isSessionActive, true);
     });
-
   });
 
   group('Streak updates after session completes', () {
@@ -242,11 +241,46 @@ void main() {
 
     setUp(() async {
       testCards = [
-        CardModel(id: '1', frontText: 'Hallo', backText: 'Hello', language: 'de', createdAt: DateTime.now(), updatedAt: DateTime.now()),
-        CardModel(id: '2', frontText: 'Welt', backText: 'World', language: 'de', createdAt: DateTime.now(), updatedAt: DateTime.now()),
-        CardModel(id: '3', frontText: 'Danke', backText: 'Thanks', language: 'de', createdAt: DateTime.now(), updatedAt: DateTime.now()),
-        CardModel(id: '4', frontText: 'Bitte', backText: 'Please', language: 'de', createdAt: DateTime.now(), updatedAt: DateTime.now()),
-        CardModel(id: '5', frontText: 'Ja', backText: 'Yes', language: 'de', createdAt: DateTime.now(), updatedAt: DateTime.now()),
+        CardModel(
+          id: '1',
+          frontText: 'Hallo',
+          backText: 'Hello',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '2',
+          frontText: 'Welt',
+          backText: 'World',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '3',
+          frontText: 'Danke',
+          backText: 'Thanks',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '4',
+          frontText: 'Bitte',
+          backText: 'Please',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '5',
+          frontText: 'Ja',
+          backText: 'Yes',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
       ];
 
       streakUpdateCallCount = 0;
@@ -260,7 +294,9 @@ void main() {
         updateCard: (_) async {},
         onSessionComplete: (cardsReviewed) async {
           streakUpdateCallCount++;
-          await streakProvider.updateStreakWithReview(cardsReviewed: cardsReviewed);
+          await streakProvider.updateStreakWithReview(
+            cardsReviewed: cardsReviewed,
+          );
         },
       );
     });
@@ -304,30 +340,36 @@ void main() {
       expect(streakProvider.totalCardsReviewed, totalExercises);
     });
 
-    test('onSessionComplete callback is called exactly once per session', () async {
-      practiceProvider.startSession();
-
-      while (practiceProvider.isSessionActive) {
-        practiceProvider.checkAnswer(isCorrect: true);
-        await practiceProvider.confirmAnswerAndAdvance(markedCorrect: true);
-      }
-
-      expect(streakUpdateCallCount, 1);
-    });
-
-    test('two sessions on same day keep streak at 1 but accumulate cards', () async {
-      for (int i = 0; i < 2; i++) {
+    test(
+      'onSessionComplete callback is called exactly once per session',
+      () async {
         practiceProvider.startSession();
+
         while (practiceProvider.isSessionActive) {
           practiceProvider.checkAnswer(isCorrect: true);
           await practiceProvider.confirmAnswerAndAdvance(markedCorrect: true);
         }
-      }
 
-      expect(streakProvider.currentStreak, 1);
-      expect(streakProvider.totalReviewSessions, 2);
-      expect(streakUpdateCallCount, 2);
-    });
+        expect(streakUpdateCallCount, 1);
+      },
+    );
+
+    test(
+      'two sessions on same day keep streak at 1 but accumulate cards',
+      () async {
+        for (int i = 0; i < 2; i++) {
+          practiceProvider.startSession();
+          while (practiceProvider.isSessionActive) {
+            practiceProvider.checkAnswer(isCorrect: true);
+            await practiceProvider.confirmAnswerAndAdvance(markedCorrect: true);
+          }
+        }
+
+        expect(streakProvider.currentStreak, 1);
+        expect(streakProvider.totalReviewSessions, 2);
+        expect(streakUpdateCallCount, 2);
+      },
+    );
   });
 }
 

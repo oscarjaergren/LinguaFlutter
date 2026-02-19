@@ -88,15 +88,22 @@ class StreakModel {
     return dailyReviewCounts[today] ?? 0;
   }
 
-  /// Get average cards per day for current streak
+  /// Get average cards per day for current streak.
+  ///
+  /// Anchors to [lastReviewDate] so the window is correct even when the user
+  /// hasn't reviewed yet today (streak is still active via the 1-day grace).
   double get averageCardsPerDay {
-    if (currentStreak == 0) return 0.0;
+    if (currentStreak == 0 || lastReviewDate == null) return 0.0;
 
-    final now = DateTime.now();
+    final anchor = DateTime(
+      lastReviewDate!.year,
+      lastReviewDate!.month,
+      lastReviewDate!.day,
+    );
     final streakDays = <String>[];
 
     for (int i = 0; i < currentStreak; i++) {
-      final date = now.subtract(Duration(days: i));
+      final date = anchor.subtract(Duration(days: i));
       streakDays.add(_formatDate(date));
     }
 
@@ -280,11 +287,20 @@ class StreakModel {
     if (identical(this, other)) return true;
     return other is StreakModel &&
         other.currentStreak == currentStreak &&
-        other.bestStreak == bestStreak;
+        other.bestStreak == bestStreak &&
+        other.lastReviewDate == lastReviewDate &&
+        other.totalReviewSessions == totalReviewSessions &&
+        other.totalCardsReviewed == totalCardsReviewed;
   }
 
   @override
-  int get hashCode => Object.hash(currentStreak, bestStreak);
+  int get hashCode => Object.hash(
+    currentStreak,
+    bestStreak,
+    lastReviewDate,
+    totalReviewSessions,
+    totalCardsReviewed,
+  );
 
   @override
   String toString() {

@@ -1,0 +1,21 @@
+#!/bin/sh
+# Pre-commit hook: enforce dart format on staged Dart files.
+# Blocks the commit if any staged .dart file is not formatted.
+
+STAGED_DART=$(git diff --cached --name-only --diff-filter=ACM | grep '\.dart$')
+
+if [ -z "$STAGED_DART" ]; then
+  exit 0
+fi
+
+# Run dart format in check mode on the repo root (covers all staged files)
+dart format --output=none --set-exit-if-changed . 2>&1
+FORMAT_EXIT=$?
+
+if [ $FORMAT_EXIT -ne 0 ]; then
+  echo ""
+  echo "❌ dart format check failed. Run 'dart format .' to fix, then re-stage."
+  exit 1
+fi
+
+exit 0

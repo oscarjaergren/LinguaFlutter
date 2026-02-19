@@ -82,10 +82,13 @@ class ExercisePreferences {
     this.weaknessThreshold = 70.0,
   });
 
-  /// Create default preferences with all implemented types enabled
+  /// Create default preferences with only the core exercise types enabled.
+  ///
+  /// Core types (reading recognition, writing translation, reverse translation)
+  /// work on every card with no extra data. Advanced types are opt-in.
   factory ExercisePreferences.defaults() {
     return ExercisePreferences(
-      enabledTypes: ExerciseType.values.where((t) => t.isImplemented).toSet(),
+      enabledTypes: ExerciseType.values.where((t) => t.isCore).toSet(),
     );
   }
 

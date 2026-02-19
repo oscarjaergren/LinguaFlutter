@@ -19,16 +19,8 @@ void main() {
 
     test('should detect exact duplicates', () {
       final cards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
       ];
 
       provider.analyzeCards(cards);
@@ -40,11 +32,7 @@ void main() {
 
     test('should not detect duplicates for unique cards', () {
       final cards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
         CardModel.create(
           frontText: 'Goodbye',
           backText: 'Adiós',
@@ -60,16 +48,8 @@ void main() {
 
     test('should get duplicates for specific card', () {
       final cards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
       ];
 
       provider.analyzeCards(cards);
@@ -86,16 +66,8 @@ void main() {
 
     test('should clear duplicate data', () {
       final cards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
       ];
 
       provider.analyzeCards(cards);
@@ -109,16 +81,8 @@ void main() {
 
     test('should filter cards with duplicates', () {
       final cards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
         CardModel.create(
           frontText: 'Unique',
           backText: 'Único',
@@ -135,16 +99,8 @@ void main() {
 
     test('should analyze cards for specific language', () {
       final cards = [
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hola',
-          language: 'es',
-        ),
-        CardModel.create(
-          frontText: 'Hello',
-          backText: 'Hallo',
-          language: 'de',
-        ),
+        CardModel.create(frontText: 'Hello', backText: 'Hola', language: 'es'),
+        CardModel.create(frontText: 'Hello', backText: 'Hallo', language: 'de'),
       ];
 
       provider.analyzeCardsForLanguage(cards, 'es');
@@ -160,11 +116,7 @@ void main() {
       });
 
       final cards = [
-        CardModel.create(
-          frontText: 'Test',
-          backText: 'Prueba',
-          language: 'es',
-        ),
+        CardModel.create(frontText: 'Test', backText: 'Prueba', language: 'es'),
       ];
 
       provider.analyzeCards(cards);

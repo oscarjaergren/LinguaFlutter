@@ -40,7 +40,11 @@ class LoggerService {
     _talker.info(message, exception, stackTrace);
     // Add as Sentry breadcrumb for debugging
     if (SentryService.isInitialized) {
-      SentryService.addBreadcrumb(message: message, category: 'app', level: SentryLevel.info);
+      SentryService.addBreadcrumb(
+        message: message,
+        category: 'app',
+        level: SentryLevel.info,
+      );
     }
   }
 
@@ -58,7 +62,7 @@ class LoggerService {
     StackTrace? stackTrace,
   ]) {
     _talker.error(message, exception, stackTrace);
-    
+
     // Send errors to Sentry in production
     if (SentryService.isInitialized) {
       if (exception != null) {
@@ -68,10 +72,7 @@ class LoggerService {
           hint: message,
         );
       } else {
-        SentryService.captureMessage(
-          message,
-          level: SentryLevel.error,
-        );
+        SentryService.captureMessage(message, level: SentryLevel.error);
       }
     }
   }
@@ -82,7 +83,7 @@ class LoggerService {
     StackTrace? stackTrace,
   ]) {
     _talker.critical(message, exception, stackTrace);
-    
+
     // Send critical errors to Sentry
     if (SentryService.isInitialized) {
       if (exception != null) {
@@ -92,10 +93,7 @@ class LoggerService {
           hint: message,
         );
       } else {
-        SentryService.captureMessage(
-          message,
-          level: SentryLevel.fatal,
-        );
+        SentryService.captureMessage(message, level: SentryLevel.fatal);
       }
     }
   }

@@ -35,39 +35,37 @@ class SentryService {
 
       final trimmedRelease = release?.trim();
 
-      await SentryFlutter.init(
-        (options) {
-          options.dsn = normalizedDsn;
+      await SentryFlutter.init((options) {
+        options.dsn = normalizedDsn;
 
-          // Environment configuration
-          options.environment = environment;
+        // Environment configuration
+        options.environment = environment;
 
-          // Sample rate for performance monitoring (1.0 = 100%)
-          options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
+        // Sample rate for performance monitoring (1.0 = 100%)
+        options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
 
-          // Enable automatic breadcrumbs
-          options.enableAutoSessionTracking = true;
+        // Enable automatic breadcrumbs
+        options.enableAutoSessionTracking = true;
 
-          // Capture failed HTTP requests
-          options.captureFailedRequests = true;
+        // Capture failed HTTP requests
+        options.captureFailedRequests = true;
 
-          // Debug options
-          options.debug = kDebugMode;
+        // Debug options
+        options.debug = kDebugMode;
 
-          // Attach stack traces to messages
-          options.attachStacktrace = true;
+        // Attach stack traces to messages
+        options.attachStacktrace = true;
 
-          if (trimmedRelease != null && trimmedRelease.isNotEmpty) {
-            options.release = trimmedRelease;
-          }
+        if (trimmedRelease != null && trimmedRelease.isNotEmpty) {
+          options.release = trimmedRelease;
+        }
 
-          // Filter out sensitive data
-          options.beforeSend = (event, hint) {
-            // Add custom filtering logic here if needed
-            return event;
-          };
-        },
-      );
+        // Filter out sensitive data
+        options.beforeSend = (event, hint) {
+          // Add custom filtering logic here if needed
+          return event;
+        };
+      });
 
       _isInitialized = true;
 
@@ -166,12 +164,7 @@ class SentryService {
 
     Sentry.configureScope((scope) {
       scope.setUser(
-        SentryUser(
-          id: id,
-          email: email,
-          username: username,
-          data: extras,
-        ),
+        SentryUser(id: id, email: email, username: username, data: extras),
       );
     });
   }
@@ -213,11 +206,7 @@ class SentryService {
       return NoOpSentrySpan();
     }
 
-    return Sentry.startTransaction(
-      name,
-      operation,
-      description: description,
-    );
+    return Sentry.startTransaction(name, operation, description: description);
   }
 
   /// Close Sentry (call on app dispose if needed)

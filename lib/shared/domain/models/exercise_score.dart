@@ -153,11 +153,22 @@ class ExerciseScore {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is ExerciseScore && other.type == type;
+    return other is ExerciseScore &&
+        other.type == type &&
+        other.correctCount == correctCount &&
+        other.incorrectCount == incorrectCount &&
+        other.currentStreak == currentStreak &&
+        other.bestStreak == bestStreak;
   }
 
   @override
-  int get hashCode => type.hashCode;
+  int get hashCode => Object.hash(
+    type,
+    correctCount,
+    incorrectCount,
+    currentStreak,
+    bestStreak,
+  );
 
   @override
   String toString() {

@@ -175,7 +175,10 @@ void main() {
       final result = WordEnrichmentResult.fromJson({
         'wordType': 'adjective',
         'translation': 'fast',
-        'grammar': {'comparative': 'schneller', 'superlative': 'am schnellsten'},
+        'grammar': {
+          'comparative': 'schneller',
+          'superlative': 'am schnellsten',
+        },
         'examples': [],
       });
 

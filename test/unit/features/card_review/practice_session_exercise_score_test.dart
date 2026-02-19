@@ -15,11 +15,7 @@ void main() {
       lastUpdatedCard = null;
 
       testCards = [
-        CardModel.create(
-          frontText: 'Hund',
-          backText: 'dog',
-          language: 'de',
-        ),
+        CardModel.create(frontText: 'Hund', backText: 'dog', language: 'de'),
       ];
 
       provider = PracticeSessionProvider(
@@ -261,7 +257,6 @@ void main() {
           frontText: 'word$i',
           backText: 'translation$i',
           language: 'de',
-
         ),
       );
 

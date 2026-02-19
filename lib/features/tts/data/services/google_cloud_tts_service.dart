@@ -4,7 +4,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 // Build-time constant - must be const for String.fromEnvironment
-const _googleCloudTtsApiKey = String.fromEnvironment('GOOGLE_CLOUD_TTS_API_KEY');
+const _googleCloudTtsApiKey = String.fromEnvironment(
+  'GOOGLE_CLOUD_TTS_API_KEY',
+);
 
 /// Google Cloud Text-to-Speech service with high-quality Neural2 voices
 class GoogleCloudTtsService {
@@ -23,9 +25,11 @@ class GoogleCloudTtsService {
   Future<void> initialize() async {
     if (_isInitialized) return;
 
-    _googleApiKey = _googleCloudTtsApiKey.isEmpty ? null : _googleCloudTtsApiKey;
+    _googleApiKey = _googleCloudTtsApiKey.isEmpty
+        ? null
+        : _googleCloudTtsApiKey;
     _isEnabled = _googleApiKey != null && _googleApiKey!.isNotEmpty;
-    
+
     if (_isEnabled) {
       LoggerService.info('Google Cloud TTS enabled');
     } else {

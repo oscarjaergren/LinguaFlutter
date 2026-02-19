@@ -7,15 +7,11 @@ import '../services/ai/ai.dart';
 class AiConfigWidget extends StatefulWidget {
   /// Called after successful save
   final VoidCallback? onSaved;
-  
+
   /// Whether to show as a dialog (compact) or full form
   final bool compact;
 
-  const AiConfigWidget({
-    super.key,
-    this.onSaved,
-    this.compact = false,
-  });
+  const AiConfigWidget({super.key, this.onSaved, this.compact = false});
 
   @override
   State<AiConfigWidget> createState() => _AiConfigWidgetState();
@@ -50,9 +46,9 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
     if (apiKey.isEmpty) {
       await provider.setApiKey(null);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('API key cleared')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('API key cleared')));
       }
       return;
     }
@@ -62,9 +58,9 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
     await provider.setApiKey(apiKey);
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('AI configuration saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('AI configuration saved')));
       widget.onSaved?.call();
     }
   }
@@ -145,10 +141,7 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
           ),
           items: AiProvider.values
               .map(
-                (p) => DropdownMenuItem(
-                  value: p,
-                  child: Text(p.displayName),
-                ),
+                (p) => DropdownMenuItem(value: p, child: Text(p.displayName)),
               )
               .toList(),
           onChanged: (value) {
@@ -191,7 +184,9 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
           obscureText: _obscureApiKey,
           decoration: InputDecoration(
             labelText: 'API Key',
-            hintText: _selectedProvider == AiProvider.gemini ? 'AIza...' : 'sk-...',
+            hintText: _selectedProvider == AiProvider.gemini
+                ? 'AIza...'
+                : 'sk-...',
             border: const OutlineInputBorder(),
             prefixIcon: const Icon(Icons.key),
             suffixIcon: Row(
