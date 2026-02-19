@@ -44,7 +44,6 @@ void main() {
           frontText: '<script>alert("xss")</script>Hello',
           backText: '<b>World</b>',
           language: 'de',
-          category: 'vocabulary',
         );
 
         when(
@@ -66,7 +65,6 @@ void main() {
           frontText: 'Front',
           backText: 'Back',
           language: 'de',
-          category: 'vocabulary',
         );
         final maliciousCard = baseCard.copyWith(
           notes: 'javascript:alert("xss")',
@@ -90,7 +88,6 @@ void main() {
           frontText: 'Front',
           backText: 'Back',
           language: 'de',
-          category: 'vocabulary',
           tags: ['tag@1', 'TAG#2', 'tag!3'],
         );
 
@@ -110,7 +107,6 @@ void main() {
           frontText: 'Front',
           backText: 'Back',
           language: 'de',
-          category: 'vocabulary',
           tags: ['tag1', 'tag2', 'tag1', 'TAG1'],
         );
 
@@ -133,7 +129,6 @@ void main() {
           frontText: longText,
           backText: longText,
           language: 'de',
-          category: 'vocabulary',
         );
 
         when(mockRepository.saveCard(any)).thenAnswer((_) async => card);
@@ -155,7 +150,6 @@ void main() {
           frontText: 'Front',
           backText: 'Back',
           language: 'invalid',
-          category: 'vocabulary',
         );
 
         when(mockRepository.saveCard(any)).thenAnswer((_) async => invalidCard);
@@ -171,33 +165,11 @@ void main() {
         expect(sanitizedCard.language, 'de');
       });
 
-      test('validates category', () async {
-        final invalidCard = CardModel.create(
-          frontText: 'Front',
-          backText: 'Back',
-          language: 'de',
-          category: 'invalid_category',
-        );
-
-        when(mockRepository.saveCard(any)).thenAnswer((_) async => invalidCard);
-        when(mockRepository.getAllCards()).thenAnswer((_) async => []);
-
-        // Invalid category gets sanitized to 'vocabulary', so no exception
-        await provider.saveCard(invalidCard);
-
-        final captured = verify(mockRepository.saveCard(captureAny)).captured;
-        final sanitizedCard = captured.first as CardModel;
-
-        // Should be sanitized to default 'vocabulary'
-        expect(sanitizedCard.category, 'vocabulary');
-      });
-
       test('validates front text is not empty', () async {
         final invalidCard = CardModel.create(
           frontText: '',
           backText: 'Back',
           language: 'de',
-          category: 'vocabulary',
         );
 
         when(mockRepository.saveCard(any)).thenAnswer((_) async => invalidCard);
@@ -211,7 +183,6 @@ void main() {
           frontText: 'Front',
           backText: '',
           language: 'de',
-          category: 'vocabulary',
         );
 
         when(mockRepository.saveCard(any)).thenAnswer((_) async => invalidCard);
@@ -225,7 +196,6 @@ void main() {
           frontText: 'Front',
           backText: 'Back',
           language: 'invalid',
-          category: 'vocabulary',
         );
 
         when(mockRepository.saveCard(any)).thenAnswer((_) async => card);
@@ -245,7 +215,6 @@ void main() {
           frontText: 'Front',
           backText: 'Back',
           language: 'de',
-          category: 'vocabulary',
         );
 
         when(mockRepository.saveCard(any)).thenAnswer((_) async => card);
@@ -271,7 +240,6 @@ void main() {
           frontText: '<b>Front</b>',
           backText: '<i>Back</i>',
           language: 'DE',
-          category: 'VOCABULARY',
           tags: ['tag@1', 'TAG#2'],
         );
 
@@ -290,7 +258,6 @@ void main() {
 
         // Verify normalization
         expect(processedCard.language, 'de');
-        expect(processedCard.category, 'vocabulary');
       });
 
       test('prevents XSS in all text fields', () async {
@@ -298,7 +265,6 @@ void main() {
           frontText: '<script>alert("xss")</script>Front',
           backText: '<img src=x onerror="alert(1)">Back',
           language: 'de',
-          category: 'vocabulary',
         );
         final maliciousCard = baseCard.copyWith(
           notes: 'javascript:void(0)',
@@ -330,13 +296,11 @@ void main() {
             frontText: '<b>Card 1</b>',
             backText: 'Back 1',
             language: 'de',
-            category: 'vocabulary',
           ),
           CardModel.create(
             frontText: '<i>Card 2</i>',
             backText: 'Back 2',
             language: 'de',
-            category: 'vocabulary',
           ),
         ];
 

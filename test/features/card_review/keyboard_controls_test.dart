@@ -284,7 +284,6 @@ void main() {
           frontText: 'Test',
           backText: 'Option 1',
           language: 'en',
-          category: 'test',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         ),

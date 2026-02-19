@@ -20,7 +20,6 @@ class CardManagementProvider extends ChangeNotifier {
 
   // Filter and search state
   String _searchQuery = '';
-  String _selectedCategory = '';
   List<String> _selectedTags = [];
   bool _showOnlyDue = false;
   bool _showOnlyFavorites = false;
@@ -72,7 +71,6 @@ class CardManagementProvider extends ChangeNotifier {
 
   // Filter state getters
   String get searchQuery => _searchQuery;
-  String get selectedCategory => _selectedCategory;
   List<String> get selectedTags => List.unmodifiable(_selectedTags);
   bool get showOnlyDue => _showOnlyDue;
   bool get showOnlyFavorites => _showOnlyFavorites;
@@ -83,14 +81,6 @@ class CardManagementProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // Computed properties
-  List<String> get categories =>
-      _allCards
-          .map((card) => card.category)
-          .where((category) => category.isNotEmpty)
-          .toSet()
-          .toList()
-        ..sort();
-
   List<String> get availableTags =>
       _allCards.expand((card) => card.tags).toSet().toList()..sort();
 
@@ -284,13 +274,6 @@ class CardManagementProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Filter by category
-  void filterByCategory(String category) {
-    _selectedCategory = category;
-    _applyFilters();
-    notifyListeners();
-  }
-
   /// Filter by tags
   void filterByTags(List<String> tags) {
     _selectedTags = tags;
@@ -322,7 +305,6 @@ class CardManagementProvider extends ChangeNotifier {
   /// Clear all active filters
   void clearFilters() {
     _searchQuery = '';
-    _selectedCategory = '';
     _selectedTags = [];
     _showOnlyDue = false;
     _showOnlyFavorites = false;
@@ -368,15 +350,9 @@ class CardManagementProvider extends ChangeNotifier {
         final query = _searchQuery.toLowerCase();
         if (!card.frontText.toLowerCase().contains(query) &&
             !card.backText.toLowerCase().contains(query) &&
-            !card.category.toLowerCase().contains(query) &&
             !card.tags.any((tag) => tag.toLowerCase().contains(query))) {
           return false;
         }
-      }
-
-      // Category filter
-      if (_selectedCategory.isNotEmpty && card.category != _selectedCategory) {
-        return false;
       }
 
       // Tags filter
@@ -441,7 +417,6 @@ class CardManagementProvider extends ChangeNotifier {
       examples: _sanitizeExamples(card.examples),
       tags: _sanitizeTags(card.tags),
       language: _sanitizeLanguageCode(card.language) ?? 'de',
-      category: _sanitizeCategory(card.category) ?? 'vocabulary',
     );
   }
 
@@ -455,9 +430,6 @@ class CardManagementProvider extends ChangeNotifier {
     }
     if (!_isValidLanguageCode(card.language)) {
       throw Exception('Invalid language code: ${card.language}');
-    }
-    if (!_isValidCategory(card.category)) {
-      throw Exception('Invalid category: ${card.category}');
     }
   }
 
@@ -480,14 +452,6 @@ class CardManagementProvider extends ChangeNotifier {
     'zh',
     'ko',
   ];
-  static const List<String> _allowedCategories = [
-    'vocabulary',
-    'grammar',
-    'phrase',
-    'idiom',
-    'other',
-  ];
-
   /// Sanitize card text (functional pipeline)
   String _sanitizeCardText(String? input) {
     if (input == null || input.isEmpty) return '';
@@ -595,23 +559,10 @@ class CardManagementProvider extends ChangeNotifier {
     return _isValidLanguageCode(sanitized) ? sanitized : null;
   }
 
-  /// Sanitize and validate category
-  String? _sanitizeCategory(String? category) {
-    if (category == null || category.isEmpty) return null;
-    final sanitized = category.trim().toLowerCase();
-    return _isValidCategory(sanitized) ? sanitized : null;
-  }
-
   /// Validate language code
   bool _isValidLanguageCode(String? code) {
     if (code == null || code.isEmpty) return false;
     return _supportedLanguages.contains(code.toLowerCase());
-  }
-
-  /// Validate category
-  bool _isValidCategory(String? category) {
-    if (category == null || category.isEmpty) return false;
-    return _allowedCategories.contains(category.toLowerCase());
   }
 
   /// Validate card text is not empty

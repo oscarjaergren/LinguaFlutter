@@ -9,6 +9,9 @@ typedef UpdateCardCallback = Future<void> Function(CardModel card);
 /// Function type for getting cards
 typedef GetCardsCallback = List<CardModel> Function();
 
+/// Function type called when a session completes, with the total cards reviewed
+typedef SessionCompleteCallback = Future<void> Function(int cardsReviewed);
+
 /// Represents a single practice item: a card + exercise type combination
 class PracticeItem {
   final CardModel card;
@@ -66,13 +69,17 @@ class PracticeSessionProvider extends ChangeNotifier {
   // Minimum cards required for multiple choice exercises
   static const int _minCardsForMultipleChoice = 4;
 
+  final SessionCompleteCallback? _onSessionComplete;
+
   PracticeSessionProvider({
     required GetCardsCallback getReviewCards,
     required GetCardsCallback getAllCards,
     required UpdateCardCallback updateCard,
+    SessionCompleteCallback? onSessionComplete,
   }) : _getReviewCards = getReviewCards,
        _getAllCards = getAllCards,
-       _updateCard = updateCard;
+       _updateCard = updateCard,
+       _onSessionComplete = onSessionComplete;
 
   // === Getters ===
 
@@ -365,18 +372,30 @@ class PracticeSessionProvider extends ChangeNotifier {
   }
 
   /// Remove a deleted card from the queue and skip if it's the current card
-  void removeCardFromQueue(String cardId) {
+  Future<void> removeCardFromQueue(String cardId) async {
     if (!_isSessionActive) return;
 
     final currentCardId = currentCard?.id;
     final wasCurrentCard = currentCardId == cardId;
+
+    // Count how many entries for this card appear strictly before the current
+    // index — needed to correctly adjust the index after removal (Bug 1+2).
+    final removedBeforeCount = _sessionQueue
+        .take(_currentIndex)
+        .where((item) => item.card.id == cardId)
+        .length;
 
     // Remove all practice items for this card
     _sessionQueue.removeWhere((item) => item.card.id == cardId);
 
     // If we removed the current card, adjust index and prepare next exercise
     if (wasCurrentCard) {
-      // Clamp index to valid range
+      // The current card may have appeared multiple times before the current
+      // index (Bug 1). Subtract those entries first, then clamp.
+      _currentIndex -= removedBeforeCount;
+      if (_currentIndex < 0) _currentIndex = 0;
+
+      // Clamp index to valid range after removal
       if (_currentIndex >= _sessionQueue.length) {
         _currentIndex = _sessionQueue.isEmpty ? 0 : _sessionQueue.length - 1;
       }
@@ -386,19 +405,33 @@ class PracticeSessionProvider extends ChangeNotifier {
       _currentAnswerCorrect = null;
       _userInput = null;
 
+      // Count the deleted card as incorrect so totalReviewed is consistent
+      // with skipExercise (Bug 3).
+      _incorrectCount++;
+
       // Check if session is now complete
       if (_sessionQueue.isEmpty) {
-        _isSessionActive = false;
+        final totalReviewed = _correctCount + _incorrectCount;
+        try {
+          await _onSessionComplete?.call(totalReviewed);
+        } catch (e) {
+          debugPrint('onSessionComplete error: $e');
+        } finally {
+          endSession(); // endSession calls notifyListeners(); return to avoid double-notify
+        }
+        return;
       } else {
         _prepareCurrentExercise();
       }
-    } else if (_currentIndex > 0) {
-      // Adjust index if we removed a card before the current one
-      final removedBeforeCurrent = _sessionQueue.length < _currentIndex;
-      if (removedBeforeCurrent && _sessionQueue.isNotEmpty) {
-        _currentIndex = _sessionQueue.length - 1;
-      }
+    } else if (removedBeforeCount > 0) {
+      // One or more entries for this card were before the current index.
+      // Shift the index back by that exact count so the same card stays current.
+      _currentIndex -= removedBeforeCount;
+      // Clamp defensively.
+      if (_currentIndex < 0) _currentIndex = 0;
     }
+    // If removedBeforeCount == 0 the removed card was after the current index;
+    // no index adjustment is needed.
 
     notifyListeners();
   }
@@ -483,12 +516,40 @@ class PracticeSessionProvider extends ChangeNotifier {
       _prepareCurrentExercise();
       notifyListeners();
     } else {
-      endSession();
+      final totalReviewed = _correctCount + _incorrectCount;
+      try {
+        await _onSessionComplete?.call(totalReviewed);
+      } catch (e) {
+        debugPrint('onSessionComplete error: $e');
+      } finally {
+        endSession();
+      }
     }
   }
 
   /// Skip current exercise without answering
-  void skipExercise() {
+  Future<void> skipExercise() async {
+    if (!_isSessionActive) return;
+    // Do not skip if the user has already submitted an answer — they must
+    // confirm via confirmAnswerAndAdvance to avoid double-counting (Bug 3).
+    if (_answerState == AnswerState.answered) return;
+
+    // Persist the skipped card as incorrect so spaced-repetition state is updated.
+    // Only count as incorrect (Bug 2) when there is actually a card to persist.
+    if (currentCard != null && currentExerciseType != null) {
+      final updatedCard = currentCard!.copyWithExerciseResult(
+        exerciseType: currentExerciseType!,
+        wasCorrect: false,
+      );
+      await _updateCard(updatedCard);
+      _sessionQueue[_currentIndex] = PracticeItem(
+        card: updatedCard,
+        exerciseType: currentExerciseType!,
+      );
+      // Count the skipped card as incorrect so it's included in totalReviewed
+      _incorrectCount++;
+    }
+
     if (_currentIndex < _sessionQueue.length - 1) {
       _currentIndex++;
       _answerState = AnswerState.pending;
@@ -497,7 +558,14 @@ class PracticeSessionProvider extends ChangeNotifier {
       _prepareCurrentExercise();
       notifyListeners();
     } else {
-      endSession();
+      final totalReviewed = _correctCount + _incorrectCount;
+      try {
+        await _onSessionComplete?.call(totalReviewed);
+      } catch (e) {
+        debugPrint('onSessionComplete error: $e');
+      } finally {
+        endSession();
+      }
     }
   }
 

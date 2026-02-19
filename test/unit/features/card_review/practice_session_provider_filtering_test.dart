@@ -20,7 +20,7 @@ void main() {
           frontText: 'Hund',
           backText: 'dog',
           language: 'de',
-          category: 'vocabulary',
+
         ).copyWith(examples: ['Der Hund ist groß']),
 
         // Card with verb data (for conjugation)
@@ -28,7 +28,7 @@ void main() {
           frontText: 'gehen',
           backText: 'to go',
           language: 'de',
-          category: 'vocabulary',
+
         ).copyWith(
           wordData: WordData.verb(
             isRegular: false,
@@ -46,7 +46,7 @@ void main() {
           frontText: 'der Tisch',
           backText: 'table',
           language: 'de',
-          category: 'vocabulary',
+
         ),
 
         // Basic card (only basic exercises)
@@ -54,7 +54,7 @@ void main() {
           frontText: 'Katze',
           backText: 'cat',
           language: 'de',
-          category: 'vocabulary',
+
         ),
       ];
 
@@ -67,7 +67,7 @@ void main() {
       );
     });
 
-    test('startSession with preferences filters exercise types', () {
+    test('startSession with preferences filters exercise types', () async {
       final prefs = ExercisePreferences(
         enabledTypes: {ExerciseType.readingRecognition},
       );
@@ -81,7 +81,7 @@ void main() {
       for (var i = 0; i < provider.totalCount; i++) {
         expect(provider.currentExerciseType, ExerciseType.readingRecognition);
         if (i < provider.totalCount - 1) {
-          provider.confirmAnswerAndAdvance(markedCorrect: true);
+          await provider.confirmAnswerAndAdvance(markedCorrect: true);
         }
       }
     });
@@ -150,13 +150,13 @@ void main() {
           frontText: 'Hund',
           backText: 'dog',
           language: 'de',
-          category: 'vocabulary',
+
         ),
         CardModel.create(
           frontText: 'Katze',
           backText: 'cat',
           language: 'de',
-          category: 'vocabulary',
+
         ),
       ];
       allCards = List.from(testCards);
@@ -185,7 +185,7 @@ void main() {
             frontText: 'test',
             backText: 'test',
             language: 'de',
-            category: 'vocabulary',
+  
           ).copyWith(
             exerciseScores: {
               ExerciseType.readingRecognition:
@@ -239,7 +239,7 @@ void main() {
       expect(provider.totalCount, 0);
     });
 
-    test('enabling category enables all types in category', () {
+    test('enabling category enables all types in category', () async {
       final prefs = ExercisePreferences(
         enabledTypes: ExerciseCategory.recognition.exerciseTypes.toSet(),
       );
@@ -253,7 +253,7 @@ void main() {
       for (var i = 0; i < provider.totalCount; i++) {
         expect(recognitionTypes.contains(provider.currentExerciseType), true);
         if (i < provider.totalCount - 1) {
-          provider.confirmAnswerAndAdvance(markedCorrect: true);
+          await provider.confirmAnswerAndAdvance(markedCorrect: true);
         }
       }
     });

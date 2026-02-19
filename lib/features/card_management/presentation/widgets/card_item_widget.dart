@@ -151,14 +151,6 @@ class CardItemWidget extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 4,
                 children: [
-                  // Category chip
-                  _buildChip(
-                    context,
-                    card.category,
-                    colorScheme.primaryContainer,
-                    colorScheme.onPrimaryContainer,
-                  ),
-
                   // Mastery level indicator
                   _buildMasteryChip(context, card.masteryLevel),
 

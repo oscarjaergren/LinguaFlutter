@@ -14,7 +14,6 @@ class CardListViewModel extends ChangeNotifier {
   // UI-specific state
   bool _isSearching = false;
   String _searchQuery = '';
-  String _selectedCategory = '';
   List<String> _selectedTags = [];
   bool _showOnlyDue = false;
   bool _showOnlyFavorites = false;
@@ -46,7 +45,6 @@ class CardListViewModel extends ChangeNotifier {
   bool get isLoading => _cardManagement.isLoading;
   bool get isSearching => _isSearching;
   String get searchQuery => _searchQuery;
-  String get selectedCategory => _selectedCategory;
   List<String> get selectedTags => List.unmodifiable(_selectedTags);
   bool get showOnlyDue => _showOnlyDue;
   bool get showOnlyFavorites => _showOnlyFavorites;
@@ -100,18 +98,6 @@ class CardListViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void selectCategory(String category) {
-    _selectedCategory = category;
-    _cardManagement.filterByCategory(category);
-    notifyListeners();
-  }
-
-  void clearCategoryFilter() {
-    _selectedCategory = '';
-    _cardManagement.filterByCategory('');
-    notifyListeners();
-  }
-
   void toggleTag(String tag) {
     if (_selectedTags.contains(tag)) {
       _selectedTags.remove(tag);
@@ -147,7 +133,6 @@ class CardListViewModel extends ChangeNotifier {
   }
 
   void clearAllFilters() {
-    _selectedCategory = '';
     _selectedTags.clear();
     _showOnlyDue = false;
     _showOnlyFavorites = false;
@@ -214,7 +199,6 @@ class CardListViewModel extends ChangeNotifier {
   void _syncWithProviders() {
     // Sync any initial state if needed
     _searchQuery = _cardManagement.searchQuery;
-    _selectedCategory = _cardManagement.selectedCategory;
     _selectedTags = List.from(_cardManagement.selectedTags);
     _showOnlyDue = _cardManagement.showOnlyDue;
     _showOnlyFavorites = _cardManagement.showOnlyFavorites;

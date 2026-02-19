@@ -27,7 +27,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   // Basic text controllers
   final _frontTextController = TextEditingController();
   final _backTextController = TextEditingController();
-  final _categoryController = TextEditingController();
   final _tagsController = TextEditingController();
   final _notesController = TextEditingController();
 
@@ -78,7 +77,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       final card = widget.cardToEdit!;
       _frontTextController.text = card.frontText;
       _backTextController.text = card.backText;
-      _categoryController.text = card.category;
       _tagsController.text = card.tags.join(', ');
       _selectedIcon = card.icon;
       _notesController.text = card.notes ?? '';
@@ -126,7 +124,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   void dispose() {
     _frontTextController.dispose();
     _backTextController.dispose();
-    _categoryController.dispose();
     _tagsController.dispose();
     _notesController.dispose();
     _presentDuController.dispose();
@@ -403,7 +400,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
           backText: _backTextController.text.trim(),
           icon: _selectedIcon,
           language: activeLanguage,
-          category: _categoryController.text.trim(),
           tags: tags,
           wordData: wordData,
           examples: _examples,
@@ -427,7 +423,6 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
               backText: _backTextController.text.trim(),
               icon: _selectedIcon,
               language: activeLanguage,
-              category: _categoryController.text.trim(),
               tags: tags,
             ).copyWith(
               wordData: wordData,
@@ -1180,29 +1175,14 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _categoryController,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                hintText: 'e.g., Vocabulary, Grammar, A1',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.folder),
-              ),
-              validator: (v) => v?.trim().isEmpty ?? true ? 'Required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _tagsController,
-              decoration: const InputDecoration(
-                labelText: 'Tags (Optional)',
-                hintText: 'Separate with commas',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.tag),
-              ),
-            ),
-          ],
+        child: TextFormField(
+          controller: _tagsController,
+          decoration: const InputDecoration(
+            labelText: 'Tags (Optional)',
+            hintText: 'Separate with commas',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.tag),
+          ),
         ),
       ),
     );

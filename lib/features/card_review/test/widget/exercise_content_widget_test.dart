@@ -25,7 +25,6 @@ void main() {
         frontText: 'Hallo',
         backText: 'Hello',
         language: 'de',
-        category: 'greetings',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -391,7 +390,6 @@ void main() {
           frontText: 'Haus',
           backText: 'House',
           language: 'de',
-          category: 'nouns',
           germanArticle: 'das',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
@@ -426,7 +424,6 @@ void main() {
           frontText: 'Welt',
           backText: 'World',
           language: 'de',
-          category: 'test',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );

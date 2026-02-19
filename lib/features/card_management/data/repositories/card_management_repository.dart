@@ -6,9 +6,6 @@ abstract class CardManagementRepository {
   /// Get all cards
   Future<List<CardModel>> getAllCards();
 
-  /// Get cards by category
-  Future<List<CardModel>> getCardsByCategory(String category);
-
   /// Get cards by language
   Future<List<CardModel>> getCardsByLanguage(String language);
 
@@ -20,9 +17,6 @@ abstract class CardManagementRepository {
 
   /// Delete a card
   Future<void> deleteCard(String cardId);
-
-  /// Get all categories
-  Future<List<String>> getCategories();
 
   /// Get all tags
   Future<List<String>> getTags();
@@ -45,12 +39,6 @@ class SupabaseCardManagementRepository implements CardManagementRepository {
   }
 
   @override
-  Future<List<CardModel>> getCardsByCategory(String category) async {
-    final allCards = await _supabaseService.loadCards();
-    return allCards.where((card) => card.category == category).toList();
-  }
-
-  @override
   Future<List<CardModel>> getCardsByLanguage(String language) async {
     return await _supabaseService.loadCards(languageCode: language);
   }
@@ -63,7 +51,6 @@ class SupabaseCardManagementRepository implements CardManagementRepository {
     return allCards.where((card) {
       return card.frontText.toLowerCase().contains(lowerQuery) ||
           card.backText.toLowerCase().contains(lowerQuery) ||
-          card.category.toLowerCase().contains(lowerQuery) ||
           card.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
     }).toList();
   }
@@ -76,17 +63,6 @@ class SupabaseCardManagementRepository implements CardManagementRepository {
   @override
   Future<void> deleteCard(String cardId) async {
     await _supabaseService.deleteCard(cardId);
-  }
-
-  @override
-  Future<List<String>> getCategories() async {
-    final allCards = await _supabaseService.loadCards();
-    return allCards
-        .map((card) => card.category)
-        .where((category) => category.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
   }
 
   @override

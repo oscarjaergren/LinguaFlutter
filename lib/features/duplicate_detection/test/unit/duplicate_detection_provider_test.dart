@@ -23,13 +23,11 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
         CardModel.create(
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
       ];
 
@@ -46,13 +44,11 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
         CardModel.create(
           frontText: 'Goodbye',
           backText: 'Adiós',
           language: 'es',
-          category: 'Greetings',
         ),
       ];
 
@@ -68,13 +64,11 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
         CardModel.create(
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Test',
         ),
       ];
 
@@ -96,13 +90,11 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
         CardModel.create(
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Test',
         ),
       ];
 
@@ -121,19 +113,16 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
         CardModel.create(
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Test',
         ),
         CardModel.create(
           frontText: 'Unique',
           backText: 'Único',
           language: 'es',
-          category: 'Test',
         ),
       ];
 
@@ -150,13 +139,11 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
         CardModel.create(
           frontText: 'Hello',
           backText: 'Hallo',
           language: 'de',
-          category: 'Greetings',
         ),
       ];
 
@@ -177,7 +164,6 @@ void main() {
           frontText: 'Test',
           backText: 'Prueba',
           language: 'es',
-          category: 'Test',
         ),
       ];
 

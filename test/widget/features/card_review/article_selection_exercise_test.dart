@@ -3,17 +3,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/features/card_review/presentation/widgets/exercises/article_selection_exercise.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 void main() {
   group('ArticleSelectionExercise Widget', () {
     late CardModel testCard;
+
+    setUpAll(() {
+      LoggerService.initialize();
+    });
 
     setUp(() {
       testCard = CardModel.create(
         frontText: 'der Tisch',
         backText: 'table',
         language: 'de',
-        category: 'vocabulary',
       );
     });
 

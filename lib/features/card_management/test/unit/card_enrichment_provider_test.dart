@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import '../../domain/models/word_enrichment_result.dart';
 import '../../domain/providers/card_enrichment_provider.dart';
+import '../../../../shared/domain/models/word_data.dart';
 import '../../../../shared/services/ai/ai.dart';
 
 /// Mock storage for testing
@@ -136,6 +138,63 @@ void main() {
       expect(provider.config.provider, AiProvider.gemini);
       expect(provider.config.apiKey, 'loaded-key');
       expect(provider.config.isEnabled, isTrue);
+    });
+  });
+
+  group('WordEnrichmentResult wordType parsing', () {
+    test('verb wordType is parsed correctly', () {
+      final result = WordEnrichmentResult.fromJson({
+        'wordType': 'verb',
+        'translation': 'to go',
+        'grammar': {
+          'isRegular': false,
+          'isSeparable': false,
+          'auxiliary': 'sein',
+          'pastParticiple': 'gegangen',
+        },
+        'examples': ['Ich gehe nach Hause.'],
+      });
+
+      expect(result.wordType, WordType.verb);
+      expect(result.wordData, isNotNull);
+    });
+
+    test('noun wordType is parsed correctly', () {
+      final result = WordEnrichmentResult.fromJson({
+        'wordType': 'noun',
+        'translation': 'the house',
+        'grammar': {'gender': 'das', 'plural': 'Häuser'},
+        'examples': [],
+      });
+
+      expect(result.wordType, WordType.noun);
+      expect(result.wordData, isNotNull);
+    });
+
+    test('adjective wordType is parsed correctly', () {
+      final result = WordEnrichmentResult.fromJson({
+        'wordType': 'adjective',
+        'translation': 'fast',
+        'grammar': {'comparative': 'schneller', 'superlative': 'am schnellsten'},
+        'examples': [],
+      });
+
+      expect(result.wordType, WordType.adjective);
+      expect(result.wordData, isNotNull);
+      expect(result.wordData, isA<AdjectiveData>());
+      final adjData = result.wordData as AdjectiveData;
+      expect(adjData.comparative, 'schneller');
+      expect(adjData.superlative, 'am schnellsten');
+    });
+
+    test('unknown wordType string defaults to other', () {
+      final result = WordEnrichmentResult.fromJson({
+        'wordType': 'pronoun',
+        'translation': 'he',
+        'examples': [],
+      });
+
+      expect(result.wordType, WordType.other);
     });
   });
 }

@@ -25,7 +25,6 @@ void main() {
 
       // Default stubs
       when(mockRepository.getAllCards()).thenAnswer((_) async => <CardModel>[]);
-      when(mockRepository.getCategories()).thenAnswer((_) async => <String>[]);
       when(mockRepository.getTags()).thenAnswer((_) async => <String>[]);
     });
 
@@ -38,14 +37,12 @@ void main() {
       expect(provider.filteredCards, isEmpty);
       expect(provider.reviewCards, isEmpty);
       expect(provider.searchQuery, isEmpty);
-      expect(provider.selectedCategory, isEmpty);
       expect(provider.selectedTags, isEmpty);
       expect(provider.showOnlyDue, false);
       expect(provider.showOnlyFavorites, false);
       expect(provider.stats, isA<Map<String, dynamic>>());
       expect(provider.isLoading, false);
       expect(provider.errorMessage, isNull);
-      expect(provider.categories, isEmpty);
       expect(provider.availableTags, isEmpty);
     });
 
@@ -55,14 +52,6 @@ void main() {
 
       provider.searchCards('');
       expect(provider.searchQuery, '');
-    });
-
-    test('should filter by category', () {
-      provider.filterByCategory('Vocabulary');
-      expect(provider.selectedCategory, 'Vocabulary');
-
-      provider.filterByCategory('');
-      expect(provider.selectedCategory, '');
     });
 
     test('should filter by tags', () {
@@ -92,7 +81,6 @@ void main() {
 
     test('should clear all filters', () {
       provider.searchCards('test');
-      provider.filterByCategory('Vocabulary');
       provider.filterByTags(['tag1']);
       provider.toggleShowOnlyDue();
       provider.toggleShowOnlyFavorites();
@@ -100,7 +88,6 @@ void main() {
       provider.clearFilters();
 
       expect(provider.searchQuery, '');
-      expect(provider.selectedCategory, '');
       expect(provider.selectedTags, isEmpty);
       expect(provider.showOnlyDue, false);
       expect(provider.showOnlyFavorites, false);
@@ -112,7 +99,6 @@ void main() {
           frontText: 'Hello',
           backText: 'Hola',
           language: 'es',
-          category: 'Greetings',
         ),
       ];
       when(mockRepository.getAllCards()).thenAnswer((_) async => testCards);
@@ -129,7 +115,6 @@ void main() {
         frontText: 'New',
         backText: 'Nuevo',
         language: 'es',
-        category: 'Test',
       );
       when(mockRepository.saveCard(any)).thenAnswer((_) async {});
       when(mockRepository.getAllCards()).thenAnswer((_) async => [newCard]);
@@ -147,5 +132,6 @@ void main() {
 
       verify(mockRepository.deleteCard('card-id')).called(1);
     });
+
   });
 }

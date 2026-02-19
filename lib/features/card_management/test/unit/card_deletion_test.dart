@@ -26,19 +26,16 @@ void main() {
           frontText: 'Card 1',
           backText: 'Translation 1',
           language: 'de',
-          category: 'Test',
         ),
         CardModel.create(
           frontText: 'Card 2',
           backText: 'Translation 2',
           language: 'de',
-          category: 'Test',
         ),
         CardModel.create(
           frontText: 'Card 3',
           backText: 'Translation 3',
           language: 'de',
-          category: 'Test',
         ),
       ];
 
@@ -48,7 +45,6 @@ void main() {
       );
 
       // Default stubs
-      when(mockRepository.getCategories()).thenAnswer((_) async => <String>[]);
       when(mockRepository.getTags()).thenAnswer((_) async => <String>[]);
     });
 

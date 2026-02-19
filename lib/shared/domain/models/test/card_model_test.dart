@@ -9,13 +9,11 @@ void main() {
         frontText: 'Hello',
         backText: 'Hola',
         language: 'es',
-        category: 'Greetings',
       );
 
       expect(card.frontText, 'Hello');
       expect(card.backText, 'Hola');
       expect(card.language, 'es');
-      expect(card.category, 'Greetings');
       expect(card.tags, isEmpty);
       expect(card.icon, isNull);
       expect(card.germanArticle, isNull);
@@ -44,7 +42,6 @@ void main() {
         frontText: 'das Haus',
         backText: 'the house',
         language: 'de',
-        category: 'Vocabulary',
         tags: ['building', 'home'],
         icon: icon,
         germanArticle: 'das',
@@ -56,7 +53,6 @@ void main() {
       expect(card.frontText, 'das Haus');
       expect(card.backText, 'the house');
       expect(card.language, 'de');
-      expect(card.category, 'Vocabulary');
       expect(card.tags, ['building', 'home']);
       expect(card.icon, icon);
       expect(card.germanArticle, 'das');
@@ -68,7 +64,6 @@ void main() {
         frontText: 'Test',
         backText: 'Prueba',
         language: 'es',
-        category: 'Test',
       ).copyWith(reviewCount: 10, correctCount: 7);
 
       expect(card.successRate, 70.0);
@@ -79,7 +74,6 @@ void main() {
         frontText: 'Test',
         backText: 'Prueba',
         language: 'es',
-        category: 'Test',
       );
 
       expect(card.successRate, 0.0);
@@ -92,7 +86,6 @@ void main() {
         frontText: 'Test',
         backText: 'Prueba',
         language: 'es',
-        category: 'Test',
       );
       expect(newCard.isDue, true);
 
@@ -112,7 +105,6 @@ void main() {
         frontText: 'Test',
         backText: 'Prueba',
         language: 'es',
-        category: 'Test',
       );
 
       final updatedCard = card.processAnswer(CardAnswer.correct);
@@ -129,7 +121,6 @@ void main() {
         frontText: 'Test',
         backText: 'Prueba',
         language: 'es',
-        category: 'Test',
       );
 
       final updatedCard = card.processAnswer(CardAnswer.incorrect);
@@ -145,7 +136,6 @@ void main() {
         frontText: 'Hello',
         backText: 'Hola',
         language: 'es',
-        category: 'Greetings',
         tags: ['greeting', 'basic'],
       );
 
@@ -155,7 +145,6 @@ void main() {
       expect(deserialized.frontText, original.frontText);
       expect(deserialized.backText, original.backText);
       expect(deserialized.language, original.language);
-      expect(deserialized.category, original.category);
       expect(deserialized.tags, original.tags);
       expect(deserialized.id, original.id);
     });
@@ -165,7 +154,6 @@ void main() {
         frontText: 'Test',
         backText: 'Prueba',
         language: 'es',
-        category: 'Test',
       );
 
       final card2 = card1.copyWith();
@@ -173,7 +161,6 @@ void main() {
         frontText: 'Different',
         backText: 'Diferente',
         language: 'es',
-        category: 'Test',
       );
 
       expect(card1, equals(card2));
@@ -185,7 +172,6 @@ void main() {
         frontText: 'Original',
         backText: 'Original',
         language: 'es',
-        category: 'Test',
       );
 
       final copied = original.copyWith(frontText: 'Updated', isFavorite: true);
@@ -201,7 +187,6 @@ void main() {
         frontText: 'Test',
         backText: 'Test',
         language: 'de',
-        category: 'Test',
       );
       expect(newCard.masteryLevel, 'New');
 

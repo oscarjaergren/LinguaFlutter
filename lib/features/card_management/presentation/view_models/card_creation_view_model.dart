@@ -16,7 +16,6 @@ class CardCreationViewModel extends ChangeNotifier {
   // Basic form state
   String _frontText = '';
   String _backText = '';
-  String _category = '';
   List<String> _tags = [];
   IconModel? _selectedIcon;
   String? _notes;
@@ -86,7 +85,6 @@ class CardCreationViewModel extends ChangeNotifier {
   // Basic form getters
   String get frontText => _frontText;
   String get backText => _backText;
-  String get category => _category;
   List<String> get tags => List.unmodifiable(_tags);
   String get tagsAsString => _tags.join(', ');
   IconModel? get selectedIcon => _selectedIcon;
@@ -119,13 +117,11 @@ class CardCreationViewModel extends ChangeNotifier {
   String? get usageNote => _usageNote;
 
   // Validation
-  bool get isFormValid =>
-      _frontText.isNotEmpty && _backText.isNotEmpty && _category.isNotEmpty;
+  bool get isFormValid => _frontText.isNotEmpty && _backText.isNotEmpty;
 
   // Language getters
   String get activeLanguage => _languageProvider.activeLanguage;
   bool get isGermanLanguage => activeLanguage == 'de';
-  List<String> get availableCategories => _cardManagement.categories;
   List<String> get availableTags => _cardManagement.availableTags;
 
   // Basic field updates
@@ -137,12 +133,6 @@ class CardCreationViewModel extends ChangeNotifier {
 
   void updateBackText(String value) {
     _backText = value.trim();
-    _clearError();
-    notifyListeners();
-  }
-
-  void updateCategory(String value) {
-    _category = value.trim();
     _clearError();
     notifyListeners();
   }
@@ -320,7 +310,6 @@ class CardCreationViewModel extends ChangeNotifier {
           backText: _backText,
           icon: _selectedIcon,
           language: activeLanguage,
-          category: _category,
           tags: _tags,
           wordData: wordData,
           examples: _examples,
@@ -333,7 +322,6 @@ class CardCreationViewModel extends ChangeNotifier {
           backText: _backText,
           icon: _selectedIcon,
           language: activeLanguage,
-          category: _category,
           tags: _tags,
         ).copyWith(wordData: wordData, examples: _examples, notes: _notes);
       }
@@ -363,7 +351,6 @@ class CardCreationViewModel extends ChangeNotifier {
   void resetForm() {
     _frontText = '';
     _backText = '';
-    _category = '';
     _tags = [];
     _selectedIcon = null;
     _notes = null;
@@ -390,7 +377,6 @@ class CardCreationViewModel extends ChangeNotifier {
   void _initializeFromCard(CardModel card) {
     _frontText = card.frontText;
     _backText = card.backText;
-    _category = card.category;
     _tags = List.from(card.tags);
     _selectedIcon = card.icon;
     _notes = card.notes;

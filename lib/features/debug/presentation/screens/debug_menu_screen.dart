@@ -738,7 +738,6 @@ class DebugMenuScreen extends StatelessWidget {
     // Calculate statistics
     final totalCards = allCards.length;
     final languages = allCards.map((c) => c.language).toSet().toList()..sort();
-    final categories = allCards.map((c) => c.category).toSet().toList()..sort();
     final reviewedCards = allCards.where((c) => c.reviewCount > 0).length;
     final averageSuccessRate = allCards.isNotEmpty
         ? allCards.map((c) => c.successRate).reduce((a, b) => a + b) /
@@ -760,17 +759,6 @@ class DebugMenuScreen extends StatelessWidget {
               '${averageSuccessRate.toStringAsFixed(1)}%',
             ),
             _buildStatRow('Languages', languages.join(', ')),
-            const SizedBox(height: 8),
-            const Text(
-              'Categories:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            ...categories.map(
-              (category) => Padding(
-                padding: const EdgeInsets.only(left: 16, top: 2),
-                child: Text('• $category'),
-              ),
-            ),
           ],
         ),
         actions: [
@@ -907,7 +895,6 @@ class DebugMenuScreen extends StatelessWidget {
               frontText: frontText,
               backText: enrichResult.translation ?? '',
               language: 'de',
-              category: 'Imported',
               examples: enrichResult.examples,
               notes: enrichResult.notes,
               wordData: enrichResult.wordData,
@@ -926,7 +913,6 @@ class DebugMenuScreen extends StatelessWidget {
               frontText: frontText,
               backText: '(needs translation)',
               language: 'de',
-              category: 'Imported',
               notes:
                   'AI enrichment failed - please use Magic button to fill in details',
               createdAt: now,

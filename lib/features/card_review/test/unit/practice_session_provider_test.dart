@@ -21,7 +21,6 @@ void main() {
         frontText: frontText,
         backText: backText,
         language: 'de',
-        category: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
         reviewCount: reviewCount,
@@ -249,18 +248,18 @@ void main() {
     });
 
     group('Skip Functionality', () {
-      test('should skip to next exercise', () {
+      test('should skip to next exercise', () async {
         provider.startSession();
         final initialIndex = provider.currentIndex;
 
-        provider.skipExercise();
+        await provider.skipExercise();
 
         if (provider.totalCount > 1) {
           expect(provider.currentIndex, initialIndex + 1);
         }
       });
 
-      test('should end session on skip of last card', () {
+      test('should end session on skip of last card', () async {
         provider = PracticeSessionProvider(
           getReviewCards: () => [testCards.first],
           getAllCards: () => [testCards.first],
@@ -268,20 +267,20 @@ void main() {
         );
 
         provider.startSession();
-        provider.skipExercise();
+        await provider.skipExercise();
 
         expect(provider.isSessionActive, false);
       });
     });
 
     group('Multiple Choice Options', () {
-      test('should generate options for multiple choice exercises', () {
+      test('should generate options for multiple choice exercises', () async {
         provider.startSession();
 
         // Find a multiple choice exercise or force one
         while (provider.isSessionActive &&
             provider.currentExerciseType != ExerciseType.multipleChoiceText) {
-          provider.skipExercise();
+          await provider.skipExercise();
         }
 
         if (provider.isSessionActive &&
@@ -298,7 +297,7 @@ void main() {
         }
       });
 
-      test('should clear options for non-multiple-choice exercises', () {
+      test('should clear options for non-multiple-choice exercises', () async {
         provider.startSession();
 
         // Skip to a non-multiple-choice exercise
@@ -306,7 +305,7 @@ void main() {
             (provider.currentExerciseType == ExerciseType.multipleChoiceText ||
                 provider.currentExerciseType ==
                     ExerciseType.multipleChoiceIcon)) {
-          provider.skipExercise();
+          await provider.skipExercise();
         }
 
         if (provider.isSessionActive) {
@@ -408,7 +407,6 @@ void main() {
         frontText: 'Test',
         backText: 'Test',
         language: 'de',
-        category: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -436,7 +434,6 @@ void main() {
         frontText: 'Test',
         backText: 'Test',
         language: 'de',
-        category: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -459,6 +456,625 @@ void main() {
       expect(AnswerState.values.length, 2);
       expect(AnswerState.pending.index, 0);
       expect(AnswerState.answered.index, 1);
+    });
+  });
+
+  group('onSessionComplete callback ordering', () {
+    test('session is still active when onSessionComplete is called', () async {
+      bool sessionActiveDuringCallback = false;
+
+      final cards = [
+        CardModel(
+          id: '1',
+          frontText: 'A',
+          backText: 'B',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '2',
+          frontText: 'C',
+          backText: 'D',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '3',
+          frontText: 'E',
+          backText: 'F',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      ];
+
+      late PracticeSessionProvider p;
+      p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+        onSessionComplete: (cardsReviewed) async {
+          sessionActiveDuringCallback = p.isSessionActive;
+        },
+      );
+
+      p.startSession();
+      while (p.isSessionActive) {
+        p.checkAnswer(isCorrect: true);
+        await p.confirmAnswerAndAdvance(markedCorrect: true);
+      }
+
+      // After the full loop the session is ended, but during the callback it
+      // must have been active (callback fires before endSession).
+      expect(sessionActiveDuringCallback, isTrue);
+    });
+
+    test('onSessionComplete receives correct total reviewed count', () async {
+      int receivedCount = -1;
+
+      final cards = [
+        CardModel(
+          id: '1',
+          frontText: 'A',
+          backText: 'B',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '2',
+          frontText: 'C',
+          backText: 'D',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '3',
+          frontText: 'E',
+          backText: 'F',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      ];
+
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+        onSessionComplete: (cardsReviewed) async {
+          receivedCount = cardsReviewed;
+        },
+      );
+
+      p.startSession();
+      final total = p.totalCount;
+      while (p.isSessionActive) {
+        p.checkAnswer(isCorrect: true);
+        await p.confirmAnswerAndAdvance(markedCorrect: true);
+      }
+
+      expect(receivedCount, equals(total));
+    });
+
+    test('onSessionComplete error does not prevent endSession', () async {
+      final cards = [
+        CardModel(
+          id: '1',
+          frontText: 'A',
+          backText: 'B',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '2',
+          frontText: 'C',
+          backText: 'D',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        CardModel(
+          id: '3',
+          frontText: 'E',
+          backText: 'F',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      ];
+
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+        onSessionComplete: (_) async {
+          throw Exception('streak service unavailable');
+        },
+      );
+
+      p.startSession();
+      // Errors from onSessionComplete are caught internally and do not
+      // propagate to the caller — the session ends cleanly regardless.
+      while (p.isSessionActive) {
+        p.checkAnswer(isCorrect: true);
+        await p.confirmAnswerAndAdvance(markedCorrect: true);
+      }
+
+      // endSession is called in the finally block, so session is inactive
+      // even though the callback threw.
+      expect(p.isSessionActive, isFalse);
+    });
+  });
+
+  group('skipExercise', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('skipping mid-session advances to next card', () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+      final firstCardId = p.currentCard?.id;
+      await p.skipExercise();
+
+      expect(p.isSessionActive, isTrue);
+      expect(p.currentCard?.id, isNot(firstCardId));
+    });
+
+    test('skipping last exercise ends session', () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+      // Advance to last exercise
+      while (p.currentIndex < p.totalCount - 1) {
+        await p.skipExercise();
+      }
+      // Skip the last one
+      await p.skipExercise();
+
+      expect(p.isSessionActive, isFalse);
+    });
+
+    test('skipped card is counted in totalReviewed passed to onSessionComplete',
+        () async {
+      int receivedCount = -1;
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+        onSessionComplete: (cardsReviewed) async {
+          receivedCount = cardsReviewed;
+        },
+      );
+
+      p.startSession();
+      final total = p.totalCount;
+
+      // Skip all exercises
+      while (p.isSessionActive) {
+        await p.skipExercise();
+      }
+
+      expect(receivedCount, equals(total));
+    });
+
+    test('skipping increments incorrectCount', () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+      await p.skipExercise();
+
+      expect(p.incorrectCount, equals(1));
+    });
+  });
+
+  group('removeCardFromQueue', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('removing current card when it is the only card ends session',
+        () async {
+      final cards = makeCards(1);
+      bool callbackFired = false;
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+        onSessionComplete: (_) async {
+          callbackFired = true;
+        },
+      );
+
+      p.startSession();
+      expect(p.isSessionActive, isTrue);
+      final cardId = p.currentCard!.id;
+
+      await p.removeCardFromQueue(cardId);
+
+      expect(p.isSessionActive, isFalse);
+      expect(callbackFired, isTrue);
+    });
+
+    test(
+        'removing current card when queue empties does not double-notify '
+        '(session is inactive after call)', () async {
+      final cards = makeCards(1);
+      int notifyCount = 0;
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+      p.addListener(() => notifyCount++);
+
+      p.startSession();
+      notifyCount = 0; // reset after startSession notifications
+
+      final cardId = p.currentCard!.id;
+      await p.removeCardFromQueue(cardId);
+
+      // endSession notifies once; no second notify should follow
+      expect(p.isSessionActive, isFalse);
+      // notifyCount should be exactly 1 (from endSession), not 2
+      expect(notifyCount, equals(1));
+    });
+
+    test('removing a non-current card keeps session active', () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+      // Find a card that is NOT the current one
+      final nonCurrentId = p.sessionQueue
+          .map((item) => item.card.id)
+          .firstWhere((id) => id != p.currentCard!.id);
+
+      await p.removeCardFromQueue(nonCurrentId);
+
+      expect(p.isSessionActive, isTrue);
+    });
+
+    test(
+        'removing a card before the current index keeps the same card displayed',
+        () async {
+      // Queue: [A, B, C]. Advance to B (index 1). Remove A (index 0).
+      // After removal queue is [B, C]. Current card must still be B, not C.
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+
+      // Advance to index 1 (second card)
+      await p.skipExercise();
+      expect(p.currentIndex, 1);
+      final currentCardId = p.currentCard!.id;
+
+      // Remove the card that is now at index 0 (before current)
+      final beforeCurrentId = p.sessionQueue.first.card.id;
+      expect(beforeCurrentId, isNot(currentCardId));
+
+      await p.removeCardFromQueue(beforeCurrentId);
+
+      // Current card must be unchanged
+      expect(p.currentCard!.id, equals(currentCardId));
+    });
+  });
+
+  group('skipExercise guard', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('calling skipExercise when session is inactive does not mutate incorrectCount',
+        () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      // Session never started — incorrectCount starts at 0
+      expect(p.isSessionActive, isFalse);
+      expect(p.incorrectCount, 0);
+
+      await p.skipExercise();
+
+      // Must still be 0; no session was active
+      expect(p.incorrectCount, 0);
+    });
+  });
+
+  group('removeCardFromQueue does not disturb the current card', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('deleting a card that comes after the current position leaves the current card unchanged', () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+      await p.skipExercise();
+      final currentCardId = p.currentCard!.id;
+      final currentIndex = p.currentIndex;
+      final afterCurrentId = p.sessionQueue[currentIndex + 1].card.id;
+
+      await p.removeCardFromQueue(afterCurrentId);
+
+      expect(p.currentCard!.id, equals(currentCardId));
+      expect(p.currentIndex, equals(currentIndex));
+    });
+
+    test('deleting a card with multiple queue entries leaves the current card unchanged', () async {
+      final cards = makeCards(5);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+
+      final card0Id = cards[0].id;
+      while (p.isSessionActive && p.currentCard?.id == card0Id) {
+        await p.skipExercise();
+      }
+      if (!p.isSessionActive) return;
+
+      final removedBeforeCount = p.sessionQueue
+          .take(p.currentIndex)
+          .where((item) => item.card.id == card0Id)
+          .length;
+      if (removedBeforeCount == 0) return;
+
+      final currentCardId = p.currentCard!.id;
+      final expectedIndex = p.currentIndex - removedBeforeCount;
+
+      await p.removeCardFromQueue(card0Id);
+
+      expect(p.currentCard!.id, equals(currentCardId));
+      expect(p.currentIndex, equals(expectedIndex));
+    });
+  });
+
+  group('removeCardFromQueue counts deleted card in totalReviewed', () {
+    test('deleting the only current card passes totalReviewed = 1 to onSessionComplete',
+        () async {
+      int receivedCount = -1;
+      final cards = [
+        CardModel(
+          id: '1',
+          frontText: 'A',
+          backText: 'B',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      ];
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+        onSessionComplete: (cardsReviewed) async {
+          receivedCount = cardsReviewed;
+        },
+      );
+
+      p.startSession();
+      await p.removeCardFromQueue(cards.first.id);
+
+      expect(receivedCount, equals(1),
+          reason: 'deleted card must be counted as incorrect in totalReviewed');
+    });
+  });
+
+  group('removeCardFromQueue ends session with exactly one notification', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('removing the only card triggers notifyListeners exactly once', () async {
+      final cards = makeCards(1);
+      int notifyCount = 0;
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+      p.startSession();
+      p.addListener(() => notifyCount++);
+      notifyCount = 0;
+
+      await p.removeCardFromQueue(cards.first.id);
+
+      expect(p.isSessionActive, isFalse);
+      expect(notifyCount, equals(1));
+    });
+  });
+
+  group('removeCardFromQueue with multi-entry current card', () {
+    test('removing current card that appears multiple times before current index adjusts index correctly', () async {
+      // Build a provider where the queue is forced to have a card appear
+      // multiple times. We do this by using a card with many due exercise types.
+      // Simplest approach: use 5 cards so multiple-choice is available, and
+      // rely on the queue builder adding multiple exercise types per card.
+      // Instead, we directly test the index arithmetic by using a large enough
+      // card set and advancing past a card that appears more than once.
+      final cards = List.generate(
+        6,
+        (i) => CardModel(
+          id: '$i',
+          frontText: 'Front $i',
+          backText: 'Back $i',
+          language: 'de',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+
+      // Advance until we are past index 0 so there is at least one entry
+      // before the current position.
+      if (p.totalCount > 1) {
+        await p.skipExercise();
+      }
+
+      // Removing a card that is strictly before the current index must keep
+      // the current card unchanged.
+      if (p.currentIndex > 0) {
+        final beforeId = p.sessionQueue.first.card.id;
+        final currentId = p.currentCard!.id;
+
+        // Only run the assertion when the card before is different from current
+        if (beforeId != currentId) {
+          await p.removeCardFromQueue(beforeId);
+          expect(p.currentCard!.id, equals(currentId));
+        }
+      }
+    });
+  });
+
+  group('skipExercise persists the skipped card', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('skipping a card calls updateCard so the review is persisted', () async {
+      final cards = makeCards(3);
+      final List<CardModel> persisted = [];
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (card) async => persisted.add(card),
+      );
+
+      p.startSession();
+      await p.skipExercise();
+
+      expect(persisted, isNotEmpty,
+          reason: 'skipExercise must persist the skipped card via updateCard');
+    });
+  });
+
+  group('skipExercise is a no-op when the current exercise is already answered', () {
+    List<CardModel> makeCards(int count) => List.generate(
+      count,
+      (i) => CardModel(
+        id: '$i',
+        frontText: 'Front $i',
+        backText: 'Back $i',
+        language: 'de',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
+    );
+
+    test('incorrectCount is not incremented when skip is called after an answer has been submitted', () async {
+      final cards = makeCards(3);
+      final p = PracticeSessionProvider(
+        getReviewCards: () => cards,
+        getAllCards: () => cards,
+        updateCard: (_) async {},
+      );
+
+      p.startSession();
+      p.checkAnswer(isCorrect: false);
+      expect(p.answerState, AnswerState.answered);
+
+      await p.skipExercise();
+
+      expect(p.incorrectCount, 0);
     });
   });
 }

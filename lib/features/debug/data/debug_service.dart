@@ -48,7 +48,6 @@ class DebugService {
           frontText: 'Word ${i + 1} (${samples[i][0]})',
           backText: 'Translation of "${samples[i][0]}"',
           language: language,
-          category: samples[i][1],
           tags: ['test', 'debug', samples[i][1]],
         ),
       );
@@ -131,7 +130,6 @@ class DebugService {
           frontText: word['german'] as String,
           backText: '${word['english']}$pluralInfo$examplesText',
           language: 'de', // German language code
-          category: word['category'] as String? ?? 'vocabulary',
           tags: [
             'german',
             'vocabulary',

@@ -19,6 +19,8 @@ class StreakProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   List<int> _newMilestones = [];
+  int? _pendingCardsReviewed;
+  DateTime? _pendingReviewDate;
 
   // Getters
   StreakModel get streak => _streak;
@@ -42,8 +44,8 @@ class StreakProvider extends ChangeNotifier {
   Future<void> loadStreak() async {
     if (_isLoading) return;
 
-    _setLoading(true);
     _clearError();
+    _setLoading(true);
 
     try {
       _streak = await _streakService.loadStreak();
@@ -53,17 +55,58 @@ class StreakProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+
+    // Flush any streak update that was queued while loading.
+    // Snapshot and clear the pending values before calling, then restore them
+    // on failure so retryPendingUpdate can apply them later (mirrors the
+    // behaviour in updateStreakWithReview).
+    if (_errorMessage == null && _pendingCardsReviewed != null) {
+      final pending = _pendingCardsReviewed!;
+      final pendingDate = _pendingReviewDate;
+      _pendingCardsReviewed = null;
+      _pendingReviewDate = null;
+      await updateStreakWithReview(
+        cardsReviewed: pending,
+        reviewDate: pendingDate,
+      );
+      // If the flush call failed, restore the pending values so they are not
+      // silently lost and can be retried via retryPendingUpdate.
+      // Only add `pending` when no new concurrent call has already set
+      // _pendingCardsReviewed (which would cause double-counting — Bug 6).
+      if (_errorMessage != null) {
+        _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pending;
+        if (pendingDate != null) {
+          final existing = _pendingReviewDate;
+          _pendingReviewDate = existing == null || pendingDate.isBefore(existing)
+              ? pendingDate
+              : existing;
+        }
+      }
+    }
   }
 
-  /// Update streak with a review session
+  /// Update streak with a review session.
+  ///
+  /// If a streak operation is already in progress, the [cardsReviewed] count
+  /// is accumulated and applied once the current operation completes.
   Future<void> updateStreakWithReview({
     required int cardsReviewed,
     DateTime? reviewDate,
   }) async {
-    if (_isLoading) return;
+    if (_isLoading) {
+      _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + cardsReviewed;
+      // Keep the earliest non-null reviewDate so explicit dates aren't lost.
+      final incoming = reviewDate;
+      if (incoming != null) {
+        final existing = _pendingReviewDate;
+        _pendingReviewDate =
+            existing == null || incoming.isBefore(existing) ? incoming : existing;
+      }
+      return;
+    }
 
-    _setLoading(true);
     _clearError();
+    _setLoading(true);
 
     try {
       // Track previous streak for milestone detection
@@ -83,6 +126,53 @@ class StreakProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+
+    // Flush any update that arrived while we were loading.
+    // Only flush when the primary call succeeded; if it failed, keep the
+    // pending values so they can be applied via retryPendingUpdate.
+    if (_errorMessage == null) {
+      final pending = _pendingCardsReviewed;
+      final pendingDate = _pendingReviewDate;
+      if (pending != null) {
+        _pendingCardsReviewed = null;
+        _pendingReviewDate = null;
+        await updateStreakWithReview(
+          cardsReviewed: pending,
+          reviewDate: pendingDate,
+        );
+        // If the flush call itself failed, restore the pending values so they
+        // are not silently lost and can be retried via retryPendingUpdate.
+        // Only add `pending` when no new concurrent call has already set
+        // _pendingCardsReviewed (which would cause double-counting — Bug 6).
+        if (_errorMessage != null) {
+          _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pending;
+          if (pendingDate != null) {
+            final existing = _pendingReviewDate;
+            _pendingReviewDate =
+                existing == null || pendingDate.isBefore(existing)
+                    ? pendingDate
+                    : existing;
+          }
+        }
+      }
+    }
+  }
+
+  /// Retry any pending streak update that was queued while a previous call
+  /// was in progress but could not be flushed because that call failed.
+  ///
+  /// Call this after the error has been acknowledged (e.g. the user retries).
+  Future<void> retryPendingUpdate() async {
+    final pending = _pendingCardsReviewed;
+    final pendingDate = _pendingReviewDate;
+    if (pending == null) return;
+    _pendingCardsReviewed = null;
+    _pendingReviewDate = null;
+    _clearError();
+    await updateStreakWithReview(
+      cardsReviewed: pending,
+      reviewDate: pendingDate,
+    );
   }
 
   /// Reset streak (but keep stats)
@@ -195,7 +285,9 @@ class StreakProvider extends ChangeNotifier {
   }
 
   void _clearError() {
+    if (_errorMessage == null) return;
     _errorMessage = null;
+    notifyListeners();
   }
 
   @override

@@ -64,8 +64,7 @@ class CardListView extends StatelessWidget {
               ),
 
             // Filter chips
-            if (vm.selectedCategory.isNotEmpty ||
-                vm.selectedTags.isNotEmpty ||
+            if (vm.selectedTags.isNotEmpty ||
                 vm.showOnlyDue ||
                 vm.showOnlyFavorites ||
                 vm.showOnlyDuplicates)
@@ -92,12 +91,6 @@ class CardListView extends StatelessWidget {
       child: Wrap(
         spacing: 8,
         children: [
-          if (viewModel.selectedCategory.isNotEmpty)
-            Chip(
-              label: Text('Category: ${viewModel.selectedCategory}'),
-              onDeleted: viewModel.clearCategoryFilter,
-              deleteIcon: const Icon(Icons.close, size: 18),
-            ),
           if (viewModel.selectedTags.isNotEmpty)
             ...viewModel.selectedTags.map(
               (tag) => Chip(
@@ -161,7 +154,6 @@ class CardListView extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context, CardListViewModel viewModel) {
     final hasFilters =
-        viewModel.selectedCategory.isNotEmpty ||
         viewModel.selectedTags.isNotEmpty ||
         viewModel.showOnlyDue ||
         viewModel.showOnlyFavorites ||

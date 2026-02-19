@@ -146,20 +146,20 @@ Future<Widget> _buildApp() async {
           PracticeSessionProvider
         >(
           create: (context) {
-            final cm = context.read<CardManagementProvider>();
+            final streakProvider = context.read<StreakProvider>();
             return PracticeSessionProvider(
-              getReviewCards: () => cm.reviewCards,
-              getAllCards: () => cm.allCards,
-              updateCard: cm.updateCard,
+              getReviewCards: () =>
+                  context.read<CardManagementProvider>().reviewCards,
+              getAllCards: () =>
+                  context.read<CardManagementProvider>().allCards,
+              updateCard: context.read<CardManagementProvider>().updateCard,
+              onSessionComplete: (cardsReviewed) =>
+                  streakProvider.updateStreakWithReview(
+                    cardsReviewed: cardsReviewed,
+                  ),
             );
           },
-          update: (context, cardManagement, previous) =>
-              previous ??
-              PracticeSessionProvider(
-                getReviewCards: () => cardManagement.reviewCards,
-                getAllCards: () => cardManagement.allCards,
-                updateCard: cardManagement.updateCard,
-              ),
+          update: (context, cardManagement, previous) => previous!,
         ),
       ],
     child: const LinguaFlutterApp(),

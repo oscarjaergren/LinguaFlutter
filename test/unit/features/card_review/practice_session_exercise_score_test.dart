@@ -19,7 +19,6 @@ void main() {
           frontText: 'Hund',
           backText: 'dog',
           language: 'de',
-          category: 'vocabulary',
         ),
       ];
 
@@ -100,7 +99,6 @@ void main() {
         frontText: 'Hund',
         backText: 'dog',
         language: 'de',
-        category: 'vocabulary',
       );
 
       var initialScore = card.getExerciseScore(ExerciseType.writingTranslation);
@@ -154,7 +152,6 @@ void main() {
         frontText: 'Hund',
         backText: 'dog',
         language: 'de',
-        category: 'vocabulary',
       );
 
       card = card.copyWithExerciseResult(
@@ -186,7 +183,6 @@ void main() {
             frontText: 'Hund',
             backText: 'dog',
             language: 'de',
-            category: 'vocabulary',
           ).copyWith(
             exerciseScores: {
               ExerciseType.writingTranslation:
@@ -265,7 +261,7 @@ void main() {
           frontText: 'word$i',
           backText: 'translation$i',
           language: 'de',
-          category: 'vocabulary',
+
         ),
       );
 

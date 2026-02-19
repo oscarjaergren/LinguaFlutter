@@ -28,7 +28,6 @@ void main() {
         frontText: frontText,
         backText: backText,
         language: 'de',
-        category: 'test',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );

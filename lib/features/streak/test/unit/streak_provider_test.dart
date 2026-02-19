@@ -152,6 +152,242 @@ void main() {
       expect(streakProvider.isNewMilestone(7), isFalse);
     });
 
+    test('concurrent update is queued and not silently dropped', () async {
+      int serviceCallCount = 0;
+      int totalCardsPassedToService = 0;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        serviceCallCount++;
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        totalCardsPassedToService += cards;
+        return StreakModel.initial().updateWithReview(
+          cardsReviewed: totalCardsPassedToService,
+        );
+      });
+
+      // Fire two updates concurrently — the second should be queued
+      final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      await Future.wait([first, second]);
+
+      // Both updates must have been applied (not dropped)
+      expect(serviceCallCount, 2);
+      expect(totalCardsPassedToService, 8);
+    });
+
+    test('pending update accumulates multiple concurrent calls', () async {
+      int serviceCallCount = 0;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        serviceCallCount++;
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+      });
+
+      // Fire three updates concurrently — only 2 service calls expected:
+      // the first immediate one, then one flush call with the accumulated total.
+      final first = streakProvider.updateStreakWithReview(cardsReviewed: 2);
+      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      final third = streakProvider.updateStreakWithReview(cardsReviewed: 4);
+      await Future.wait([first, second, third]);
+
+      // First call runs immediately; second and third are queued together
+      // and flushed as a single call with 3+4=7.
+      expect(serviceCallCount, 2);
+    });
+
+    test('pending flush is skipped when primary call fails', () async {
+      int serviceCallCount = 0;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((_) async {
+        serviceCallCount++;
+        throw Exception('service unavailable');
+      });
+
+      // Fire two concurrent updates — first fails, second should be queued
+      // but NOT flushed (because primary failed).
+      final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      await Future.wait([first, second]);
+
+      // Service called only once (the primary); flush suppressed on error.
+      expect(serviceCallCount, 1);
+      // Error message from the primary call is preserved.
+      expect(streakProvider.errorMessage, isNotNull);
+      expect(streakProvider.errorMessage, contains('Failed to update streak'));
+    });
+
+    test('error message is preserved when pending flush is suppressed',
+        () async {
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((_) async => throw Exception('network error'));
+
+      final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      await Future.wait([first, second]);
+
+      // The original error message must not be overwritten by a second failure.
+      expect(streakProvider.errorMessage, isNotNull);
+      expect(streakProvider.isLoading, isFalse);
+    });
+
+    test('pending data is retained after failure so a retry can apply it',
+        () async {
+      int serviceCallCount = 0;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((_) async {
+        serviceCallCount++;
+        throw Exception('service unavailable');
+      });
+
+      // First call fails; second is queued as pending.
+      final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      await Future.wait([first, second]);
+
+      expect(serviceCallCount, 1);
+      expect(streakProvider.errorMessage, isNotNull);
+
+      // Now the service recovers — a retry should apply the pending 3 cards.
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        serviceCallCount++;
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+      });
+
+      await streakProvider.retryPendingUpdate();
+
+      // The pending 3-card update must have been sent to the service.
+      expect(serviceCallCount, 2);
+      expect(streakProvider.errorMessage, isNull);
+    });
+
+    test('earliest reviewDate wins when multiple pending calls carry explicit dates',
+        () async {
+      final earlier = DateTime(2026, 1, 1);
+      final later = DateTime(2026, 3, 1);
+
+      DateTime? capturedDate;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        capturedDate =
+            invocation.namedArguments[const Symbol('reviewDate')] as DateTime?;
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+      });
+
+      // Primary call fires immediately; second and third are queued.
+      // Second carries the later date, third carries the earlier date.
+      // The flush should use the earlier date.
+      final first = streakProvider.updateStreakWithReview(
+        cardsReviewed: 1,
+        reviewDate: later,
+      );
+      final second = streakProvider.updateStreakWithReview(
+        cardsReviewed: 2,
+        reviewDate: later,
+      );
+      final third = streakProvider.updateStreakWithReview(
+        cardsReviewed: 3,
+        reviewDate: earlier,
+      );
+      await Future.wait([first, second, third]);
+
+      // The flush call (second service invocation) must use the earliest date.
+      expect(capturedDate, equals(earlier));
+    });
+
+    test('pending flush runs when primary call succeeds', () async {
+      int serviceCallCount = 0;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        serviceCallCount++;
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+      });
+
+      final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      await Future.wait([first, second]);
+
+      // Both calls should have been made (primary + flush).
+      expect(serviceCallCount, 2);
+      expect(streakProvider.errorMessage, isNull);
+    });
+
+    test(
+        'update queued during loadStreak is flushed after load completes',
+        () async {
+      int updateCallCount = 0;
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        updateCallCount++;
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+      });
+
+      // Start loadStreak (sets _isLoading = true) and concurrently fire an
+      // updateStreakWithReview — the update should be queued and flushed once
+      // loadStreak finishes, not silently dropped.
+      final load = streakProvider.loadStreak();
+      final update = streakProvider.updateStreakWithReview(cardsReviewed: 7);
+      await Future.wait([load, update]);
+
+      // The update must have been sent to the service.
+      expect(updateCallCount, 1);
+      expect(streakProvider.totalCardsReviewed, 7);
+    });
+
     test('should get daily review data', () async {
       final dailyData = await streakProvider.getDailyReviewData(days: 7);
 
@@ -164,6 +400,216 @@ void main() {
 
       verify(mockService.getStreakStats()).called(1);
       expect(stats.containsKey('currentStreak'), isTrue);
+    });
+
+    test(
+        'a review queued while loadStreak is in progress is applied after retryPendingUpdate when the flush fails',
+        () async {
+      when(mockService.loadStreak()).thenAnswer((_) async => StreakModel.initial());
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((_) async => throw Exception('service unavailable'));
+
+      final load = streakProvider.loadStreak();
+      final update = streakProvider.updateStreakWithReview(cardsReviewed: 7);
+      await Future.wait([load, update]);
+
+      expect(streakProvider.errorMessage, isNotNull);
+
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((invocation) async {
+        final cards =
+            invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+      });
+
+      await streakProvider.retryPendingUpdate();
+
+      expect(streakProvider.errorMessage, isNull);
+      expect(streakProvider.totalCardsReviewed, 7);
+    });
+
+    test('errorMessage is cleared and listeners notified before next operation begins',
+        () async {
+      // Arrange: put the provider into an error state
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((_) async => throw Exception('first failure'));
+
+      await streakProvider.updateStreakWithReview(cardsReviewed: 1);
+      expect(streakProvider.errorMessage, isNotNull);
+
+      // Now make the service succeed
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer(
+        (_) async => StreakModel.initial().updateWithReview(cardsReviewed: 5),
+      );
+
+      // Capture the errorMessage value at the moment the first notification
+      // fires after the new call starts (i.e. when _setLoading(true) is called,
+      // which happens AFTER _clearError()).
+      String? errorAtFirstNotify;
+      bool captured = false;
+      streakProvider.addListener(() {
+        if (!captured) {
+          captured = true;
+          errorAtFirstNotify = streakProvider.errorMessage;
+        }
+      });
+
+      await streakProvider.updateStreakWithReview(cardsReviewed: 5);
+
+      // The very first notification must already see a null errorMessage,
+      // meaning _clearError notified listeners before _setLoading(true).
+      expect(errorAtFirstNotify, isNull);
+      expect(streakProvider.errorMessage, isNull);
+    });
+
+    group('pending data is not double-counted when loadStreak flush fails', () {
+      test('retryPendingUpdate after a failed loadStreak flush sends exactly the queued count', () async {
+        int updateCallCount = 0;
+        int? lastCardsArg;
+
+        when(
+          mockService.updateStreakWithReview(
+            cardsReviewed: anyNamed('cardsReviewed'),
+            reviewDate: anyNamed('reviewDate'),
+          ),
+        ).thenAnswer((_) async => throw Exception('service unavailable'));
+
+        final load = streakProvider.loadStreak();
+        final update = streakProvider.updateStreakWithReview(cardsReviewed: 7);
+        await Future.wait([load, update]);
+
+        expect(streakProvider.errorMessage, isNotNull);
+
+        when(
+          mockService.updateStreakWithReview(
+            cardsReviewed: anyNamed('cardsReviewed'),
+            reviewDate: anyNamed('reviewDate'),
+          ),
+        ).thenAnswer((invocation) async {
+          updateCallCount++;
+          lastCardsArg =
+              invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+          return StreakModel.initial().updateWithReview(cardsReviewed: lastCardsArg!);
+        });
+
+        await streakProvider.retryPendingUpdate();
+
+        expect(updateCallCount, 1);
+        expect(lastCardsArg, equals(7));
+      });
+    });
+
+    group('flush restore does not double-count when a new call arrives during the failed flush', () {
+      test('pending count is not doubled when a concurrent call queues during a failed flush', () async {
+        int serviceCallCount = 0;
+        int? lastCardsArg;
+
+        when(
+          mockService.updateStreakWithReview(
+            cardsReviewed: anyNamed('cardsReviewed'),
+            reviewDate: anyNamed('reviewDate'),
+          ),
+        ).thenAnswer((invocation) async {
+          serviceCallCount++;
+          final cards =
+              invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+          if (serviceCallCount == 1) {
+            // Primary call succeeds
+            return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+          }
+          // Flush call fails
+          throw Exception('flush failed');
+        });
+
+        // Primary (5) fires immediately; secondary (3) is queued as pending.
+        final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+        final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+        await Future.wait([first, second]);
+
+        // Flush failed — pending should be exactly 3, not 6.
+        expect(streakProvider.errorMessage, isNotNull);
+
+        when(
+          mockService.updateStreakWithReview(
+            cardsReviewed: anyNamed('cardsReviewed'),
+            reviewDate: anyNamed('reviewDate'),
+          ),
+        ).thenAnswer((invocation) async {
+          serviceCallCount++;
+          lastCardsArg =
+              invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+          return StreakModel.initial().updateWithReview(cardsReviewed: lastCardsArg!);
+        });
+
+        await streakProvider.retryPendingUpdate();
+
+        expect(lastCardsArg, equals(3),
+            reason: 'pending must be exactly 3, not 6 (double-count bug)');
+        expect(streakProvider.errorMessage, isNull);
+      });
+    });
+
+    group('pending data is retained for retry when updateStreakWithReview flush fails', () {
+      test('retryPendingUpdate after a failed flush applies the pending cards', () async {
+        int serviceCallCount = 0;
+        int? lastCardsArg;
+
+        when(
+          mockService.updateStreakWithReview(
+            cardsReviewed: anyNamed('cardsReviewed'),
+            reviewDate: anyNamed('reviewDate'),
+          ),
+        ).thenAnswer((invocation) async {
+          serviceCallCount++;
+          final cards =
+              invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+          if (serviceCallCount == 1) {
+            return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+          }
+          throw Exception('flush failed');
+        });
+
+        final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
+        final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+        await Future.wait([first, second]);
+
+        expect(streakProvider.errorMessage, isNotNull);
+
+        when(
+          mockService.updateStreakWithReview(
+            cardsReviewed: anyNamed('cardsReviewed'),
+            reviewDate: anyNamed('reviewDate'),
+          ),
+        ).thenAnswer((invocation) async {
+          serviceCallCount++;
+          lastCardsArg =
+              invocation.namedArguments[const Symbol('cardsReviewed')] as int;
+          return StreakModel.initial().updateWithReview(cardsReviewed: lastCardsArg!);
+        });
+
+        await streakProvider.retryPendingUpdate();
+
+        expect(lastCardsArg, equals(3),
+            reason: 'pending 3 cards must be sent on retry, not silently lost');
+        expect(streakProvider.errorMessage, isNull);
+      });
     });
   });
 

@@ -25,9 +25,6 @@ class CardModel {
   /// Language code for this card (e.g., 'de', 'es', 'fr')
   final String language;
 
-  /// Category or deck this card belongs to
-  final String category;
-
   /// Tags for organizing cards
   final List<String> tags;
 
@@ -83,7 +80,6 @@ class CardModel {
     required this.backText,
     this.icon,
     required this.language,
-    required this.category,
     this.tags = const [],
     this.germanArticle,
     this.reviewCount = 0,
@@ -107,7 +103,6 @@ class CardModel {
     required String backText,
     IconModel? icon,
     required String language,
-    required String category,
     List<String> tags = const [],
     String? germanArticle,
   }) {
@@ -129,7 +124,6 @@ class CardModel {
       backText: backText,
       icon: icon,
       language: language,
-      category: category,
       tags: tags,
       germanArticle: germanArticle,
       createdAt: now,
@@ -243,52 +237,63 @@ class CardModel {
     );
   }
 
-  /// Create a copy of this card with updated properties
+  /// Sentinel value used by [copyWith] to distinguish "not provided" from
+  /// an explicit `null` for nullable fields.
+  static const Object _absent = Object();
+
+  /// Create a copy of this card with updated properties.
+  ///
+  /// Pass [_absent] (the default) to keep the existing value, or pass an
+  /// explicit `null` to clear a nullable field.
   CardModel copyWith({
     String? id,
     String? frontText,
     String? backText,
-    IconModel? icon,
+    Object? icon = _absent,
     String? language,
-    String? category,
     List<String>? tags,
-    String? germanArticle,
+    Object? germanArticle = _absent,
     int? reviewCount,
     int? correctCount,
-    DateTime? lastReviewed,
-    DateTime? nextReview,
+    Object? lastReviewed = _absent,
+    Object? nextReview = _absent,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isFavorite,
     bool? isArchived,
     Map<ExerciseType, ExerciseScore>? exerciseScores,
-    WordData? wordData,
+    Object? wordData = _absent,
     List<String>? examples,
-    String? parentId,
-    String? notes,
+    Object? parentId = _absent,
+    Object? notes = _absent,
   }) {
     return CardModel(
       id: id ?? this.id,
       frontText: frontText ?? this.frontText,
       backText: backText ?? this.backText,
-      icon: icon ?? this.icon,
+      icon: identical(icon, _absent) ? this.icon : icon as IconModel?,
       language: language ?? this.language,
-      category: category ?? this.category,
       tags: tags ?? this.tags,
-      germanArticle: germanArticle ?? this.germanArticle,
+      germanArticle: identical(germanArticle, _absent)
+          ? this.germanArticle
+          : germanArticle as String?,
       reviewCount: reviewCount ?? this.reviewCount,
       correctCount: correctCount ?? this.correctCount,
-      lastReviewed: lastReviewed ?? this.lastReviewed,
-      nextReview: nextReview ?? this.nextReview,
+      lastReviewed: identical(lastReviewed, _absent)
+          ? this.lastReviewed
+          : lastReviewed as DateTime?,
+      nextReview: identical(nextReview, _absent)
+          ? this.nextReview
+          : nextReview as DateTime?,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isFavorite: isFavorite ?? this.isFavorite,
       isArchived: isArchived ?? this.isArchived,
       exerciseScores: exerciseScores ?? this.exerciseScores,
-      wordData: wordData ?? this.wordData,
+      wordData: identical(wordData, _absent) ? this.wordData : wordData as WordData?,
       examples: examples ?? this.examples,
-      parentId: parentId ?? this.parentId,
-      notes: notes ?? this.notes,
+      parentId: identical(parentId, _absent) ? this.parentId : parentId as String?,
+      notes: identical(notes, _absent) ? this.notes : notes as String?,
     );
   }
 
@@ -356,7 +361,7 @@ class CardModel {
 
   @override
   String toString() {
-    return 'CardModel(id: $id, frontText: $frontText, backText: $backText, category: $category)';
+    return 'CardModel(id: $id, frontText: $frontText, backText: $backText)';
   }
 }
 
