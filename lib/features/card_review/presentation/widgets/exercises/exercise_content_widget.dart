@@ -358,7 +358,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
           onSubmitted: hasAnswered ? null : (_) => _onCheckAnswer(),
         ),
 
-        if (hasAnswered) ...[
+        if (hasAnswered && widget.currentAnswerCorrect == false) ...[
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
@@ -369,8 +369,6 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.green),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

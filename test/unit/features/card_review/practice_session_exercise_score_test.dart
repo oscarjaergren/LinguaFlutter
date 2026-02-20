@@ -59,7 +59,7 @@ void main() {
         expect(updatedScore.incorrectCount, 0);
         expect(updatedScore.totalAttempts, 1);
         expect(updatedScore.successRate, 100.0);
-        expect(updatedScore.currentStreak, 1);
+        expect(updatedScore.currentChain, 1);
         expect(updatedScore.masteryLevel, 'Learning');
       },
     );
@@ -85,7 +85,7 @@ void main() {
         expect(updatedScore.incorrectCount, 1);
         expect(updatedScore.totalAttempts, 1);
         expect(updatedScore.successRate, 0.0);
-        expect(updatedScore.currentStreak, 0);
+        expect(updatedScore.currentChain, 0);
         expect(updatedScore.masteryLevel, 'Difficult');
       },
     );
@@ -107,7 +107,7 @@ void main() {
       );
       var score = card.getExerciseScore(ExerciseType.reverseTranslation)!;
       expect(score.correctCount, 1);
-      expect(score.currentStreak, 1);
+      expect(score.currentChain, 1);
       expect(score.masteryLevel, 'Learning');
 
       card = card.copyWithExerciseResult(
@@ -116,7 +116,7 @@ void main() {
       );
       score = card.getExerciseScore(ExerciseType.reverseTranslation)!;
       expect(score.correctCount, 2);
-      expect(score.currentStreak, 2);
+      expect(score.currentChain, 2);
       expect(score.masteryLevel, 'Learning');
 
       card = card.copyWithExerciseResult(
@@ -125,7 +125,7 @@ void main() {
       );
       score = card.getExerciseScore(ExerciseType.reverseTranslation)!;
       expect(score.correctCount, 3);
-      expect(score.currentStreak, 3);
+      expect(score.currentChain, 3);
       expect(score.totalAttempts, 3);
       expect(score.successRate, 100.0);
       expect(score.masteryLevel, 'Good');
@@ -137,7 +137,7 @@ void main() {
       score = card.getExerciseScore(ExerciseType.reverseTranslation)!;
       expect(score.correctCount, 3);
       expect(score.incorrectCount, 1);
-      expect(score.currentStreak, 2);
+      expect(score.currentChain, 2);
       expect(score.totalAttempts, 4);
       expect(score.successRate, 75.0);
       expect(score.masteryLevel, 'Learning');
@@ -213,7 +213,7 @@ void main() {
       )!;
       expect(initialScore.correctCount, 5);
       expect(initialScore.incorrectCount, 2);
-      expect(initialScore.currentStreak, 0);
+      expect(initialScore.currentChain, 0);
       expect(initialScore.totalAttempts, 7);
       expect(initialScore.successRate, closeTo(71.4, 0.1));
       expect(initialScore.masteryLevel, 'Difficult');
@@ -225,7 +225,7 @@ void main() {
       )!;
       expect(updatedScore.correctCount, 6);
       expect(updatedScore.incorrectCount, 2);
-      expect(updatedScore.currentStreak, 1);
+      expect(updatedScore.currentChain, 1);
       expect(updatedScore.totalAttempts, 8);
       expect(updatedScore.successRate, 75.0);
       expect(updatedScore.masteryLevel, 'Learning');

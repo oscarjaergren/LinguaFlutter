@@ -53,7 +53,6 @@ class PracticeSessionProvider extends ChangeNotifier {
   bool _isSessionActive = false;
   bool _isSessionComplete = false;
   DateTime? _sessionStartTime;
-
   // Exercise filtering
   ExercisePreferences _exercisePreferences = ExercisePreferences.defaults();
 

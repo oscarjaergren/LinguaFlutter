@@ -123,51 +123,51 @@ void main() {
           type: ExerciseType.readingRecognition,
           correctCount: 0,
           incorrectCount: 0,
-          currentStreak: 0,
+          currentChain: 0,
         );
 
         expect(score.masteryLevel, 'New');
       });
 
-      test('should return Difficult when streak is 0 with attempts', () {
+      test('should return Difficult when chain is 0 with attempts', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 2,
           incorrectCount: 8,
-          currentStreak: 0,
+          currentChain: 0,
         );
 
         expect(score.masteryLevel, 'Difficult');
       });
 
-      test('should return Learning when streak is 1-2', () {
+      test('should return Learning when chain is 1-2', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 6,
           incorrectCount: 4,
-          currentStreak: 2,
+          currentChain: 2,
         );
 
         expect(score.masteryLevel, 'Learning');
       });
 
-      test('should return Good when streak is 3-4', () {
+      test('should return Good when chain is 3-4', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 8,
           incorrectCount: 2,
-          currentStreak: 3,
+          currentChain: 3,
         );
 
         expect(score.masteryLevel, 'Good');
       });
 
-      test('should return Mastered when streak is 5+', () {
+      test('should return Mastered when chain is 5+', () {
         const score = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 9,
           incorrectCount: 1,
-          currentStreak: 5,
+          currentChain: 5,
         );
 
         expect(score.masteryLevel, 'Mastered');

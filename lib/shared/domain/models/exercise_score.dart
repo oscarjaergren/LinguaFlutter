@@ -15,11 +15,11 @@ class ExerciseScore {
   /// Number of incorrect answers for this exercise type
   final int incorrectCount;
 
-  /// Current streak of consecutive correct answers
-  final int currentStreak;
+  /// Current chain of consecutive correct answers
+  final int currentChain;
 
-  /// Best streak achieved for this exercise
-  final int bestStreak;
+  /// Best chain achieved for this exercise
+  final int bestChain;
 
   /// Last time this exercise was practiced
   final DateTime? lastPracticed;
@@ -31,8 +31,8 @@ class ExerciseScore {
     required this.type,
     this.correctCount = 0,
     this.incorrectCount = 0,
-    this.currentStreak = 0,
-    this.bestStreak = 0,
+    this.currentChain = 0,
+    this.bestChain = 0,
     this.lastPracticed,
     this.nextReview,
   });
@@ -58,24 +58,24 @@ class ExerciseScore {
   }
 
   /// Mastery level for this specific exercise type
-  /// Based on current streak: 5+ correct in a row = Mastered
+  /// Based on current chain: 5+ correct in a row = Mastered
   String get masteryLevel {
-    if (currentStreak >= 5) return 'Mastered';
+    if (currentChain >= 5) return 'Mastered';
     if (totalAttempts == 0) return 'New';
-    if (currentStreak >= 3) return 'Good';
-    if (currentStreak >= 1) return 'Learning';
+    if (currentChain >= 3) return 'Good';
+    if (currentChain >= 1) return 'Learning';
     return 'Difficult';
   }
 
   /// Progress toward mastery (0.0 to 1.0)
-  /// Shows how close to achieving 5-streak mastery
+  /// Shows how close to achieving 5-chain mastery
   double get masteryProgress {
-    return (currentStreak / 5.0).clamp(0.0, 1.0);
+    return (currentChain / 5.0).clamp(0.0, 1.0);
   }
 
   /// Number of correct answers needed to reach mastery
   int get answersToMastery {
-    return (5 - currentStreak).clamp(0, 5);
+    return (5 - currentChain).clamp(0, 5);
   }
 
   /// Net score (correct - incorrect)
@@ -84,27 +84,27 @@ class ExerciseScore {
   /// Record a correct answer and return updated score
   ExerciseScore recordCorrect() {
     final now = DateTime.now();
-    final newStreak = currentStreak + 1;
-    final newBestStreak = newStreak > bestStreak ? newStreak : bestStreak;
+    final newChain = currentChain + 1;
+    final newBestChain = newChain > bestChain ? newChain : bestChain;
 
     // Calculate next review using spaced repetition
-    // Use currentStreak for progressive intervals, not overall correctCount
-    final streakMultiplier = (currentStreak + 1) / 1.0;
+    // Use currentChain for progressive intervals, not overall correctCount
+    final chainMultiplier = (currentChain + 1) / 1.0;
     final baseDays = 1;
-    final intervalDays = (baseDays * (1 + streakMultiplier * 2)).round();
+    final intervalDays = (baseDays * (1 + chainMultiplier * 2)).round();
     final nextReviewDate = now.add(Duration(days: intervalDays));
 
     return copyWith(
       correctCount: correctCount + 1,
-      currentStreak: newStreak,
-      bestStreak: newBestStreak,
+      currentChain: newChain,
+      bestChain: newBestChain,
       lastPracticed: now,
       nextReview: nextReviewDate,
     );
   }
 
   /// Record an incorrect answer and return updated score
-  /// Wrong answer decreases streak by 1 (minimum 0)
+  /// Wrong answer decreases chain by 1 (minimum 0)
   ExerciseScore recordIncorrect() {
     final now = DateTime.now();
 
@@ -113,31 +113,31 @@ class ExerciseScore {
 
     return copyWith(
       incorrectCount: incorrectCount + 1,
-      currentStreak: currentStreak - 1,
+      currentChain: currentChain - 1,
       lastPracticed: now,
       nextReview: nextReviewDate,
     );
   }
 
   /// Create a copy with updated fields
-  /// Ensures currentStreak never goes below 0
-  /// bestStreak has no upper limit and can grow indefinitely
+  /// Ensures currentChain never goes below 0
+  /// bestChain has no upper limit and can grow indefinitely
   ExerciseScore copyWith({
     ExerciseType? type,
     int? correctCount,
     int? incorrectCount,
-    int? currentStreak,
-    int? bestStreak,
+    int? currentChain,
+    int? bestChain,
     DateTime? lastPracticed,
     DateTime? nextReview,
   }) {
-    final newStreak = currentStreak ?? this.currentStreak;
+    final newChain = currentChain ?? this.currentChain;
     return ExerciseScore(
       type: type ?? this.type,
       correctCount: correctCount ?? this.correctCount,
       incorrectCount: incorrectCount ?? this.incorrectCount,
-      currentStreak: newStreak < 0 ? 0 : newStreak,
-      bestStreak: bestStreak ?? this.bestStreak,
+      currentChain: newChain < 0 ? 0 : newChain,
+      bestChain: bestChain ?? this.bestChain,
       lastPracticed: lastPracticed ?? this.lastPracticed,
       nextReview: nextReview ?? this.nextReview,
     );
@@ -157,21 +157,16 @@ class ExerciseScore {
         other.type == type &&
         other.correctCount == correctCount &&
         other.incorrectCount == incorrectCount &&
-        other.currentStreak == currentStreak &&
-        other.bestStreak == bestStreak;
+        other.currentChain == currentChain &&
+        other.bestChain == bestChain;
   }
 
   @override
-  int get hashCode => Object.hash(
-    type,
-    correctCount,
-    incorrectCount,
-    currentStreak,
-    bestStreak,
-  );
+  int get hashCode =>
+      Object.hash(type, correctCount, incorrectCount, currentChain, bestChain);
 
   @override
   String toString() {
-    return 'ExerciseScore(type: ${type.displayName}, correct: $correctCount, incorrect: $incorrectCount, streak: $currentStreak/$bestStreak, rate: ${successRate.toStringAsFixed(1)}%)';
+    return 'ExerciseScore(type: ${type.displayName}, correct: $correctCount, incorrect: $incorrectCount, chain: $currentChain/$bestChain, rate: ${successRate.toStringAsFixed(1)}%)';
   }
 }

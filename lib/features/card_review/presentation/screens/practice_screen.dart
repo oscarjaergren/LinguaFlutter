@@ -292,7 +292,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
     final exerciseType = widget.provider.currentExerciseType!;
     final score = card.getExerciseScore(exerciseType);
     final masteryLevel = score?.masteryLevel ?? "New";
-    final currentStreak = score?.currentStreak ?? 0;
+    final currentChain = score?.currentChain ?? 0;
     final masteryProgress = score?.masteryProgress ?? 0.0;
     final color = _getMasteryColor(masteryLevel);
 
@@ -331,7 +331,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
                 context,
                 exerciseType,
                 masteryLevel,
-                currentStreak,
+                currentChain,
                 masteryProgress,
                 color,
                 score,
@@ -357,7 +357,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
     BuildContext context,
     ExerciseType exerciseType,
     String masteryLevel,
-    int currentStreak,
+    int currentChain,
     double masteryProgress,
     Color color,
     ExerciseScore? score,
@@ -384,7 +384,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
             ),
           ),
           const SizedBox(width: 12),
-          // Streak with progress bar
+          // Chain with progress bar
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,10 +392,10 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.local_fire_department, size: 12, color: color),
+                    Icon(Icons.link, size: 12, color: color),
                     const SizedBox(width: 4),
                     Text(
-                      '$currentStreak/5',
+                      '$currentChain/5',
                       style: TextStyle(
                         fontSize: 11,
                         color: color,
