@@ -191,8 +191,6 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     switch (widget.exerciseType) {
       case ExerciseType.readingRecognition:
         return 'What does this word mean?';
-      case ExerciseType.writingTranslation:
-        return 'Type the translation:';
       case ExerciseType.multipleChoiceText:
         return 'Select the correct translation:';
       case ExerciseType.multipleChoiceIcon:
@@ -219,7 +217,6 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       case ExerciseType.multipleChoiceText:
       case ExerciseType.multipleChoiceIcon:
         return _buildMultipleChoiceSection(context);
-      case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
         return _buildWritingSection(context);
       case ExerciseType.sentenceBuilding:
@@ -358,7 +355,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
           ),
           style: const TextStyle(fontSize: 18),
           onChanged: (value) {},
-          onSubmitted: hasAnswered ? null : (_) => _checkWritingAnswer(),
+          onSubmitted: hasAnswered ? null : (_) => _onCheckAnswer(),
         ),
 
         if (hasAnswered) ...[
@@ -600,7 +597,6 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       case ExerciseType.multipleChoiceText:
       case ExerciseType.multipleChoiceIcon:
         return _selectedAnswer != null;
-      case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
         return _textController.text.trim().isNotEmpty;
       case ExerciseType.readingRecognition:
@@ -617,9 +613,6 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       case ExerciseType.multipleChoiceIcon:
         isCorrect = _selectedAnswer == widget.card.backText;
         break;
-      case ExerciseType.writingTranslation:
-        isCorrect = _checkWritingAnswer();
-        break;
       case ExerciseType.reverseTranslation:
         isCorrect = _checkReverseAnswer();
         break;
@@ -631,12 +624,6 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     }
 
     widget.onCheckAnswer(isCorrect);
-  }
-
-  bool _checkWritingAnswer() {
-    final userAnswer = _textController.text.trim().toLowerCase();
-    final correctAnswer = widget.card.backText.trim().toLowerCase();
-    return userAnswer == correctAnswer;
   }
 
   bool _checkReverseAnswer() {

@@ -10,7 +10,7 @@ void main() {
       final coreTypes = ExerciseType.values.where((t) => t.isCore).toList();
 
       expect(prefs.enabledTypes.length, coreTypes.length);
-      expect(prefs.enabledTypes.length, 4);
+      expect(prefs.enabledTypes.length, 3);
       for (final type in coreTypes) {
         expect(prefs.isEnabled(type), true);
       }
@@ -22,12 +22,12 @@ void main() {
       final prefs = ExercisePreferences(
         enabledTypes: {
           ExerciseType.readingRecognition,
-          ExerciseType.writingTranslation,
+          ExerciseType.reverseTranslation,
         },
       );
 
       expect(prefs.isEnabled(ExerciseType.readingRecognition), true);
-      expect(prefs.isEnabled(ExerciseType.writingTranslation), true);
+      expect(prefs.isEnabled(ExerciseType.reverseTranslation), true);
       expect(prefs.isEnabled(ExerciseType.multipleChoiceText), false);
     });
 
@@ -37,8 +37,8 @@ void main() {
       );
 
       // Add a type
-      prefs = prefs.toggleType(ExerciseType.writingTranslation);
-      expect(prefs.isEnabled(ExerciseType.writingTranslation), true);
+      prefs = prefs.toggleType(ExerciseType.reverseTranslation);
+      expect(prefs.isEnabled(ExerciseType.reverseTranslation), true);
       expect(prefs.enabledTypes.length, 2);
 
       // Remove a type
@@ -124,7 +124,7 @@ void main() {
       final original = ExercisePreferences(
         enabledTypes: {
           ExerciseType.readingRecognition,
-          ExerciseType.writingTranslation,
+          ExerciseType.reverseTranslation,
           ExerciseType.sentenceBuilding,
         },
         prioritizeWeaknesses: false,
@@ -136,7 +136,7 @@ void main() {
 
       expect(restored.enabledTypes.length, original.enabledTypes.length);
       expect(restored.isEnabled(ExerciseType.readingRecognition), true);
-      expect(restored.isEnabled(ExerciseType.writingTranslation), true);
+      expect(restored.isEnabled(ExerciseType.reverseTranslation), true);
       expect(restored.isEnabled(ExerciseType.sentenceBuilding), true);
       expect(restored.prioritizeWeaknesses, false);
       expect(restored.weaknessThreshold, 80.0);
@@ -147,7 +147,7 @@ void main() {
         'enabledTypes': [
           'reading_recognition',
           'unknownType',
-          'writing_translation',
+          'reverse_translation',
         ],
         'prioritizeWeaknesses': true,
         'weaknessThreshold': 70.0,
@@ -157,14 +157,14 @@ void main() {
 
       expect(prefs.enabledTypes.length, 2); // Only known types
       expect(prefs.isEnabled(ExerciseType.readingRecognition), true);
-      expect(prefs.isEnabled(ExerciseType.writingTranslation), true);
+      expect(prefs.isEnabled(ExerciseType.reverseTranslation), true);
     });
 
     test('equality works correctly', () {
       final prefs1 = ExercisePreferences(
         enabledTypes: {
           ExerciseType.readingRecognition,
-          ExerciseType.writingTranslation,
+          ExerciseType.reverseTranslation,
         },
         prioritizeWeaknesses: true,
         weaknessThreshold: 70.0,
@@ -172,7 +172,7 @@ void main() {
 
       final prefs2 = ExercisePreferences(
         enabledTypes: {
-          ExerciseType.writingTranslation,
+          ExerciseType.reverseTranslation,
           ExerciseType.readingRecognition,
         },
         prioritizeWeaknesses: true,
@@ -199,14 +199,14 @@ void main() {
       expect(types.contains(ExerciseType.multipleChoiceIcon), true);
       expect(types.contains(ExerciseType.articleSelection), true);
       expect(types.contains(ExerciseType.listening), true);
-      expect(types.contains(ExerciseType.writingTranslation), false);
+      expect(types.contains(ExerciseType.reverseTranslation), false);
       expect(types.contains(ExerciseType.reverseTranslation), false);
     });
 
     test('exerciseTypes returns correct types for production', () {
       final types = ExerciseCategory.production.exerciseTypes;
 
-      expect(types.contains(ExerciseType.writingTranslation), true);
+      expect(types.contains(ExerciseType.reverseTranslation), true);
       expect(types.contains(ExerciseType.reverseTranslation), true);
       expect(types.contains(ExerciseType.sentenceBuilding), true);
       expect(types.contains(ExerciseType.conjugationPractice), true);
@@ -235,7 +235,7 @@ void main() {
       );
 
       expect(
-        ExerciseType.writingTranslation.category,
+        ExerciseType.reverseTranslation.category,
         ExerciseCategory.production,
       );
       expect(
@@ -251,12 +251,12 @@ void main() {
     test('isRecognition returns correct value', () {
       expect(ExerciseType.readingRecognition.isRecognition, true);
       expect(ExerciseType.multipleChoiceText.isRecognition, true);
-      expect(ExerciseType.writingTranslation.isRecognition, false);
+      expect(ExerciseType.reverseTranslation.isRecognition, false);
       expect(ExerciseType.sentenceBuilding.isRecognition, false);
     });
 
     test('isProduction returns correct value', () {
-      expect(ExerciseType.writingTranslation.isProduction, true);
+      expect(ExerciseType.reverseTranslation.isProduction, true);
       expect(ExerciseType.sentenceBuilding.isProduction, true);
       expect(ExerciseType.readingRecognition.isProduction, false);
       expect(ExerciseType.multipleChoiceText.isProduction, false);

@@ -11,11 +11,6 @@ enum ExerciseType {
   @JsonValue('reading_recognition')
   readingRecognition,
 
-  /// Type the correct translation of the word
-  /// Tests: Spelling, active recall, writing
-  @JsonValue('writing_translation')
-  writingTranslation,
-
   /// Select the correct translation from multiple text options
   /// Tests: Recognition, comprehension
   @JsonValue('multiple_choice_text')
@@ -72,8 +67,6 @@ extension ExerciseTypeExtension on ExerciseType {
     switch (this) {
       case ExerciseType.readingRecognition:
         return 'reading_recognition';
-      case ExerciseType.writingTranslation:
-        return 'writing_translation';
       case ExerciseType.multipleChoiceText:
         return 'multiple_choice_text';
       case ExerciseType.multipleChoiceIcon:
@@ -100,8 +93,6 @@ extension ExerciseTypeExtension on ExerciseType {
     switch (this) {
       case ExerciseType.readingRecognition:
         return 'Reading Recognition';
-      case ExerciseType.writingTranslation:
-        return 'Writing Translation';
       case ExerciseType.multipleChoiceText:
         return 'Multiple Choice (Text)';
       case ExerciseType.multipleChoiceIcon:
@@ -128,8 +119,6 @@ extension ExerciseTypeExtension on ExerciseType {
     switch (this) {
       case ExerciseType.readingRecognition:
         return 'See the word and recall its meaning';
-      case ExerciseType.writingTranslation:
-        return 'Type the correct translation';
       case ExerciseType.multipleChoiceText:
         return 'Choose the correct meaning from options';
       case ExerciseType.multipleChoiceIcon:
@@ -155,7 +144,6 @@ extension ExerciseTypeExtension on ExerciseType {
   bool get isImplemented {
     switch (this) {
       case ExerciseType.readingRecognition:
-      case ExerciseType.writingTranslation:
       case ExerciseType.multipleChoiceText:
       case ExerciseType.multipleChoiceIcon:
       case ExerciseType.reverseTranslation:
@@ -210,7 +198,6 @@ extension ExerciseTypeExtension on ExerciseType {
 
       // All other implemented types work on any card.
       case ExerciseType.readingRecognition:
-      case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
       case ExerciseType.sentenceFill:
       case ExerciseType.listening:
@@ -228,7 +215,6 @@ extension ExerciseTypeExtension on ExerciseType {
   bool get isCore {
     switch (this) {
       case ExerciseType.readingRecognition:
-      case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
       case ExerciseType.listening:
         return true;
@@ -258,8 +244,6 @@ extension ExerciseTypeExtension on ExerciseType {
     switch (this) {
       case ExerciseType.readingRecognition:
         return 'mdi:book-open-page-variant';
-      case ExerciseType.writingTranslation:
-        return 'mdi:pencil';
       case ExerciseType.multipleChoiceText:
         return 'mdi:format-list-checks';
       case ExerciseType.multipleChoiceIcon:
@@ -286,8 +270,6 @@ extension ExerciseTypeExtension on ExerciseType {
     switch (this) {
       case ExerciseType.readingRecognition:
         return Icons.menu_book;
-      case ExerciseType.writingTranslation:
-        return Icons.edit;
       case ExerciseType.multipleChoiceText:
         return Icons.checklist;
       case ExerciseType.multipleChoiceIcon:

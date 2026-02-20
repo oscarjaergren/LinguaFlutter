@@ -5,9 +5,8 @@ import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 void main() {
   group('ExerciseType', () {
     test('should have all expected values', () {
-      expect(ExerciseType.values.length, 11);
+      expect(ExerciseType.values.length, 10);
       expect(ExerciseType.values, contains(ExerciseType.readingRecognition));
-      expect(ExerciseType.values, contains(ExerciseType.writingTranslation));
       expect(ExerciseType.values, contains(ExerciseType.multipleChoiceText));
       expect(ExerciseType.values, contains(ExerciseType.multipleChoiceIcon));
       expect(ExerciseType.values, contains(ExerciseType.reverseTranslation));
@@ -26,10 +25,6 @@ void main() {
         expect(
           ExerciseType.readingRecognition.displayName,
           'Reading Recognition',
-        );
-        expect(
-          ExerciseType.writingTranslation.displayName,
-          'Writing Translation',
         );
         expect(
           ExerciseType.multipleChoiceText.displayName,
@@ -65,10 +60,6 @@ void main() {
           'See the word and recall its meaning',
         );
         expect(
-          ExerciseType.writingTranslation.description,
-          'Type the correct translation',
-        );
-        expect(
           ExerciseType.multipleChoiceText.description,
           'Choose the correct meaning from options',
         );
@@ -92,7 +83,6 @@ void main() {
     group('isImplemented', () {
       test('should return true for implemented types', () {
         expect(ExerciseType.readingRecognition.isImplemented, true);
-        expect(ExerciseType.writingTranslation.isImplemented, true);
         expect(ExerciseType.multipleChoiceText.isImplemented, true);
         expect(ExerciseType.multipleChoiceIcon.isImplemented, true);
         expect(ExerciseType.reverseTranslation.isImplemented, true);
@@ -110,18 +100,17 @@ void main() {
         expect(ExerciseType.articleSelection.isImplemented, true);
       });
 
-      test('should have exactly 9 implemented types', () {
+      test('should have exactly 8 implemented types', () {
         final implementedCount = ExerciseType.values
             .where((t) => t.isImplemented)
             .length;
-        expect(implementedCount, 9);
+        expect(implementedCount, 8);
       });
     });
 
     group('isCore', () {
-      test('should return true for the 4 core types', () {
+      test('should return true for the 3 core types', () {
         expect(ExerciseType.readingRecognition.isCore, true);
-        expect(ExerciseType.writingTranslation.isCore, true);
         expect(ExerciseType.reverseTranslation.isCore, true);
         expect(ExerciseType.listening.isCore, true);
       });
@@ -136,9 +125,9 @@ void main() {
         expect(ExerciseType.articleSelection.isCore, false);
       });
 
-      test('should have exactly 4 core types', () {
+      test('should have exactly 3 core types', () {
         final coreCount = ExerciseType.values.where((t) => t.isCore).length;
-        expect(coreCount, 4);
+        expect(coreCount, 3);
       });
     });
 
@@ -180,7 +169,6 @@ void main() {
           ExerciseType.readingRecognition.iconName,
           'mdi:book-open-page-variant',
         );
-        expect(ExerciseType.writingTranslation.iconName, 'mdi:pencil');
         expect(
           ExerciseType.multipleChoiceText.iconName,
           'mdi:format-list-checks',
@@ -203,7 +191,6 @@ void main() {
     group('icon', () {
       test('should return valid IconData for all types', () {
         expect(ExerciseType.readingRecognition.icon, Icons.menu_book);
-        expect(ExerciseType.writingTranslation.icon, Icons.edit);
         expect(ExerciseType.multipleChoiceText.icon, Icons.checklist);
         expect(ExerciseType.multipleChoiceIcon.icon, Icons.image);
         expect(ExerciseType.reverseTranslation.icon, Icons.swap_horiz);

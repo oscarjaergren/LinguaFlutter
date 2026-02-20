@@ -20,7 +20,6 @@ extension ExerciseTypeGrouping on ExerciseType {
       case ExerciseType.listening:
       case ExerciseType.articleSelection:
         return ExerciseCategory.recognition;
-      case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
       case ExerciseType.speakingPronunciation:
       case ExerciseType.sentenceFill:

@@ -26,7 +26,7 @@ void main() {
       final prefs = ExercisePreferences(
         enabledTypes: {
           ExerciseType.readingRecognition,
-          ExerciseType.writingTranslation,
+          ExerciseType.reverseTranslation,
         },
         prioritizeWeaknesses: false,
         weaknessThreshold: 80.0,
@@ -37,7 +37,7 @@ void main() {
       final loaded = await service.loadPreferences();
       expect(loaded.enabledTypes.length, 2);
       expect(loaded.isEnabled(ExerciseType.readingRecognition), true);
-      expect(loaded.isEnabled(ExerciseType.writingTranslation), true);
+      expect(loaded.isEnabled(ExerciseType.reverseTranslation), true);
       expect(loaded.prioritizeWeaknesses, false);
       expect(loaded.weaknessThreshold, 80.0);
     });

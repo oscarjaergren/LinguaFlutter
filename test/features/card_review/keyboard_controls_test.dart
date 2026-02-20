@@ -327,7 +327,7 @@ void main() {
         when(mockProvider.canSwipe).thenReturn(false);
         when(
           mockProvider.currentExerciseType,
-        ).thenReturn(ExerciseType.writingTranslation);
+        ).thenReturn(ExerciseType.reverseTranslation);
 
         await tester.pumpWidget(
           MaterialApp(

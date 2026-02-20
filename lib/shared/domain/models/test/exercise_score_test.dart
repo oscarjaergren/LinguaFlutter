@@ -20,14 +20,14 @@ void main() {
         final nextReview = now.add(const Duration(days: 1));
 
         final score = ExerciseScore(
-          type: ExerciseType.writingTranslation,
+          type: ExerciseType.reverseTranslation,
           correctCount: 5,
           incorrectCount: 2,
           lastPracticed: now,
           nextReview: nextReview,
         );
 
-        expect(score.type, ExerciseType.writingTranslation);
+        expect(score.type, ExerciseType.reverseTranslation);
         expect(score.correctCount, 5);
         expect(score.incorrectCount, 2);
         expect(score.lastPracticed, now);
@@ -310,7 +310,7 @@ void main() {
       test('should preserve values when not specified', () {
         final now = DateTime.now();
         final score = ExerciseScore(
-          type: ExerciseType.writingTranslation,
+          type: ExerciseType.reverseTranslation,
           correctCount: 5,
           incorrectCount: 2,
           lastPracticed: now,
@@ -318,7 +318,7 @@ void main() {
 
         final copied = score.copyWith(correctCount: 10);
 
-        expect(copied.type, ExerciseType.writingTranslation);
+        expect(copied.type, ExerciseType.reverseTranslation);
         expect(copied.correctCount, 10);
         expect(copied.incorrectCount, 2);
         expect(copied.lastPracticed, now);
@@ -392,7 +392,7 @@ void main() {
           correctCount: 5,
         );
         const score2 = ExerciseScore(
-          type: ExerciseType.writingTranslation,
+          type: ExerciseType.reverseTranslation,
           correctCount: 5,
         );
 

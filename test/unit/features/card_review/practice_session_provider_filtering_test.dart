@@ -177,9 +177,9 @@ void main() {
                     incorrectCount: 2,
                     lastPracticed: DateTime.now(),
                   ),
-              ExerciseType.writingTranslation:
+              ExerciseType.reverseTranslation:
                   ExerciseScore.initial(
-                    ExerciseType.writingTranslation,
+                    ExerciseType.reverseTranslation,
                   ).copyWith(
                     correctCount: 3,
                     incorrectCount: 7,
@@ -200,7 +200,7 @@ void main() {
       final prefs = ExercisePreferences(
         enabledTypes: {
           ExerciseType.readingRecognition,
-          ExerciseType.writingTranslation,
+          ExerciseType.reverseTranslation,
         },
         prioritizeWeaknesses: true,
       );
@@ -208,7 +208,7 @@ void main() {
       provider.startSession(preferences: prefs);
 
       // First exercise should be the weaker one (writing translation)
-      expect(provider.currentExerciseType, ExerciseType.writingTranslation);
+      expect(provider.currentExerciseType, ExerciseType.reverseTranslation);
     });
 
     test('disabling all types results in no session', () {

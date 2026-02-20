@@ -469,8 +469,6 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
     switch (type) {
       case ExerciseType.readingRecognition:
         return 'Reading';
-      case ExerciseType.writingTranslation:
-        return 'Writing';
       case ExerciseType.multipleChoiceText:
         return 'Multiple Choice';
       case ExerciseType.multipleChoiceIcon:

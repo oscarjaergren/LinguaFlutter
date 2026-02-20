@@ -243,112 +243,6 @@ void main() {
       });
     });
 
-    group('Writing Translation', () {
-      testWidgets('should display instruction text', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        expect(find.text('Type the translation:'), findsOneWidget);
-      });
-
-      testWidgets('should have text input field', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        expect(find.byType(TextField), findsOneWidget);
-      });
-
-      testWidgets('should disable Check Answer when input empty', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        // Tap Check Answer without typing anything
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-
-        // Callback should not have been called
-        expect(checkAnswerCalled, false);
-      });
-
-      testWidgets('should enable Check Answer after typing', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        await tester.enterText(find.byType(TextField), 'Hello');
-        await tester.pump();
-
-        // Tap Check Answer
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-
-        // Callback should have been called
-        expect(checkAnswerCalled, true);
-      });
-
-      testWidgets('should validate correct answer', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        await tester.enterText(find.byType(TextField), 'Hello');
-        await tester.pump();
-
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-
-        expect(checkAnswerCalled, true);
-        expect(lastCheckAnswerValue, true);
-      });
-
-      testWidgets('should validate incorrect answer', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        await tester.enterText(find.byType(TextField), 'Wrong');
-        await tester.pump();
-
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-
-        expect(checkAnswerCalled, true);
-        expect(lastCheckAnswerValue, false);
-      });
-
-      testWidgets('should be case insensitive', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
-        );
-
-        await tester.enterText(find.byType(TextField), 'HELLO');
-        await tester.pump();
-
-        await tester.tap(find.text('Check Answer'));
-        await tester.pump();
-
-        expect(lastCheckAnswerValue, true);
-      });
-
-      testWidgets('should show correct answer after checking', (tester) async {
-        await tester.pumpWidget(
-          buildTestWidget(
-            exerciseType: ExerciseType.writingTranslation,
-            answerState: AnswerState.answered,
-            currentAnswerCorrect: false,
-          ),
-        );
-
-        expect(find.text('Correct answer:'), findsOneWidget);
-        expect(find.text('Hello'), findsOneWidget);
-      });
-    });
-
     group('Reverse Translation', () {
       testWidgets('should display instruction text', (tester) async {
         await tester.pumpWidget(
@@ -409,9 +303,9 @@ void main() {
 
     group('State Reset', () {
       testWidgets('should reset state when card changes', (tester) async {
-        // Use writing exercise to test state reset (has Check Answer button)
+        // Use reverse translation exercise to test state reset (has Check Answer button)
         await tester.pumpWidget(
-          buildTestWidget(exerciseType: ExerciseType.writingTranslation),
+          buildTestWidget(exerciseType: ExerciseType.reverseTranslation),
         );
 
         // Type something
@@ -430,7 +324,7 @@ void main() {
 
         await tester.pumpWidget(
           buildTestWidget(
-            exerciseType: ExerciseType.writingTranslation,
+            exerciseType: ExerciseType.reverseTranslation,
             card: newCard,
           ),
         );

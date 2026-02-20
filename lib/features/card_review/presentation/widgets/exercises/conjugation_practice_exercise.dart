@@ -94,13 +94,13 @@ class _ConjugationPracticeExerciseState
       _prompt = selected.key;
       _correctAnswer = selected.value;
     } else if (wordData is NounData) {
-      // _canDoExercise guarantees gender is non-empty.
       final gender = wordData.gender.toLowerCase().trim();
-      assert(
-        gender.isNotEmpty,
-        'ConjugationPracticeExercise reached with NounData that has empty '
-        'gender — _canDoExercise should have excluded this card.',
-      );
+      if (gender.isEmpty) {
+        // No gender data — fall back to a text field asking for the base form.
+        _prompt = 'base form';
+        _correctAnswer = wordData.plural ?? widget.card.frontText;
+        return;
+      }
       if (_articles.contains(gender)) {
         _prompt = 'article';
         _correctAnswer = gender;

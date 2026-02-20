@@ -423,7 +423,7 @@ void main() {
       );
       final item3 = PracticeItem(
         card: card,
-        exerciseType: ExerciseType.writingTranslation,
+        exerciseType: ExerciseType.reverseTranslation,
       );
 
       expect(item1, equals(item2));
