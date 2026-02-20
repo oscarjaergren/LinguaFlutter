@@ -8,14 +8,8 @@ if [ -z "$STAGED_DART" ]; then
   exit 0
 fi
 
-# Run dart format in check mode on the repo root (covers all staged files)
-dart format --output=none --set-exit-if-changed . 2>&1
-FORMAT_EXIT=$?
-
-if [ $FORMAT_EXIT -ne 0 ]; then
-  echo ""
-  echo "❌ dart format check failed. Run 'dart format .' to fix, then re-stage."
-  exit 1
-fi
+# Auto-format staged Dart files and re-stage them
+dart format . 2>&1
+echo "$STAGED_DART" | xargs git add
 
 exit 0
