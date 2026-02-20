@@ -363,4 +363,4 @@ class CardModel {
 }
 
 /// Enum for card review answers
-enum CardAnswer { correct, incorrect, skip }
+enum CardAnswer { correct, incorrect }
