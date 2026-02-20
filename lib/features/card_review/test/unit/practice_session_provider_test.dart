@@ -249,32 +249,6 @@ void main() {
       });
     });
 
-    group('Skip Functionality', () {
-      test('should skip to next exercise', () async {
-        provider.startSession();
-        final initialIndex = provider.currentIndex;
-
-        await provider.skipExercise();
-
-        if (provider.totalCount > 1) {
-          expect(provider.currentIndex, initialIndex + 1);
-        }
-      });
-
-      test('should end session on skip of last card', () async {
-        provider = PracticeSessionProvider(
-          getReviewCards: () => [testCards.first],
-          getAllCards: () => [testCards.first],
-          updateCard: (card) async {},
-        );
-
-        provider.startSession();
-        await provider.skipExercise();
-
-        expect(provider.isSessionActive, false);
-      });
-    });
-
     group('Multiple Choice Options', () {
       test('should generate options for multiple choice exercises', () async {
         provider.startSession();
@@ -282,7 +256,8 @@ void main() {
         // Find a multiple choice exercise or force one
         while (provider.isSessionActive &&
             provider.currentExerciseType != ExerciseType.multipleChoiceText) {
-          await provider.skipExercise();
+          provider.checkAnswer(isCorrect: false);
+          await provider.confirmAnswerAndAdvance(markedCorrect: false);
         }
 
         if (provider.isSessionActive &&
@@ -307,7 +282,8 @@ void main() {
             (provider.currentExerciseType == ExerciseType.multipleChoiceText ||
                 provider.currentExerciseType ==
                     ExerciseType.multipleChoiceIcon)) {
-          await provider.skipExercise();
+          provider.checkAnswer(isCorrect: false);
+          await provider.confirmAnswerAndAdvance(markedCorrect: false);
         }
 
         if (provider.isSessionActive) {
@@ -613,95 +589,6 @@ void main() {
     });
   });
 
-  group('skipExercise', () {
-    List<CardModel> makeCards(int count) => List.generate(
-      count,
-      (i) => CardModel(
-        id: '$i',
-        frontText: 'Front $i',
-        backText: 'Back $i',
-        language: 'de',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    test('skipping mid-session advances to next card', () async {
-      final cards = makeCards(3);
-      final p = PracticeSessionProvider(
-        getReviewCards: () => cards,
-        getAllCards: () => cards,
-        updateCard: (_) async {},
-      );
-
-      p.startSession();
-      final firstCardId = p.currentCard?.id;
-      await p.skipExercise();
-
-      expect(p.isSessionActive, isTrue);
-      expect(p.currentCard?.id, isNot(firstCardId));
-    });
-
-    test('skipping last exercise ends session', () async {
-      final cards = makeCards(3);
-      final p = PracticeSessionProvider(
-        getReviewCards: () => cards,
-        getAllCards: () => cards,
-        updateCard: (_) async {},
-      );
-
-      p.startSession();
-      // Advance to last exercise
-      while (p.currentIndex < p.totalCount - 1) {
-        await p.skipExercise();
-      }
-      // Skip the last one
-      await p.skipExercise();
-
-      expect(p.isSessionActive, isFalse);
-    });
-
-    test(
-      'skipped card is counted in totalReviewed passed to onSessionComplete',
-      () async {
-        int receivedCount = -1;
-        final cards = makeCards(3);
-        final p = PracticeSessionProvider(
-          getReviewCards: () => cards,
-          getAllCards: () => cards,
-          updateCard: (_) async {},
-          onSessionComplete: (cardsReviewed) async {
-            receivedCount = cardsReviewed;
-          },
-        );
-
-        p.startSession();
-        final total = p.totalCount;
-
-        // Skip all exercises
-        while (p.isSessionActive) {
-          await p.skipExercise();
-        }
-
-        expect(receivedCount, equals(total));
-      },
-    );
-
-    test('skipping increments incorrectCount', () async {
-      final cards = makeCards(3);
-      final p = PracticeSessionProvider(
-        getReviewCards: () => cards,
-        getAllCards: () => cards,
-        updateCard: (_) async {},
-      );
-
-      p.startSession();
-      await p.skipExercise();
-
-      expect(p.incorrectCount, equals(1));
-    });
-  });
-
   group('removeCardFromQueue', () {
     List<CardModel> makeCards(int count) => List.generate(
       count,
@@ -797,7 +684,8 @@ void main() {
         p.startSession();
 
         // Advance to index 1 (second card)
-        await p.skipExercise();
+        p.checkAnswer(isCorrect: false);
+        await p.confirmAnswerAndAdvance(markedCorrect: false);
         expect(p.currentIndex, 1);
         final currentCardId = p.currentCard!.id;
 
@@ -809,41 +697,6 @@ void main() {
 
         // Current card must be unchanged
         expect(p.currentCard!.id, equals(currentCardId));
-      },
-    );
-  });
-
-  group('skipExercise guard', () {
-    List<CardModel> makeCards(int count) => List.generate(
-      count,
-      (i) => CardModel(
-        id: '$i',
-        frontText: 'Front $i',
-        backText: 'Back $i',
-        language: 'de',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    test(
-      'calling skipExercise when session is inactive does not mutate incorrectCount',
-      () async {
-        final cards = makeCards(3);
-        final p = PracticeSessionProvider(
-          getReviewCards: () => cards,
-          getAllCards: () => cards,
-          updateCard: (_) async {},
-        );
-
-        // Session never started — incorrectCount starts at 0
-        expect(p.isSessionActive, isFalse);
-        expect(p.incorrectCount, 0);
-
-        await p.skipExercise();
-
-        // Must still be 0; no session was active
-        expect(p.incorrectCount, 0);
       },
     );
   });
@@ -872,7 +725,8 @@ void main() {
         );
 
         p.startSession();
-        await p.skipExercise();
+        p.checkAnswer(isCorrect: false);
+        await p.confirmAnswerAndAdvance(markedCorrect: false);
         final currentCardId = p.currentCard!.id;
         final currentIndex = p.currentIndex;
         final afterCurrentId = p.sessionQueue[currentIndex + 1].card.id;
@@ -898,7 +752,8 @@ void main() {
 
         final card0Id = cards[0].id;
         while (p.isSessionActive && p.currentCard?.id == card0Id) {
-          await p.skipExercise();
+          p.checkAnswer(isCorrect: false);
+          await p.confirmAnswerAndAdvance(markedCorrect: false);
         }
         if (!p.isSessionActive) return;
 
@@ -1023,7 +878,8 @@ void main() {
         // Advance until we are past index 0 so there is at least one entry
         // before the current position.
         if (p.totalCount > 1) {
-          await p.skipExercise();
+          p.checkAnswer(isCorrect: false);
+          await p.confirmAnswerAndAdvance(markedCorrect: false);
         }
 
         // Removing a card that is strictly before the current index must keep
@@ -1041,79 +897,6 @@ void main() {
       },
     );
   });
-
-  group('skipExercise persists the skipped card', () {
-    List<CardModel> makeCards(int count) => List.generate(
-      count,
-      (i) => CardModel(
-        id: '$i',
-        frontText: 'Front $i',
-        backText: 'Back $i',
-        language: 'de',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    );
-
-    test(
-      'skipping a card calls updateCard so the review is persisted',
-      () async {
-        final cards = makeCards(3);
-        final List<CardModel> persisted = [];
-        final p = PracticeSessionProvider(
-          getReviewCards: () => cards,
-          getAllCards: () => cards,
-          updateCard: (card) async => persisted.add(card),
-        );
-
-        p.startSession();
-        await p.skipExercise();
-
-        expect(
-          persisted,
-          isNotEmpty,
-          reason: 'skipExercise must persist the skipped card via updateCard',
-        );
-      },
-    );
-  });
-
-  group(
-    'skipExercise is a no-op when the current exercise is already answered',
-    () {
-      List<CardModel> makeCards(int count) => List.generate(
-        count,
-        (i) => CardModel(
-          id: '$i',
-          frontText: 'Front $i',
-          backText: 'Back $i',
-          language: 'de',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
-
-      test(
-        'incorrectCount is not incremented when skip is called after an answer has been submitted',
-        () async {
-          final cards = makeCards(3);
-          final p = PracticeSessionProvider(
-            getReviewCards: () => cards,
-            getAllCards: () => cards,
-            updateCard: (_) async {},
-          );
-
-          p.startSession();
-          p.checkAnswer(isCorrect: false);
-          expect(p.answerState, AnswerState.answered);
-
-          await p.skipExercise();
-
-          expect(p.incorrectCount, 0);
-        },
-      );
-    },
-  );
 
   group('conjugationPractice exercise filtering', () {
     // Preferences that only enable conjugationPractice so the queue builder

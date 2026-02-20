@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
+import '../../../../shared/services/logger_service.dart';
 import '../models/exercise_preferences.dart';
 
 /// Function type for persisting card updates
@@ -11,6 +12,9 @@ typedef GetCardsCallback = List<CardModel> Function();
 
 /// Function type called when a session completes, with the total cards reviewed
 typedef SessionCompleteCallback = Future<void> Function(int cardsReviewed);
+
+/// Function type called whenever a single review is finalized.
+typedef ReviewRecordedCallback = Future<void> Function(int cardsReviewed);
 
 /// Represents a single practice item: a card + exercise type combination
 class PracticeItem {
@@ -70,16 +74,19 @@ class PracticeSessionProvider extends ChangeNotifier {
   static const int _minCardsForMultipleChoice = 4;
 
   final SessionCompleteCallback? _onSessionComplete;
+  final ReviewRecordedCallback? _onReviewRecorded;
 
   PracticeSessionProvider({
     required GetCardsCallback getReviewCards,
     required GetCardsCallback getAllCards,
     required UpdateCardCallback updateCard,
     SessionCompleteCallback? onSessionComplete,
+    ReviewRecordedCallback? onReviewRecorded,
   }) : _getReviewCards = getReviewCards,
        _getAllCards = getAllCards,
        _updateCard = updateCard,
-       _onSessionComplete = onSessionComplete;
+       _onSessionComplete = onSessionComplete,
+       _onReviewRecorded = onReviewRecorded;
 
   // === Getters ===
 
@@ -384,9 +391,9 @@ class PracticeSessionProvider extends ChangeNotifier {
       _currentAnswerCorrect = null;
       _userInput = null;
 
-      // Count the deleted card as incorrect so totalReviewed is consistent
-      // with skipExercise (Bug 3).
+      // Count the deleted current card as reviewed/incorrect.
       _incorrectCount++;
+      await _recordReviewForStreak();
 
       // Check if session is now complete
       if (_sessionQueue.isEmpty) {
@@ -487,6 +494,7 @@ class PracticeSessionProvider extends ChangeNotifier {
     } else {
       _incorrectCount++;
     }
+    await _recordReviewForStreak();
 
     // Move to next exercise or end session
     if (_currentIndex < _sessionQueue.length - 1) {
@@ -509,46 +517,11 @@ class PracticeSessionProvider extends ChangeNotifier {
     }
   }
 
-  /// Skip current exercise without answering
-  Future<void> skipExercise() async {
-    if (!_isSessionActive) return;
-    // Do not skip if the user has already submitted an answer — they must
-    // confirm via confirmAnswerAndAdvance to avoid double-counting (Bug 3).
-    if (_answerState == AnswerState.answered) return;
-
-    // Persist the skipped card as incorrect so spaced-repetition state is updated.
-    // Only count as incorrect (Bug 2) when there is actually a card to persist.
-    if (currentCard != null && currentExerciseType != null) {
-      final updatedCard = currentCard!.copyWithExerciseResult(
-        exerciseType: currentExerciseType!,
-        wasCorrect: false,
-      );
-      await _updateCard(updatedCard);
-      _sessionQueue[_currentIndex] = PracticeItem(
-        card: updatedCard,
-        exerciseType: currentExerciseType!,
-      );
-      // Count the skipped card as incorrect so it's included in totalReviewed
-      _incorrectCount++;
-    }
-
-    if (_currentIndex < _sessionQueue.length - 1) {
-      _currentIndex++;
-      _answerState = AnswerState.pending;
-      _currentAnswerCorrect = null;
-      _userInput = null;
-      _prepareCurrentExercise();
-      notifyListeners();
-    } else {
-      _isSessionComplete = true;
-      final totalReviewed = _correctCount + _incorrectCount;
-      try {
-        await _onSessionComplete?.call(totalReviewed);
-      } catch (e) {
-        debugPrint('onSessionComplete error: $e');
-      } finally {
-        endSession();
-      }
+  Future<void> _recordReviewForStreak() async {
+    try {
+      await _onReviewRecorded?.call(1);
+    } catch (e, stackTrace) {
+      LoggerService.error('Failed to record streak review', e, stackTrace);
     }
   }
 

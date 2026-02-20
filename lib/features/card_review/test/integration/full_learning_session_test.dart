@@ -192,7 +192,11 @@ void main() {
       // Verify card was updated
       expect(updatedCards, isNotEmpty);
       final updatedCard = updatedCards.first;
-      expect(updatedCard.reviewCount, greaterThan(0));
+      final totalExerciseAttempts = updatedCard.exerciseScores.values.fold<int>(
+        0,
+        (sum, score) => sum + score.totalAttempts,
+      );
+      expect(totalExerciseAttempts, greaterThan(0));
     });
 
     test('empty card list results in no active session', () async {

@@ -153,7 +153,7 @@ Future<Widget> _buildApp() async {
                 context.read<CardManagementProvider>().reviewCards,
             getAllCards: () => context.read<CardManagementProvider>().allCards,
             updateCard: context.read<CardManagementProvider>().updateCard,
-            onSessionComplete: (cardsReviewed) => streakProvider
+            onReviewRecorded: (cardsReviewed) => streakProvider
                 .updateStreakWithReview(cardsReviewed: cardsReviewed),
           );
         },
