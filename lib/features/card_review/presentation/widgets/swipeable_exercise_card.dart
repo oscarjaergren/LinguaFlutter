@@ -11,10 +11,10 @@ class SwipeableExerciseCard extends StatefulWidget {
   final bool canSwipe;
 
   /// Called when user swipes right (marking correct)
-  final VoidCallback onSwipeRight;
+  final Future<void> Function() onSwipeRight;
 
   /// Called when user swipes left (marking incorrect)
-  final VoidCallback onSwipeLeft;
+  final Future<void> Function() onSwipeLeft;
 
   /// Optional callback for when card is tapped
   final VoidCallback? onTap;
@@ -174,14 +174,16 @@ class SwipeableExerciseCardState extends State<SwipeableExerciseCard>
     });
   }
 
-  void _onSwipeAnimationStatus(AnimationStatus status) {
+  void _onSwipeAnimationStatus(AnimationStatus status) async {
     if (status == AnimationStatus.completed) {
       // Trigger callback
       if (_swipeIsCorrect == true) {
-        widget.onSwipeRight();
+        await widget.onSwipeRight();
       } else if (_swipeIsCorrect == false) {
-        widget.onSwipeLeft();
+        await widget.onSwipeLeft();
       }
+
+      if (!mounted) return;
 
       // Reset state for next card
       setState(() {

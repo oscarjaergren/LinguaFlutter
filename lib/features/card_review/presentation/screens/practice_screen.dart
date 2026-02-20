@@ -299,11 +299,11 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
     return SwipeableExerciseCard(
       key: _swipeCardKey,
       canSwipe: widget.provider.canSwipe,
-      onSwipeRight: () {
-        widget.provider.confirmAnswerAndAdvance(markedCorrect: true);
+      onSwipeRight: () async {
+        await widget.provider.confirmAnswerAndAdvance(markedCorrect: true);
       },
-      onSwipeLeft: () {
-        widget.provider.confirmAnswerAndAdvance(markedCorrect: false);
+      onSwipeLeft: () async {
+        await widget.provider.confirmAnswerAndAdvance(markedCorrect: false);
       },
       child: Stack(
         children: [

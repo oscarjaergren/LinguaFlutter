@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/features/card_review/presentation/widgets/swipeable_exercise_card.dart';
@@ -18,8 +20,12 @@ void main() {
           body: Center(
             child: SwipeableExerciseCard(
               canSwipe: canSwipe,
-              onSwipeRight: () => swipedRight = true,
-              onSwipeLeft: () => swipedLeft = true,
+              onSwipeRight: () async {
+                swipedRight = true;
+              },
+              onSwipeLeft: () async {
+                swipedLeft = true;
+              },
               child:
                   child ??
                   const SizedBox(
@@ -56,8 +62,8 @@ void main() {
           home: Scaffold(
             body: SwipeableExerciseCard(
               canSwipe: true,
-              onSwipeRight: () {},
-              onSwipeLeft: () {},
+              onSwipeRight: () async {},
+              onSwipeLeft: () async {},
               onTap: () => tapped = true,
               child: const SizedBox(width: 300, height: 400),
             ),
@@ -123,6 +129,51 @@ void main() {
       expect(swipedLeft, true);
     });
 
+    testWidgets(
+      'should not snap card back before async swipe callback completes',
+      (tester) async {
+        final completer = Completer<void>();
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SwipeableExerciseCard(
+                  canSwipe: true,
+                  onSwipeRight: () => completer.future,
+                  onSwipeLeft: () async {},
+                  child: const SizedBox(
+                    width: 300,
+                    height: 400,
+                    child: Center(child: Text('Test Content')),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        final initialCenter = tester.getCenter(find.text('Test Content'));
+
+        await tester.fling(
+          find.byType(SwipeableExerciseCard),
+          const Offset(300, 0),
+          1000,
+        );
+        await tester.pumpAndSettle();
+
+        final centerWhilePending = tester.getCenter(find.text('Test Content'));
+        expect(centerWhilePending.dx, greaterThan(initialCenter.dx + 200));
+
+        completer.complete();
+        await tester.pump();
+        await tester.pumpAndSettle();
+
+        final centerAfterComplete = tester.getCenter(find.text('Test Content'));
+        expect(centerAfterComplete.dx, lessThan(centerWhilePending.dx));
+      },
+    );
+
     testWidgets('should not trigger swipe on small drag', (tester) async {
       await tester.pumpWidget(buildTestWidget(canSwipe: true));
 
@@ -143,8 +194,8 @@ void main() {
           home: Scaffold(
             body: SwipeableExerciseCard(
               canSwipe: true,
-              onSwipeRight: () {},
-              onSwipeLeft: () {},
+              onSwipeRight: () async {},
+              onSwipeLeft: () async {},
               backgroundColor: Colors.blue,
               child: const SizedBox(width: 300, height: 400),
             ),
@@ -199,8 +250,12 @@ void main() {
             body: SwipeableExerciseCard(
               key: key,
               canSwipe: true,
-              onSwipeRight: () => swipedRight = true,
-              onSwipeLeft: () => swipedLeft = true,
+              onSwipeRight: () async {
+                swipedRight = true;
+              },
+              onSwipeLeft: () async {
+                swipedLeft = true;
+              },
               child: const SizedBox(width: 300, height: 400),
             ),
           ),
