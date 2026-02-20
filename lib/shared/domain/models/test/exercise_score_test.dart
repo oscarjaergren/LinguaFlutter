@@ -373,7 +373,7 @@ void main() {
     });
 
     group('Equality', () {
-      test('should be equal when same type', () {
+      test('should not be equal when counts differ even with same type', () {
         const score1 = ExerciseScore(
           type: ExerciseType.readingRecognition,
           correctCount: 5,
@@ -383,7 +383,7 @@ void main() {
           correctCount: 10,
         );
 
-        expect(score1, equals(score2));
+        expect(score1, isNot(equals(score2)));
       });
 
       test('should not be equal when different type', () {

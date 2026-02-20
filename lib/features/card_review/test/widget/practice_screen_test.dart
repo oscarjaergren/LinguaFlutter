@@ -235,17 +235,20 @@ void main() {
         expect(find.text('Mark Wrong'), findsOneWidget);
         expect(find.text('Mark Correct'), findsOneWidget);
 
+        final initialIndex = provider.currentIndex;
+
         // Override to wrong
         await tester.ensureVisible(find.text('Mark Wrong'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Mark Wrong'));
-        await tester.pump();
-        expect(provider.currentAnswerCorrect, false);
+        await tester.pumpAndSettle();
 
-        // Override back to correct
-        await tester.tap(find.text('Mark Correct'));
-        await tester.pump();
-        expect(provider.currentAnswerCorrect, true);
+        // Override action should immediately confirm and advance.
+        expect(provider.incorrectCount, 1);
+        expect(
+          provider.currentIndex > initialIndex || !provider.isSessionActive,
+          isTrue,
+        );
       });
     });
 
