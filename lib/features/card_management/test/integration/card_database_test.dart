@@ -37,7 +37,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'Hallo',
             'back_text': 'Hello',
-            'language': 'de',
+            'language_code': 'de',
             'category': 'Greetings',
           })
           .select()
@@ -65,7 +65,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'Original',
             'back_text': 'Original',
-            'language': 'de',
+            'language_code': 'de',
           })
           .select()
           .single();
@@ -95,7 +95,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'ToDelete',
             'back_text': 'ToDelete',
-            'language': 'de',
+            'language_code': 'de',
           })
           .select()
           .single();
@@ -121,7 +121,7 @@ void main() {
         'user_id': SupabaseTestHelper.currentUserId,
         'front_text': 'Hallo',
         'back_text': 'Hello',
-        'language': 'de',
+        'language_code': 'de',
       });
 
       // Insert Spanish card
@@ -129,7 +129,7 @@ void main() {
         'user_id': SupabaseTestHelper.currentUserId,
         'front_text': 'Hola',
         'back_text': 'Hello',
-        'language': 'es',
+        'language_code': 'es',
       });
 
       // Query German only
@@ -137,7 +137,7 @@ void main() {
           .from('cards')
           .select()
           .eq('user_id', SupabaseTestHelper.currentUserId)
-          .eq('language', 'de');
+          .eq('language_code', 'de');
 
       expect(germanCards, hasLength(1));
       expect(germanCards.first['front_text'], equals('Hallo'));
@@ -159,7 +159,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'Test',
             'back_text': 'Test',
-            'language': 'de',
+            'language_code': 'de',
             'review_count': 10,
             'correct_count': 8,
           })
@@ -177,7 +177,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'Flagged',
             'back_text': 'Flagged',
-            'language': 'de',
+            'language_code': 'de',
             'is_favorite': true,
             'is_archived': true,
           })
@@ -195,7 +195,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'Tagged',
             'back_text': 'Tagged',
-            'language': 'de',
+            'language_code': 'de',
             'tags': ['important', 'review'],
             'examples': ['Example 1', 'Example 2'],
           })
@@ -213,7 +213,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'WithNotes',
             'back_text': 'WithNotes',
-            'language': 'de',
+            'language_code': 'de',
             'notes': 'This is a helpful note.',
           })
           .select()
@@ -229,7 +229,7 @@ void main() {
             'user_id': SupabaseTestHelper.currentUserId,
             'front_text': 'Timestamps',
             'back_text': 'Timestamps',
-            'language': 'de',
+            'language_code': 'de',
           })
           .select()
           .single();

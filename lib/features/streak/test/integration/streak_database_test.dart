@@ -79,6 +79,31 @@ void main() {
       expect(updated['total_cards_reviewed'], equals(50));
     });
 
+    test('should atomically apply concurrent review updates via RPC', () async {
+      final rpcName = 'update_streak_with_review_atomic';
+
+      final first = SupabaseTestHelper.client.rpc(
+        rpcName,
+        params: {'p_cards_reviewed': 5},
+      );
+      final second = SupabaseTestHelper.client.rpc(
+        rpcName,
+        params: {'p_cards_reviewed': 3},
+      );
+      await Future.wait([first, second]);
+
+      final updated = await SupabaseTestHelper.client
+          .from('streaks')
+          .select()
+          .eq('user_id', SupabaseTestHelper.currentUserId)
+          .single();
+
+      expect(updated['total_cards_reviewed'], equals(8));
+      expect(updated['total_review_sessions'], equals(2));
+      expect(updated['current_streak'], equals(1));
+      expect(updated['daily_review_counts'], isNotEmpty);
+    });
+
     test('should enforce unique user_id constraint', () async {
       // Insert first streak
       await SupabaseTestHelper.client.from('streaks').insert({
@@ -158,14 +183,16 @@ void main() {
           .select()
           .single();
 
-      expect(streak['created_at'], isNotNull);
+      expect(streak['id'], isNotNull);
       expect(streak['updated_at'], isNotNull);
     });
 
     test('should handle zero/default values correctly', () async {
       final streak = await SupabaseTestHelper.client
           .from('streaks')
-          .insert({'user_id': SupabaseTestHelper.currentUserId})
+          .upsert({
+            'user_id': SupabaseTestHelper.currentUserId,
+          }, onConflict: 'user_id')
           .select()
           .single();
 

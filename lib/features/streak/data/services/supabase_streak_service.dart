@@ -9,13 +9,27 @@ import 'streak_service.dart';
 /// Manages streak data persistence in Supabase database.
 class SupabaseStreakService implements StreakService {
   static const String _tableName = 'streaks';
+  static const String _atomicUpdateRpc = 'update_streak_with_review_atomic';
+
+  final SupabaseClient Function()? _clientProvider;
+  final bool Function()? _isAuthenticatedProvider;
+  final String? Function()? _userIdProvider;
+
+  SupabaseStreakService({
+    SupabaseClient Function()? clientProvider,
+    bool Function()? isAuthenticatedProvider,
+    String? Function()? userIdProvider,
+  }) : _clientProvider = clientProvider,
+       _isAuthenticatedProvider = isAuthenticatedProvider,
+       _userIdProvider = userIdProvider;
 
   /// Get the Supabase client
-  SupabaseClient get _client => SupabaseAuthService.client;
+  SupabaseClient get _client =>
+      _clientProvider?.call() ?? SupabaseAuthService.client;
 
   /// Get current user ID or throw if not authenticated
   String get _userId {
-    final userId = SupabaseAuthService.currentUserId;
+    final userId = _userIdProvider?.call() ?? SupabaseAuthService.currentUserId;
     if (userId == null) {
       throw Exception('User not authenticated');
     }
@@ -23,7 +37,8 @@ class SupabaseStreakService implements StreakService {
   }
 
   /// Check if user is authenticated
-  bool get isAuthenticated => SupabaseAuthService.isAuthenticated;
+  bool get isAuthenticated =>
+      _isAuthenticatedProvider?.call() ?? SupabaseAuthService.isAuthenticated;
 
   @override
   Future<StreakModel> loadStreak() async {
@@ -78,13 +93,39 @@ class SupabaseStreakService implements StreakService {
     required int cardsReviewed,
     DateTime? reviewDate,
   }) async {
-    final currentStreak = await loadStreak();
-    final updatedStreak = currentStreak.updateWithReview(
-      cardsReviewed: cardsReviewed,
-      reviewDate: reviewDate,
-    );
-    await saveStreak(updatedStreak);
-    return updatedStreak;
+    // Guard: no-op if not authenticated to match existing behavior.
+    if (!isAuthenticated) {
+      LoggerService.debug('Not authenticated, returning initial streak');
+      return StreakModel.initial();
+    }
+
+    final params = <String, dynamic>{
+      'p_cards_reviewed': cardsReviewed,
+      'p_review_date': reviewDate?.toIso8601String().split('T').first,
+    };
+
+    try {
+      final response = await _client.rpc(_atomicUpdateRpc, params: params);
+      return _streakFromSupabase(_extractSingleRow(response));
+    } catch (e) {
+      LoggerService.error('Failed to atomically update streak', e);
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic> _extractSingleRow(dynamic response) {
+    if (response is Map<String, dynamic>) {
+      return response;
+    }
+
+    if (response is List && response.isNotEmpty) {
+      final first = response.first;
+      if (first is Map<String, dynamic>) {
+        return first;
+      }
+    }
+
+    throw StateError('Unexpected RPC response shape for $_atomicUpdateRpc');
   }
 
   @override

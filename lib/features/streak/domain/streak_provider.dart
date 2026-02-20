@@ -16,11 +16,11 @@ class StreakProvider extends ChangeNotifier {
     : _streakService = streakService ?? SupabaseStreakService();
 
   StreakModel _streak = StreakModel.initial();
+  Future<void> _operationQueue = Future<void>.value();
   bool _isLoading = false;
+  bool _isDisposed = false;
   String? _errorMessage;
   List<int> _newMilestones = [];
-  int? _pendingCardsReviewed;
-  DateTime? _pendingReviewDate;
 
   // Getters
   StreakModel get streak => _streak;
@@ -40,214 +40,46 @@ class StreakProvider extends ChangeNotifier {
   bool get needsReviewToday => _streak.needsReviewToday;
   Map<String, int> get dailyReviewCounts => _streak.dailyReviewCounts;
 
-  /// Load streak data from storage
+  /// Load streak data from storage.
   Future<void> loadStreak() async {
-    if (_isLoading) return;
-
-    _clearError();
-    _setLoading(true);
-
-    // Snapshot and clear pending values that existed before this load started.
-    // Any concurrent updateStreakWithReview call that arrives during the await
-    // below will see _isLoading==true and queue itself into _pendingCardsReviewed
-    // fresh — those are "during-load" arrivals, distinct from pendingToFlush.
-    final pendingToFlush = _pendingCardsReviewed;
-    final pendingDateToFlush = _pendingReviewDate;
-    if (pendingToFlush != null) {
-      _pendingCardsReviewed = null;
-      _pendingReviewDate = null;
-    }
-
-    bool loadSucceeded = false;
-    try {
+    return _runStreakOperation(() async {
       _streak = await _streakService.loadStreak();
-      loadSucceeded = true;
-      notifyListeners();
-    } catch (e) {
-      _setError('Failed to load streak data: $e');
-      // Restore pre-load pending so it is not silently lost.
-      if (pendingToFlush != null) {
-        _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pendingToFlush;
-        if (pendingDateToFlush != null) {
-          final existing = _pendingReviewDate;
-          _pendingReviewDate =
-              existing == null || pendingDateToFlush.isBefore(existing)
-              ? pendingDateToFlush
-              : existing;
-        }
-      }
-    } finally {
-      // Snapshot concurrent arrivals that queued themselves during the await.
-      // Do this before _setLoading(false) so no new call slips through the
-      // _isLoading==false window and gets double-counted.
-      final duringLoadPending = _pendingCardsReviewed;
-      final duringLoadDate = _pendingReviewDate;
-      if (duringLoadPending != null) {
-        _pendingCardsReviewed = null;
-        _pendingReviewDate = null;
-      }
-      _setLoading(false);
-
-      // On failure, restore during-load arrivals so they are not lost.
-      // (Pre-load pending was already restored in the catch block above.)
-      if (!loadSucceeded && duringLoadPending != null) {
-        _pendingCardsReviewed =
-            (_pendingCardsReviewed ?? 0) + duringLoadPending;
-        if (duringLoadDate != null) {
-          final existing = _pendingReviewDate;
-          _pendingReviewDate =
-              existing == null || duringLoadDate.isBefore(existing)
-              ? duringLoadDate
-              : existing;
-        }
-      }
-
-      // On success, flush all pending in a single call to avoid double-counting.
-      if (loadSucceeded) {
-        final totalPending = (pendingToFlush ?? 0) + (duringLoadPending ?? 0);
-        if (totalPending > 0) {
-          DateTime? flushDate;
-          if (pendingDateToFlush != null && duringLoadDate != null) {
-            flushDate = pendingDateToFlush.isBefore(duringLoadDate)
-                ? pendingDateToFlush
-                : duringLoadDate;
-          } else {
-            flushDate = pendingDateToFlush ?? duringLoadDate;
-          }
-          await updateStreakWithReview(
-            cardsReviewed: totalPending,
-            reviewDate: flushDate,
-          );
-        }
-      }
-    }
+      _notifyIfAlive();
+    }, errorPrefix: 'Failed to load streak data');
   }
 
   /// Update streak with a review session.
-  ///
-  /// If a streak operation is already in progress, the [cardsReviewed] count
-  /// is accumulated and applied once the current operation completes.
   Future<void> updateStreakWithReview({
     required int cardsReviewed,
     DateTime? reviewDate,
   }) async {
-    if (_isLoading) {
-      _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + cardsReviewed;
-      // Keep the earliest non-null reviewDate so explicit dates aren't lost.
-      final incoming = reviewDate;
-      if (incoming != null) {
-        final existing = _pendingReviewDate;
-        _pendingReviewDate = existing == null || incoming.isBefore(existing)
-            ? incoming
-            : existing;
-      }
-      return;
-    }
-
-    _clearError();
-    _setLoading(true);
-
-    try {
-      // Track previous streak for milestone detection
+    return _runStreakOperation(() async {
       final previousStreak = _streak.currentStreak;
-
       _streak = await _streakService.updateStreakWithReview(
         cardsReviewed: cardsReviewed,
         reviewDate: reviewDate,
       );
-
-      // Check for new milestones
       _newMilestones = _streak.getNewMilestones(previousStreak);
-
-      notifyListeners();
-    } catch (e) {
-      _setError('Failed to update streak: $e');
-    } finally {
-      _setLoading(false);
-    }
-
-    // Flush any update that arrived while we were loading.
-    // Only flush when the primary call succeeded; if it failed, keep the
-    // pending values so they can be applied via retryPendingUpdate.
-    if (_errorMessage == null) {
-      final pending = _pendingCardsReviewed;
-      final pendingDate = _pendingReviewDate;
-      if (pending != null) {
-        _pendingCardsReviewed = null;
-        _pendingReviewDate = null;
-        await updateStreakWithReview(
-          cardsReviewed: pending,
-          reviewDate: pendingDate,
-        );
-        // If the flush call itself failed, restore the pending values so they
-        // are not silently lost and can be retried via retryPendingUpdate.
-        // Only add `pending` when no new concurrent call has already set
-        // _pendingCardsReviewed (which would cause double-counting — Bug 6).
-        if (_errorMessage != null) {
-          _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pending;
-          if (pendingDate != null) {
-            final existing = _pendingReviewDate;
-            _pendingReviewDate =
-                existing == null || pendingDate.isBefore(existing)
-                ? pendingDate
-                : existing;
-          }
-        }
-      }
-    }
-  }
-
-  /// Retry any pending streak update that was queued while a previous call
-  /// was in progress but could not be flushed because that call failed.
-  ///
-  /// Call this after the error has been acknowledged (e.g. the user retries).
-  Future<void> retryPendingUpdate() async {
-    final pending = _pendingCardsReviewed;
-    final pendingDate = _pendingReviewDate;
-    if (pending == null) return;
-    _pendingCardsReviewed = null;
-    _pendingReviewDate = null;
-    _clearError();
-    await updateStreakWithReview(
-      cardsReviewed: pending,
-      reviewDate: pendingDate,
-    );
+      _notifyIfAlive();
+    }, errorPrefix: 'Failed to update streak');
   }
 
   /// Reset streak (but keep stats)
   Future<void> resetStreak() async {
-    if (_isLoading) return;
-
-    _setLoading(true);
-    _clearError();
-
-    try {
+    return _runStreakOperation(() async {
       await _streakService.resetStreak();
       _streak = await _streakService.loadStreak();
-      notifyListeners();
-    } catch (e) {
-      _setError('Failed to reset streak: $e');
-    } finally {
-      _setLoading(false);
-    }
+      _notifyIfAlive();
+    }, errorPrefix: 'Failed to reset streak');
   }
 
   /// Clear all streak data
   Future<void> clearStreakData() async {
-    if (_isLoading) return;
-
-    _setLoading(true);
-    _clearError();
-
-    try {
+    return _runStreakOperation(() async {
       await _streakService.clearStreakData();
       _streak = StreakModel.initial();
-      notifyListeners();
-    } catch (e) {
-      _setError('Failed to clear streak data: $e');
-    } finally {
-      _setLoading(false);
-    }
+      _notifyIfAlive();
+    }, errorPrefix: 'Failed to clear streak data');
   }
 
   /// Get daily review data for charts
@@ -273,7 +105,7 @@ class StreakProvider extends ChangeNotifier {
   /// Clear new milestones (after showing them to user)
   void clearNewMilestones() {
     _newMilestones = [];
-    notifyListeners();
+    _notifyIfAlive();
   }
 
   /// Record a card review (for integration with CardManagementProvider)
@@ -313,25 +145,54 @@ class StreakProvider extends ChangeNotifier {
   }
 
   // Private helper methods
+  Future<void> _runStreakOperation(
+    Future<void> Function() action, {
+    required String errorPrefix,
+  }) {
+    final future = _operationQueue.then((_) async {
+      _clearError();
+      _setLoading(true);
+
+      try {
+        await action();
+      } catch (e) {
+        _setError('$errorPrefix: $e');
+      } finally {
+        _setLoading(false);
+      }
+    });
+
+    _operationQueue = future.catchError((_) {});
+    return future;
+  }
+
   void _setLoading(bool loading) {
+    if (_isDisposed) return;
     _isLoading = loading;
-    notifyListeners();
+    _notifyIfAlive();
   }
 
   void _setError(String error) {
+    if (_isDisposed) return;
     _errorMessage = error;
-    notifyListeners();
+    _notifyIfAlive();
   }
 
   void _clearError() {
+    if (_isDisposed) return;
     if (_errorMessage == null) return;
     _errorMessage = null;
+    _notifyIfAlive();
+  }
+
+  void _notifyIfAlive() {
+    if (_isDisposed) return;
     notifyListeners();
   }
 
   @override
   void dispose() {
-    // No resources to dispose
+    _isDisposed = true;
     super.dispose();
   }
 }

@@ -8,14 +8,22 @@
 library;
 
 import 'dart:io';
+import 'dart:convert';
 import 'package:supabase/supabase.dart';
 import 'package:lingua_flutter/shared/test_helpers/test_config.dart';
 
 /// Helper class for managing Supabase test environment
 class SupabaseTestHelper {
+  static const String _defaultSupabaseUrl = 'http://127.0.0.1:54321';
+  static const String _defaultAuthUrl = 'http://127.0.0.1:54321/auth/v1';
+
   static bool _isInitialized = false;
   static SupabaseClient? _client;
   static String? _currentUserId;
+  static String _resolvedSupabaseUrl = _defaultSupabaseUrl;
+  static String _resolvedAuthUrl = _defaultAuthUrl;
+  static String _resolvedAnonKey = TestConfig.anonKey;
+  static String _resolvedServiceRoleKey = TestConfig.serviceRoleKey;
 
   /// Get the Supabase client for tests
   static SupabaseClient get client {
@@ -45,7 +53,7 @@ class SupabaseTestHelper {
     await _ensureContainersRunning();
 
     // Create pure Supabase client (no Flutter dependencies)
-    _client = SupabaseClient(TestConfig.supabaseUrl, TestConfig.anonKey);
+    _client = SupabaseClient(_resolvedSupabaseUrl, _resolvedAnonKey);
 
     _isInitialized = true;
   }
@@ -63,6 +71,7 @@ class SupabaseTestHelper {
   /// Sign out the current user
   static Future<void> signOut() async {
     await client.auth.signOut();
+    _currentUserId = null;
   }
 
   /// Clean up test data for a specific table
@@ -71,8 +80,8 @@ class SupabaseTestHelper {
   static Future<void> cleanTable(String tableName) async {
     // Create admin client with service role
     final adminClient = SupabaseClient(
-      TestConfig.supabaseUrl,
-      TestConfig.serviceRoleKey,
+      _resolvedSupabaseUrl,
+      _resolvedServiceRoleKey,
     );
 
     try {
@@ -91,7 +100,17 @@ class SupabaseTestHelper {
   /// Clean up all test streaks for the current user
   static Future<void> cleanTestUserStreaks() async {
     if (_currentUserId == null) return;
-    await client.from('streaks').delete().eq('user_id', _currentUserId!);
+
+    final adminClient = SupabaseClient(
+      _resolvedSupabaseUrl,
+      _resolvedServiceRoleKey,
+    );
+
+    try {
+      await adminClient.from('streaks').delete().eq('user_id', _currentUserId!);
+    } finally {
+      adminClient.dispose();
+    }
   }
 
   /// Reset the test environment
@@ -99,118 +118,219 @@ class SupabaseTestHelper {
   /// Call this in tearDown() to clean up between tests
   static Future<void> reset() async {
     await cleanTestUserCards();
+    await cleanTestUserStreaks();
   }
 
   /// Dispose of Supabase resources
   ///
   /// Call this in tearDownAll()
   static Future<void> dispose() async {
-    await signOut();
+    if (_client != null) {
+      await signOut();
+    }
     _client?.dispose();
     _client = null;
     _isInitialized = false;
+    _currentUserId = null;
+    _resolvedSupabaseUrl = _defaultSupabaseUrl;
+    _resolvedAuthUrl = _defaultAuthUrl;
+    _resolvedAnonKey = TestConfig.anonKey;
+    _resolvedServiceRoleKey = TestConfig.serviceRoleKey;
   }
 
-  /// Ensure Docker containers are running, start them if not
+  /// Ensure local Supabase services are running.
   static Future<void> _ensureContainersRunning() async {
-    final requiredContainers = [
-      'lingua_test_db',
-      'lingua_test_auth',
-      'lingua_test_rest',
-    ];
+    final projectRoot = await _findProjectRoot();
+
+    // Fast path: if this repo's Supabase project is reachable, use it directly.
+    if (await _resolveEndpointsIfReachable(projectRoot: projectRoot)) {
+      await _ensureTestUserExists();
+      return;
+    }
 
     try {
-      // Check if containers are already running
-      final result = await Process.run('docker', [
-        'ps',
-        '--filter',
-        'name=lingua_test',
-        '--format',
-        '{{.Names}}',
-      ]);
-
-      final runningContainers = (result.stdout as String).trim().split('\n');
-      final allRunning = requiredContainers.every(
-        (c) => runningContainers.contains(c),
-      );
-
-      if (!allRunning) {
-        // Start containers with docker-compose
-        await _startContainers();
-      } else {
-        // Containers running, but ensure test user exists
-        await _ensureTestUserExists();
-      }
+      await _startContainers(projectRoot: projectRoot);
     } catch (e) {
       throw StateError(
-        'Could not check/start Docker containers. Is Docker Desktop running?\n'
+        'Could not start local Supabase services. Is Docker Desktop running?\n'
         'Error: $e',
       );
     }
+
+    final resolved = await _resolveEndpointsIfReachable(
+      projectRoot: projectRoot,
+    );
+    if (!resolved) {
+      throw StateError(
+        'Started Supabase CLI, but could not resolve this project\'s API URL and keys. '
+        'Run `supabase status -o env` in $projectRoot to inspect local status.',
+      );
+    }
+
+    await _ensureTestUserExists();
   }
 
-  /// Start Docker containers using docker-compose
-  static Future<void> _startContainers() async {
-    // Find project root by looking for docker-compose.test.yml
-    final projectRoot = await _findProjectRoot();
+  /// Start local Supabase services using Supabase CLI.
+  static Future<void> _startContainers({required String projectRoot}) async {
+    final supabaseConfigPath = File('$projectRoot/supabase/config.toml');
 
-    final result = await Process.run('docker-compose', [
-      '-f',
-      'docker-compose.test.yml',
-      'up',
-      '-d',
-    ], workingDirectory: projectRoot);
+    if (!await supabaseConfigPath.exists()) {
+      throw StateError('Could not find supabase/config.toml in project root.');
+    }
+
+    final result = await _startSupabaseCliWithRecovery(
+      projectRoot: projectRoot,
+    );
 
     if (result.exitCode != 0) {
       throw StateError(
-        'Failed to start Docker containers:\n'
+        'Failed to start local Supabase services:\n'
         '${result.stderr}',
       );
     }
 
-    // Wait for containers to be healthy
-    await _waitForContainersHealthy();
-
-    // Create test user if it doesn't exist
-    await _ensureTestUserExists();
+    await _waitForContainersHealthy(projectRoot: projectRoot);
   }
 
   /// Find project root directory
   static Future<String> _findProjectRoot() async {
     var dir = Directory.current;
     while (dir.path != dir.parent.path) {
-      final dockerCompose = File('${dir.path}/docker-compose.test.yml');
-      if (await dockerCompose.exists()) {
+      final supabaseConfig = File('${dir.path}/supabase/config.toml');
+      if (await supabaseConfig.exists()) {
         return dir.path;
       }
       dir = dir.parent;
     }
-    throw StateError(
-      'Could not find project root with docker-compose.test.yml',
-    );
+    throw StateError('Could not find project root for integration tests');
+  }
+
+  static Future<bool> _resolveEndpointsIfReachable({
+    required String projectRoot,
+  }) async {
+    final status = await _resolveSupabaseCliStatus(projectRoot: projectRoot);
+    if (status == null) {
+      return false;
+    }
+
+    final authUrl = '${status.supabaseUrl}/auth/v1';
+    final reachable = await _isHealthEndpointReachable('$authUrl/health');
+    if (!reachable) {
+      return false;
+    }
+
+    _resolvedSupabaseUrl = status.supabaseUrl;
+    _resolvedAuthUrl = authUrl;
+    _resolvedAnonKey = status.anonKey;
+    _resolvedServiceRoleKey = status.serviceRoleKey;
+    return true;
+  }
+
+  static Future<({String supabaseUrl, String anonKey, String serviceRoleKey})?>
+  _resolveSupabaseCliStatus({required String projectRoot}) async {
+    try {
+      final result = await Process.run('supabase', [
+        'status',
+        '-o',
+        'env',
+      ], workingDirectory: projectRoot);
+
+      if (result.exitCode != 0) {
+        return null;
+      }
+
+      final output = '${result.stdout}\n${result.stderr}';
+      final apiUrl = _readEnvLine(output, ['API_URL', 'SUPABASE_URL']);
+      final anonKey = _readEnvLine(output, ['ANON_KEY', 'SUPABASE_ANON_KEY']);
+      final serviceRoleKey = _readEnvLine(output, [
+        'SERVICE_ROLE_KEY',
+        'SUPABASE_SERVICE_ROLE_KEY',
+      ]);
+      if (apiUrl == null || anonKey == null || serviceRoleKey == null) {
+        return null;
+      }
+
+      return (
+        supabaseUrl: apiUrl,
+        anonKey: anonKey,
+        serviceRoleKey: serviceRoleKey,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String? _readEnvLine(String output, List<String> keys) {
+    for (final rawLine in output.split(RegExp(r'\r?\n'))) {
+      final line = rawLine.trim();
+      for (final key in keys) {
+        final prefix = '$key=';
+        if (line.startsWith(prefix)) {
+          final value = line.substring(prefix.length).trim();
+          return value.replaceAll('"', '');
+        }
+      }
+    }
+    return null;
+  }
+
+  static Future<bool> _isHealthEndpointReachable(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      final client = HttpClient();
+      final request = await client.getUrl(uri);
+      final response = await request.close();
+      client.close();
+      return response.statusCode >= 200 && response.statusCode < 500;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<ProcessResult> _startSupabaseCliWithRecovery({
+    required String projectRoot,
+  }) async {
+    var result = await Process.run('supabase', [
+      'start',
+    ], workingDirectory: projectRoot);
+
+    if (result.exitCode == 0) {
+      return result;
+    }
+
+    final stderrText = (result.stderr ?? '').toString().toLowerCase();
+    final shouldRecover =
+        stderrText.contains('network') ||
+        stderrText.contains('not found') ||
+        stderrText.contains('failed to start docker container');
+
+    if (!shouldRecover) {
+      return result;
+    }
+
+    await Process.run('supabase', [
+      'stop',
+      '--no-backup',
+    ], workingDirectory: projectRoot);
+
+    result = await Process.run('supabase', [
+      'start',
+    ], workingDirectory: projectRoot);
+
+    return result;
   }
 
   /// Wait for containers to be healthy
-  static Future<void> _waitForContainersHealthy() async {
+  static Future<void> _waitForContainersHealthy({
+    required String projectRoot,
+  }) async {
     final stopwatch = Stopwatch()..start();
-    const timeout = Duration(seconds: 60);
+    const timeout = Duration(seconds: 90);
 
     while (stopwatch.elapsed < timeout) {
-      try {
-        final result = await Process.run('docker', [
-          'exec',
-          'lingua_test_db',
-          'pg_isready',
-          '-U',
-          'postgres',
-        ]);
-        if (result.exitCode == 0) {
-          // Give other services a moment to start
-          await Future.delayed(const Duration(seconds: 5));
-          return;
-        }
-      } catch (_) {
-        // Container not ready yet
+      if (await _resolveEndpointsIfReachable(projectRoot: projectRoot)) {
+        await Future.delayed(const Duration(seconds: 2));
+        return;
       }
       await Future.delayed(const Duration(seconds: 2));
     }
@@ -225,33 +345,64 @@ class SupabaseTestHelper {
     // Use direct auth URL, bypassing Kong for reliability
     final stopwatch = Stopwatch()..start();
     const timeout = Duration(seconds: 30);
+    int? lastStatusCode;
+    String? lastResponseBody;
+    Object? lastError;
 
     while (stopwatch.elapsed < timeout) {
       try {
         // Use HTTP directly to GoTrue signup endpoint
         final httpClient = HttpClient();
         final request = await httpClient.postUrl(
-          Uri.parse('${TestConfig.authUrl}/signup'),
+          Uri.parse('$_resolvedAuthUrl/signup'),
         );
         request.headers.contentType = ContentType.json;
+        request.headers.set('apikey', _resolvedAnonKey);
+        request.headers.set(
+          HttpHeaders.authorizationHeader,
+          'Bearer $_resolvedAnonKey',
+        );
         request.write(
           '{"email":"${TestConfig.testUserEmail}","password":"${TestConfig.testUserPassword}"}',
         );
 
         final response = await request.close();
         final statusCode = response.statusCode;
+        final body = await response.transform(utf8.decoder).join();
+        lastStatusCode = statusCode;
+        lastResponseBody = body;
         httpClient.close();
 
-        // 200/201 = created, 400 with "already registered" = exists (both OK)
-        if (statusCode == 200 || statusCode == 201 || statusCode == 400) {
+        final lowerBody = body.toLowerCase();
+        final alreadyExists =
+            lowerBody.contains('already registered') ||
+            lowerBody.contains('already exists') ||
+            lowerBody.contains('exists');
+
+        // Created or already-existing user are both valid outcomes.
+        if (statusCode == 200 ||
+            statusCode == 201 ||
+            statusCode == 400 ||
+            statusCode == 409 ||
+            statusCode == 422 ||
+            alreadyExists) {
           return; // Success or user already exists
         }
 
         await Future.delayed(const Duration(seconds: 2));
-      } catch (_) {
+      } catch (e) {
+        lastError = e;
         await Future.delayed(const Duration(seconds: 2));
       }
     }
+
+    throw StateError(
+      'Could not ensure test user exists within ${timeout.inSeconds}s '
+      'at $_resolvedAuthUrl/signup. '
+      'Last status: ${lastStatusCode ?? 'none'}, '
+      'last response: ${lastResponseBody ?? 'none'}, '
+      'last error: ${lastError ?? 'none'}',
+    );
   }
 
   /// Wait for the database to be ready
