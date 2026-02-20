@@ -80,6 +80,7 @@ void main() {
 
       final streak = StreakModel(
         currentStreak: 3,
+        lastReviewDate: now,
         dailyReviewCounts: {today: 15, yesterday: 10, twoDaysAgo: 5},
       );
 

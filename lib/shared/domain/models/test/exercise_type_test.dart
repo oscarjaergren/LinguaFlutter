@@ -11,7 +11,7 @@ void main() {
       expect(ExerciseType.values, contains(ExerciseType.multipleChoiceText));
       expect(ExerciseType.values, contains(ExerciseType.multipleChoiceIcon));
       expect(ExerciseType.values, contains(ExerciseType.reverseTranslation));
-      expect(ExerciseType.values, contains(ExerciseType.listeningRecognition));
+      expect(ExerciseType.values, contains(ExerciseType.listening));
       expect(ExerciseType.values, contains(ExerciseType.speakingPronunciation));
       expect(ExerciseType.values, contains(ExerciseType.sentenceFill));
       expect(ExerciseType.values, contains(ExerciseType.sentenceBuilding));
@@ -43,10 +43,7 @@ void main() {
           ExerciseType.reverseTranslation.displayName,
           'Reverse Translation',
         );
-        expect(
-          ExerciseType.listeningRecognition.displayName,
-          'Listening Recognition',
-        );
+        expect(ExerciseType.listening.displayName, 'Listening');
         expect(
           ExerciseType.speakingPronunciation.displayName,
           'Speaking Pronunciation',
@@ -99,10 +96,10 @@ void main() {
         expect(ExerciseType.multipleChoiceText.isImplemented, true);
         expect(ExerciseType.multipleChoiceIcon.isImplemented, true);
         expect(ExerciseType.reverseTranslation.isImplemented, true);
+        expect(ExerciseType.listening.isImplemented, true);
       });
 
       test('should return false for unimplemented types', () {
-        expect(ExerciseType.listeningRecognition.isImplemented, false);
         expect(ExerciseType.speakingPronunciation.isImplemented, false);
         expect(ExerciseType.sentenceFill.isImplemented, false);
       });
@@ -113,11 +110,35 @@ void main() {
         expect(ExerciseType.articleSelection.isImplemented, true);
       });
 
-      test('should have exactly 8 implemented types', () {
+      test('should have exactly 9 implemented types', () {
         final implementedCount = ExerciseType.values
             .where((t) => t.isImplemented)
             .length;
-        expect(implementedCount, 8);
+        expect(implementedCount, 9);
+      });
+    });
+
+    group('isCore', () {
+      test('should return true for the 4 core types', () {
+        expect(ExerciseType.readingRecognition.isCore, true);
+        expect(ExerciseType.writingTranslation.isCore, true);
+        expect(ExerciseType.reverseTranslation.isCore, true);
+        expect(ExerciseType.listening.isCore, true);
+      });
+
+      test('should return false for all non-core types', () {
+        expect(ExerciseType.multipleChoiceText.isCore, false);
+        expect(ExerciseType.multipleChoiceIcon.isCore, false);
+        expect(ExerciseType.speakingPronunciation.isCore, false);
+        expect(ExerciseType.sentenceFill.isCore, false);
+        expect(ExerciseType.sentenceBuilding.isCore, false);
+        expect(ExerciseType.conjugationPractice.isCore, false);
+        expect(ExerciseType.articleSelection.isCore, false);
+      });
+
+      test('should have exactly 4 core types', () {
+        final coreCount = ExerciseType.values.where((t) => t.isCore).length;
+        expect(coreCount, 4);
       });
     });
 
@@ -166,7 +187,7 @@ void main() {
         );
         expect(ExerciseType.multipleChoiceIcon.iconName, 'mdi:image-multiple');
         expect(ExerciseType.reverseTranslation.iconName, 'mdi:swap-horizontal');
-        expect(ExerciseType.listeningRecognition.iconName, 'mdi:ear-hearing');
+        expect(ExerciseType.listening.iconName, 'mdi:headphones');
         expect(ExerciseType.speakingPronunciation.iconName, 'mdi:microphone');
         expect(ExerciseType.sentenceFill.iconName, 'mdi:text-box');
       });
@@ -186,7 +207,7 @@ void main() {
         expect(ExerciseType.multipleChoiceText.icon, Icons.checklist);
         expect(ExerciseType.multipleChoiceIcon.icon, Icons.image);
         expect(ExerciseType.reverseTranslation.icon, Icons.swap_horiz);
-        expect(ExerciseType.listeningRecognition.icon, Icons.hearing);
+        expect(ExerciseType.listening.icon, Icons.headphones);
         expect(ExerciseType.speakingPronunciation.icon, Icons.mic);
         expect(ExerciseType.sentenceFill.icon, Icons.short_text);
       });

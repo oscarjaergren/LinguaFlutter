@@ -47,9 +47,10 @@ class StreakProvider extends ChangeNotifier {
     _clearError();
     _setLoading(true);
 
-    // Snapshot and clear pending values while still loading so that any
-    // concurrent updateStreakWithReview call that arrives during the await
-    // below will queue itself again rather than racing with our flush.
+    // Snapshot and clear pending values that existed before this load started.
+    // Any concurrent updateStreakWithReview call that arrives during the await
+    // below will see _isLoading==true and queue itself into _pendingCardsReviewed
+    // fresh — those are "during-load" arrivals, distinct from pendingToFlush.
     final pendingToFlush = _pendingCardsReviewed;
     final pendingDateToFlush = _pendingReviewDate;
     if (pendingToFlush != null) {
@@ -57,12 +58,14 @@ class StreakProvider extends ChangeNotifier {
       _pendingReviewDate = null;
     }
 
+    bool loadSucceeded = false;
     try {
       _streak = await _streakService.loadStreak();
+      loadSucceeded = true;
       notifyListeners();
     } catch (e) {
       _setError('Failed to load streak data: $e');
-      // Restore the pending values so they are not silently lost.
+      // Restore pre-load pending so it is not silently lost.
       if (pendingToFlush != null) {
         _pendingCardsReviewed = (_pendingCardsReviewed ?? 0) + pendingToFlush;
         if (pendingDateToFlush != null) {
@@ -74,15 +77,49 @@ class StreakProvider extends ChangeNotifier {
         }
       }
     } finally {
+      // Snapshot concurrent arrivals that queued themselves during the await.
+      // Do this before _setLoading(false) so no new call slips through the
+      // _isLoading==false window and gets double-counted.
+      final duringLoadPending = _pendingCardsReviewed;
+      final duringLoadDate = _pendingReviewDate;
+      if (duringLoadPending != null) {
+        _pendingCardsReviewed = null;
+        _pendingReviewDate = null;
+      }
       _setLoading(false);
-    }
 
-    // Flush any update that was queued while loading (and not restored above).
-    if (_errorMessage == null && pendingToFlush != null) {
-      await updateStreakWithReview(
-        cardsReviewed: pendingToFlush,
-        reviewDate: pendingDateToFlush,
-      );
+      // On failure, restore during-load arrivals so they are not lost.
+      // (Pre-load pending was already restored in the catch block above.)
+      if (!loadSucceeded && duringLoadPending != null) {
+        _pendingCardsReviewed =
+            (_pendingCardsReviewed ?? 0) + duringLoadPending;
+        if (duringLoadDate != null) {
+          final existing = _pendingReviewDate;
+          _pendingReviewDate =
+              existing == null || duringLoadDate.isBefore(existing)
+              ? duringLoadDate
+              : existing;
+        }
+      }
+
+      // On success, flush all pending in a single call to avoid double-counting.
+      if (loadSucceeded) {
+        final totalPending = (pendingToFlush ?? 0) + (duringLoadPending ?? 0);
+        if (totalPending > 0) {
+          DateTime? flushDate;
+          if (pendingDateToFlush != null && duringLoadDate != null) {
+            flushDate = pendingDateToFlush.isBefore(duringLoadDate)
+                ? pendingDateToFlush
+                : duringLoadDate;
+          } else {
+            flushDate = pendingDateToFlush ?? duringLoadDate;
+          }
+          await updateStreakWithReview(
+            cardsReviewed: totalPending,
+            reviewDate: flushDate,
+          );
+        }
+      }
     }
   }
 

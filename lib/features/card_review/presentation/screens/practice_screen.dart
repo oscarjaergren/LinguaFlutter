@@ -477,7 +477,7 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
         return 'Icon Choice';
       case ExerciseType.reverseTranslation:
         return 'Reverse';
-      case ExerciseType.listeningRecognition:
+      case ExerciseType.listening:
         return 'Listening';
       case ExerciseType.speakingPronunciation:
         return 'Speaking';

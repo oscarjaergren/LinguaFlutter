@@ -56,9 +56,11 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
   void didUpdateWidget(ExerciseContentWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Reset state when card changes
-    if (oldWidget.card.id != widget.card.id) {
+    if (oldWidget.card.id != widget.card.id ||
+        oldWidget.exerciseType != widget.exerciseType) {
       setState(() {
         _selectedAnswer = null;
+        _selectedGender = null;
         _textController.clear();
       });
     }
@@ -104,6 +106,27 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         widget.exerciseType == ExerciseType.conjugationPractice ||
         widget.exerciseType == ExerciseType.articleSelection) {
       return const SizedBox.shrink();
+    }
+
+    // Listening comprehension hides the word — only the speaker button is shown
+    if (widget.exerciseType == ExerciseType.listening) {
+      return Column(
+        children: [
+          Text(
+            _getInstructionText(),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          SpeakerButton(
+            key: ValueKey('speaker_${card.id}_${widget.exerciseType}'),
+            text: card.frontText,
+            languageCode: card.language,
+            size: 56,
+            autoPlay: true,
+          ),
+        ],
+      );
     }
 
     // Determine what to show based on exercise type
@@ -176,8 +199,18 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         return 'Select the matching icon:';
       case ExerciseType.reverseTranslation:
         return 'Translate to the target language:';
-      default:
-        return 'Answer the question:';
+      case ExerciseType.listening:
+        return 'Listen and recall the meaning:';
+      case ExerciseType.speakingPronunciation:
+        return 'Speak the word:';
+      case ExerciseType.sentenceFill:
+        return 'Fill in the blank:';
+      case ExerciseType.sentenceBuilding:
+        return 'Arrange the words:';
+      case ExerciseType.conjugationPractice:
+        return 'Provide the correct form:';
+      case ExerciseType.articleSelection:
+        return 'Choose the correct article:';
     }
   }
 
@@ -210,6 +243,8 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
           currentAnswerCorrect: widget.currentAnswerCorrect,
           onCheckAnswer: widget.onCheckAnswer,
         );
+      case ExerciseType.listening:
+        return _buildListeningSection(context);
       case ExerciseType.readingRecognition:
       default:
         return _buildReadingSection(context);
@@ -417,6 +452,91 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
     );
   }
 
+  Widget _buildListeningSection(BuildContext context) {
+    final hasAnswered = widget.answerState == AnswerState.answered;
+    final card = widget.card;
+
+    if (!hasAnswered) {
+      return InkWell(
+        onTap: _onCheckAnswer,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.grey.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: const Column(
+            children: [
+              Icon(Icons.visibility_off, size: 48, color: Colors.grey),
+              SizedBox(height: 12),
+              Text(
+                'Tap to reveal the answer',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.lightbulb, size: 48, color: Colors.amber),
+          const SizedBox(height: 16),
+          // Primary: the meaning (what the user was trying to recall)
+          Text(
+            card.backText,
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          const Divider(),
+          const SizedBox(height: 8),
+          // Secondary: the word they heard, with speaker button for replay
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  card.frontText,
+                  style: TextStyle(fontSize: 18, color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 8),
+              SpeakerButton(
+                text: card.frontText,
+                languageCode: card.language,
+                size: 20,
+              ),
+            ],
+          ),
+          if (card.germanArticle != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              card.germanArticle!,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildActionSection(BuildContext context) {
     final hasAnswered = widget.answerState == AnswerState.answered;
 
@@ -427,9 +547,10 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
       return const SizedBox.shrink();
     }
 
-    // For reading recognition, the tap-to-reveal is on the card itself
+    // For reading/listening comprehension, tap-to-reveal is on the answer card itself
     if (!hasAnswered &&
-        widget.exerciseType == ExerciseType.readingRecognition) {
+        (widget.exerciseType == ExerciseType.readingRecognition ||
+            widget.exerciseType == ExerciseType.listening)) {
       return const SizedBox.shrink();
     }
 
@@ -503,8 +624,9 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
         isCorrect = _checkReverseAnswer();
         break;
       case ExerciseType.readingRecognition:
+      case ExerciseType.listening:
       default:
-        // For reading recognition, we just reveal - user decides if correct
+        // For reading/listening, we just reveal - user decides if correct
         isCorrect = true; // Default to correct, user can override
     }
 

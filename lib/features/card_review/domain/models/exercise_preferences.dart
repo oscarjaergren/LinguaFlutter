@@ -17,7 +17,7 @@ extension ExerciseTypeGrouping on ExerciseType {
       case ExerciseType.readingRecognition:
       case ExerciseType.multipleChoiceText:
       case ExerciseType.multipleChoiceIcon:
-      case ExerciseType.listeningRecognition:
+      case ExerciseType.listening:
       case ExerciseType.articleSelection:
         return ExerciseCategory.recognition;
       case ExerciseType.writingTranslation:
@@ -84,8 +84,8 @@ class ExercisePreferences {
 
   /// Create default preferences with only the core exercise types enabled.
   ///
-  /// Core types (reading recognition, writing translation, reverse translation)
-  /// work on every card with no extra data. Advanced types are opt-in.
+  /// Core types (reading recognition, writing translation, reverse translation,
+  /// listening) work on every card with no extra data. Advanced types are opt-in.
   factory ExercisePreferences.defaults() {
     return ExercisePreferences(
       enabledTypes: ExerciseType.values.where((t) => t.isCore).toSet(),
@@ -172,7 +172,7 @@ class ExercisePreferences {
   /// Convert to JSON for persistence
   Map<String, dynamic> toJson() {
     return {
-      'enabledTypes': enabledTypes.map((t) => t.name).toList(),
+      'enabledTypes': enabledTypes.map((t) => t.jsonValue).toList(),
       'prioritizeWeaknesses': prioritizeWeaknesses,
       'weaknessThreshold': weaknessThreshold,
     };
@@ -186,7 +186,7 @@ class ExercisePreferences {
     final enabledTypes = <ExerciseType>{};
     for (final name in enabledTypeNames) {
       try {
-        final type = ExerciseType.values.firstWhere((t) => t.name == name);
+        final type = ExerciseType.values.firstWhere((t) => t.jsonValue == name);
         if (type.isImplemented) {
           enabledTypes.add(type);
         }

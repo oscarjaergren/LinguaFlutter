@@ -36,6 +36,7 @@ class _SpeakerButtonState extends State<SpeakerButton>
     with SingleTickerProviderStateMixin {
   late final GoogleCloudTtsService _ttsService = SpeakerButton.ttsFactory();
   bool _isSpeaking = false;
+  bool _hasError = false;
   late AnimationController _animationController;
 
   @override
@@ -58,11 +59,14 @@ class _SpeakerButtonState extends State<SpeakerButton>
   @override
   void didUpdateWidget(SpeakerButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Auto-play when text changes if enabled
-    if (widget.autoPlay && oldWidget.text != widget.text) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _speak();
-      });
+    if (oldWidget.text != widget.text) {
+      setState(() => _hasError = false);
+      // Auto-play when text changes if enabled
+      if (widget.autoPlay) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _speak();
+        });
+      }
     }
   }
 
@@ -78,11 +82,18 @@ class _SpeakerButtonState extends State<SpeakerButton>
       setState(() => _isSpeaking = false);
       _animationController.reverse();
     } else {
-      setState(() => _isSpeaking = true);
+      setState(() {
+        _isSpeaking = true;
+        _hasError = false; // always clear before attempting
+      });
       _animationController.forward();
 
       try {
         await _ttsService.speak(widget.text, widget.languageCode);
+      } catch (_) {
+        if (mounted) {
+          setState(() => _hasError = true);
+        }
       } finally {
         if (mounted) {
           setState(() => _isSpeaking = false);
@@ -95,6 +106,26 @@ class _SpeakerButtonState extends State<SpeakerButton>
   @override
   Widget build(BuildContext context) {
     final buttonColor = widget.color ?? Theme.of(context).colorScheme.onSurface;
+
+    if (_hasError) {
+      final errorColor = Theme.of(context).colorScheme.error;
+      if (widget.showLabel) {
+        return OutlinedButton.icon(
+          onPressed: _speak,
+          icon: Icon(Icons.volume_off, size: 20, color: errorColor),
+          label: const Text('Retry'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: errorColor,
+            side: BorderSide(color: errorColor),
+          ),
+        );
+      }
+      return IconButton(
+        onPressed: _speak,
+        icon: Icon(Icons.volume_off, size: widget.size, color: errorColor),
+        tooltip: 'Audio failed — tap to retry',
+      );
+    }
 
     if (widget.showLabel) {
       return OutlinedButton.icon(

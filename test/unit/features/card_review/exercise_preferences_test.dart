@@ -4,23 +4,19 @@ import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 
 void main() {
   group('ExercisePreferences', () {
-    test(
-      'defaults() creates preferences with all implemented types enabled',
-      () {
-        final prefs = ExercisePreferences.defaults();
+    test('defaults() creates preferences with only core types enabled', () {
+      final prefs = ExercisePreferences.defaults();
 
-        final implementedTypes = ExerciseType.values
-            .where((t) => t.isImplemented)
-            .toList();
+      final coreTypes = ExerciseType.values.where((t) => t.isCore).toList();
 
-        expect(prefs.enabledTypes.length, implementedTypes.length);
-        for (final type in implementedTypes) {
-          expect(prefs.isEnabled(type), true);
-        }
-        expect(prefs.prioritizeWeaknesses, true);
-        expect(prefs.weaknessThreshold, 70.0);
-      },
-    );
+      expect(prefs.enabledTypes.length, coreTypes.length);
+      expect(prefs.enabledTypes.length, 4);
+      for (final type in coreTypes) {
+        expect(prefs.isEnabled(type), true);
+      }
+      expect(prefs.prioritizeWeaknesses, true);
+      expect(prefs.weaknessThreshold, 70.0);
+    });
 
     test('isEnabled returns correct status', () {
       final prefs = ExercisePreferences(
@@ -52,7 +48,8 @@ void main() {
     });
 
     test('toggleCategory enables/disables all types in category', () {
-      var prefs = ExercisePreferences.defaults();
+      // Start with all types enabled so both categories are fully populated
+      var prefs = ExercisePreferences.defaults().enableAll();
 
       // Disable recognition category
       prefs = prefs.toggleCategory(
@@ -148,9 +145,9 @@ void main() {
     test('fromJson handles unknown exercise types gracefully', () {
       final json = {
         'enabledTypes': [
-          'readingRecognition',
+          'reading_recognition',
           'unknownType',
-          'writingTranslation',
+          'writing_translation',
         ],
         'prioritizeWeaknesses': true,
         'weaknessThreshold': 70.0,
@@ -201,7 +198,9 @@ void main() {
       expect(types.contains(ExerciseType.multipleChoiceText), true);
       expect(types.contains(ExerciseType.multipleChoiceIcon), true);
       expect(types.contains(ExerciseType.articleSelection), true);
+      expect(types.contains(ExerciseType.listening), true);
       expect(types.contains(ExerciseType.writingTranslation), false);
+      expect(types.contains(ExerciseType.reverseTranslation), false);
     });
 
     test('exerciseTypes returns correct types for production', () {

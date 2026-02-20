@@ -31,10 +31,10 @@ enum ExerciseType {
   @JsonValue('reverse_translation')
   reverseTranslation,
 
-  /// Listen to audio and identify the correct word (future feature)
-  /// Tests: Listening comprehension, pronunciation recognition
-  @JsonValue('listening_recognition')
-  listeningRecognition,
+  /// Hear the word spoken aloud and recall its meaning without seeing it
+  /// Tests: Listening comprehension, audio-to-meaning mapping
+  @JsonValue('listening')
+  listening,
 
   /// Speak the word and get pronunciation feedback (future feature)
   /// Tests: Speaking, pronunciation
@@ -80,8 +80,8 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'multiple_choice_icon';
       case ExerciseType.reverseTranslation:
         return 'reverse_translation';
-      case ExerciseType.listeningRecognition:
-        return 'listening_recognition';
+      case ExerciseType.listening:
+        return 'listening';
       case ExerciseType.speakingPronunciation:
         return 'speaking_pronunciation';
       case ExerciseType.sentenceFill:
@@ -108,8 +108,8 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'Multiple Choice (Icon)';
       case ExerciseType.reverseTranslation:
         return 'Reverse Translation';
-      case ExerciseType.listeningRecognition:
-        return 'Listening Recognition';
+      case ExerciseType.listening:
+        return 'Listening';
       case ExerciseType.speakingPronunciation:
         return 'Speaking Pronunciation';
       case ExerciseType.sentenceFill:
@@ -136,8 +136,8 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'Choose the matching icon';
       case ExerciseType.reverseTranslation:
         return 'Translate from your native language';
-      case ExerciseType.listeningRecognition:
-        return 'Listen and identify the word';
+      case ExerciseType.listening:
+        return 'Hear the word and recall its meaning';
       case ExerciseType.speakingPronunciation:
         return 'Speak the word correctly';
       case ExerciseType.sentenceFill:
@@ -159,15 +159,14 @@ extension ExerciseTypeExtension on ExerciseType {
       case ExerciseType.multipleChoiceText:
       case ExerciseType.multipleChoiceIcon:
       case ExerciseType.reverseTranslation:
-        return true;
-      case ExerciseType.listeningRecognition:
-      case ExerciseType.speakingPronunciation:
-      case ExerciseType.sentenceFill:
-        return false;
+      case ExerciseType.listening:
       case ExerciseType.sentenceBuilding:
       case ExerciseType.conjugationPractice:
       case ExerciseType.articleSelection:
         return true;
+      case ExerciseType.speakingPronunciation:
+      case ExerciseType.sentenceFill:
+        return false;
     }
   }
 
@@ -214,7 +213,7 @@ extension ExerciseTypeExtension on ExerciseType {
       case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
       case ExerciseType.sentenceFill:
-      case ExerciseType.listeningRecognition:
+      case ExerciseType.listening:
       case ExerciseType.speakingPronunciation:
         return true;
     }
@@ -231,8 +230,15 @@ extension ExerciseTypeExtension on ExerciseType {
       case ExerciseType.readingRecognition:
       case ExerciseType.writingTranslation:
       case ExerciseType.reverseTranslation:
+      case ExerciseType.listening:
         return true;
-      default:
+      case ExerciseType.multipleChoiceText:
+      case ExerciseType.multipleChoiceIcon:
+      case ExerciseType.speakingPronunciation:
+      case ExerciseType.sentenceFill:
+      case ExerciseType.sentenceBuilding:
+      case ExerciseType.conjugationPractice:
+      case ExerciseType.articleSelection:
         return false;
     }
   }
@@ -260,8 +266,8 @@ extension ExerciseTypeExtension on ExerciseType {
         return 'mdi:image-multiple';
       case ExerciseType.reverseTranslation:
         return 'mdi:swap-horizontal';
-      case ExerciseType.listeningRecognition:
-        return 'mdi:ear-hearing';
+      case ExerciseType.listening:
+        return 'mdi:headphones';
       case ExerciseType.speakingPronunciation:
         return 'mdi:microphone';
       case ExerciseType.sentenceFill:
@@ -288,8 +294,8 @@ extension ExerciseTypeExtension on ExerciseType {
         return Icons.image;
       case ExerciseType.reverseTranslation:
         return Icons.swap_horiz;
-      case ExerciseType.listeningRecognition:
-        return Icons.hearing;
+      case ExerciseType.listening:
+        return Icons.headphones;
       case ExerciseType.speakingPronunciation:
         return Icons.mic;
       case ExerciseType.sentenceFill:
