@@ -673,7 +673,7 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
           if (isCorrect) {
             backgroundColor = Colors.green.withValues(alpha: 0.1);
             borderColor = Colors.green;
-          } else if (isSelected && !isCorrect) {
+          } else {
             backgroundColor = Colors.red.withValues(alpha: 0.1);
             borderColor = Colors.red;
           }
