@@ -109,10 +109,12 @@ class DashboardScreen extends StatelessWidget {
       body: Consumer<CardManagementProvider>(
         builder: (context, cardManagement, child) {
           final dueCount = cardManagement.filteredCards
-              .where((c) => !c.isArchived && c.isDue)
+              .where((c) => !c.isArchived && c.isDueForReview)
               .length;
           final learningCount = cardManagement.filteredCards
-              .where((c) => !c.isArchived && !c.isDue && c.reviewCount > 0)
+              .where(
+                (c) => !c.isArchived && !c.isDueForReview && c.reviewCount > 0,
+              )
               .length;
           final masteredCount = cardManagement.filteredCards
               .where((c) => !c.isArchived && c.masteryLevel == 'Mastered')

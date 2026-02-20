@@ -310,57 +310,8 @@ class CardModel {
   @override
   int get hashCode => id.hashCode;
 
-  // Convenience getters for backward compatibility
-  String get front => frontText;
-  String get back => backText;
-  bool get isDue => isDueForReview;
-
-  /// Process a card answer and return updated card with spaced repetition logic
-  /// Uses a simple algorithm based on consecutive correct answers:
-  /// - 0 correct: 1 day
-  /// - 1 correct: 3 days
-  /// - 2 correct: 7 days (1 week)
-  /// - 3 correct: 14 days (2 weeks)
-  /// - 4+ correct: 30 days (1 month)
-  CardModel processAnswer(CardAnswer answer) {
-    final wasCorrect = answer == CardAnswer.correct;
-    DateTime? nextReviewDate;
-
-    if (wasCorrect) {
-      // Calculate interval based on success rate and review history
-      // Higher success rate = longer intervals
-      final newCorrectCount = correctCount + 1;
-      final newReviewCount = reviewCount + 1;
-      final successRatio = newCorrectCount / newReviewCount;
-
-      // Base interval grows with consecutive successes
-      final baseInterval = switch (newCorrectCount) {
-        1 => 1, // First correct: 1 day
-        2 => 3, // Second correct: 3 days
-        3 => 7, // Third correct: 1 week
-        4 => 14, // Fourth correct: 2 weeks
-        _ => 30, // 5+ correct: 1 month base
-      };
-
-      // Multiply by success ratio (0.0 to 1.0) + 1 for scaling
-      final intervalDays = (baseInterval * (successRatio + 1)).round();
-      nextReviewDate = DateTime.now().add(Duration(days: intervalDays));
-    } else {
-      // If incorrect, review again tomorrow
-      nextReviewDate = DateTime.now().add(const Duration(days: 1));
-    }
-
-    return copyWithReview(
-      wasCorrect: wasCorrect,
-      nextReviewDate: nextReviewDate,
-    );
-  }
-
   @override
   String toString() {
     return 'CardModel(id: $id, frontText: $frontText, backText: $backText)';
   }
 }
-
-/// Enum for card review answers
-enum CardAnswer { correct, incorrect }

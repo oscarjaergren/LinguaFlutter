@@ -76,7 +76,7 @@ class CardManagementProvider extends ChangeNotifier {
   List<CardModel> get reviewCards => _allCards
       .where(
         (card) =>
-            card.isDue &&
+            card.isDueForReview &&
             !card.isArchived &&
             (_languageProvider.activeLanguage.isEmpty ||
                 card.language == _languageProvider.activeLanguage),
@@ -377,7 +377,7 @@ class CardManagementProvider extends ChangeNotifier {
       }
 
       // Due filter
-      if (_showOnlyDue && !card.isDue) {
+      if (_showOnlyDue && !card.isDueForReview) {
         return false;
       }
 

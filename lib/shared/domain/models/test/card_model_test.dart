@@ -87,48 +87,17 @@ void main() {
         backText: 'Prueba',
         language: 'es',
       );
-      expect(newCard.isDue, true);
+      expect(newCard.isDueForReview, true);
 
       final futureCard = newCard.copyWith(
         nextReview: now.add(const Duration(days: 1)),
       );
-      expect(futureCard.isDue, false);
+      expect(futureCard.isDueForReview, false);
 
       final pastCard = newCard.copyWith(
         nextReview: now.subtract(const Duration(days: 1)),
       );
-      expect(pastCard.isDue, true);
-    });
-
-    test('should process correct answer', () {
-      final card = CardModel.create(
-        frontText: 'Test',
-        backText: 'Prueba',
-        language: 'es',
-      );
-
-      final updatedCard = card.processAnswer(CardAnswer.correct);
-
-      expect(updatedCard.reviewCount, card.reviewCount + 1);
-      expect(updatedCard.correctCount, card.correctCount + 1);
-      expect(updatedCard.lastReviewed, isA<DateTime>());
-      expect(updatedCard.nextReview, isA<DateTime>());
-      expect(updatedCard.nextReview!.isAfter(DateTime.now()), true);
-    });
-
-    test('should process incorrect answer', () {
-      final card = CardModel.create(
-        frontText: 'Test',
-        backText: 'Prueba',
-        language: 'es',
-      );
-
-      final updatedCard = card.processAnswer(CardAnswer.incorrect);
-
-      expect(updatedCard.reviewCount, card.reviewCount + 1);
-      expect(updatedCard.correctCount, card.correctCount);
-      expect(updatedCard.lastReviewed, isA<DateTime>());
-      expect(updatedCard.nextReview, isA<DateTime>());
+      expect(pastCard.isDueForReview, true);
     });
 
     test('should serialize to and from JSON', () {
