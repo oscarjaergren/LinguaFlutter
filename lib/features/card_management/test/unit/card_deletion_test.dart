@@ -43,9 +43,6 @@ void main() {
         languageProvider: languageProvider,
         repository: mockRepository,
       );
-
-      // Default stubs
-      when(mockRepository.getTags()).thenAnswer((_) async => <String>[]);
     });
 
     tearDown(() {

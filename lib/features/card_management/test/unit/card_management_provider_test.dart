@@ -25,7 +25,6 @@ void main() {
 
       // Default stubs
       when(mockRepository.getAllCards()).thenAnswer((_) async => <CardModel>[]);
-      when(mockRepository.getTags()).thenAnswer((_) async => <String>[]);
     });
 
     tearDown(() {

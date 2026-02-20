@@ -1,5 +1,8 @@
 #!/bin/sh
-# Pre-commit hook: auto-format staged Dart files and re-stage them.
+# Pre-commit hook:
+#   1. Auto-format staged Dart files and re-stage them.
+#   2. Regenerate mocks if any mock-annotated source files changed.
+#   3. Run dart analyze --fatal-infos to catch lint/mock drift before push.
 
 STAGED_DART=$(git diff --cached --name-only --diff-filter=ACM -- '*.dart')
 
@@ -34,5 +37,28 @@ for file in $STAGED_DART; do
   git add "$file"
 done
 IFS=$OLD_IFS
+
+# Regenerate mocks if any file with @GenerateMocks annotations was staged.
+MOCK_SOURCES=$(echo "$STAGED_DART" | grep -v '\.mocks\.dart$' | xargs grep -l '@GenerateMocks' 2>/dev/null || true)
+if [ -n "$MOCK_SOURCES" ]; then
+  echo "🔄 Mock-annotated files changed — regenerating mocks..."
+  dart run build_runner build --delete-conflicting-outputs
+  if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ build_runner failed. Fix generation errors before committing."
+    exit 1
+  fi
+  # Stage regenerated mock files.
+  git add $(git diff --name-only -- '*.mocks.dart')
+fi
+
+# Analyze the full project — same check CI runs.
+echo "🔍 Running dart analyze --fatal-infos..."
+dart analyze --fatal-infos
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ dart analyze failed. Fix all errors/warnings before committing."
+  exit 1
+fi
 
 exit 0
