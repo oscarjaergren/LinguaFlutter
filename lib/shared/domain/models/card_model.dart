@@ -227,14 +227,7 @@ class CardModel {
     final newScores = Map<ExerciseType, ExerciseScore>.from(exerciseScores);
     newScores[exerciseType] = updatedScore;
 
-    // Also update legacy fields for backward compatibility
-    return copyWith(
-      exerciseScores: newScores,
-      reviewCount: reviewCount + 1,
-      correctCount: wasCorrect ? correctCount + 1 : correctCount,
-      lastReviewed: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+    return copyWith(exerciseScores: newScores, updatedAt: DateTime.now());
   }
 
   /// Sentinel value used by [copyWith] to distinguish "not provided" from

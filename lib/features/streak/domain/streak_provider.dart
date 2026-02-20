@@ -16,11 +16,10 @@ class StreakProvider extends ChangeNotifier {
     : _streakService = streakService ?? SupabaseStreakService();
 
   StreakModel _streak = StreakModel.initial();
-  Future<void> _operationQueue = Future<void>.value();
   bool _isLoading = false;
-  bool _isDisposed = false;
   String? _errorMessage;
   List<int> _newMilestones = [];
+  Future<void> _operationQueue = Future<void>.value();
 
   // Getters
   StreakModel get streak => _streak;
@@ -44,7 +43,7 @@ class StreakProvider extends ChangeNotifier {
   Future<void> loadStreak() async {
     return _runStreakOperation(() async {
       _streak = await _streakService.loadStreak();
-      _notifyIfAlive();
+      notifyListeners();
     }, errorPrefix: 'Failed to load streak data');
   }
 
@@ -60,7 +59,7 @@ class StreakProvider extends ChangeNotifier {
         reviewDate: reviewDate,
       );
       _newMilestones = _streak.getNewMilestones(previousStreak);
-      _notifyIfAlive();
+      notifyListeners();
     }, errorPrefix: 'Failed to update streak');
   }
 
@@ -69,7 +68,7 @@ class StreakProvider extends ChangeNotifier {
     return _runStreakOperation(() async {
       await _streakService.resetStreak();
       _streak = await _streakService.loadStreak();
-      _notifyIfAlive();
+      notifyListeners();
     }, errorPrefix: 'Failed to reset streak');
   }
 
@@ -78,7 +77,7 @@ class StreakProvider extends ChangeNotifier {
     return _runStreakOperation(() async {
       await _streakService.clearStreakData();
       _streak = StreakModel.initial();
-      _notifyIfAlive();
+      notifyListeners();
     }, errorPrefix: 'Failed to clear streak data');
   }
 
@@ -105,7 +104,7 @@ class StreakProvider extends ChangeNotifier {
   /// Clear new milestones (after showing them to user)
   void clearNewMilestones() {
     _newMilestones = [];
-    _notifyIfAlive();
+    notifyListeners();
   }
 
   /// Record a card review (for integration with CardManagementProvider)
@@ -114,21 +113,7 @@ class StreakProvider extends ChangeNotifier {
   }
 
   /// Get motivational message based on current streak
-  String getMotivationalMessage() {
-    if (currentStreak == 0) {
-      return "Start your learning streak today! 🚀";
-    } else if (currentStreak == 1) {
-      return "Great start! Keep the momentum going! 💪";
-    } else if (currentStreak < 7) {
-      return "You're on fire! $currentStreak days strong! 🔥";
-    } else if (currentStreak < 30) {
-      return "Amazing! $currentStreak days of consistent learning! ⭐";
-    } else if (currentStreak < 100) {
-      return "Incredible dedication! $currentStreak days! 🏆";
-    } else {
-      return "Legendary! $currentStreak days of unstoppable learning! 👑";
-    }
-  }
+  String getMotivationalMessage() => _streak.motivationMessage;
 
   /// Get streak status color
   String getStreakStatusColor() {
@@ -152,7 +137,6 @@ class StreakProvider extends ChangeNotifier {
     final future = _operationQueue.then((_) async {
       _clearError();
       _setLoading(true);
-
       try {
         await action();
       } catch (e) {
@@ -167,32 +151,18 @@ class StreakProvider extends ChangeNotifier {
   }
 
   void _setLoading(bool loading) {
-    if (_isDisposed) return;
     _isLoading = loading;
-    _notifyIfAlive();
-  }
-
-  void _setError(String error) {
-    if (_isDisposed) return;
-    _errorMessage = error;
-    _notifyIfAlive();
-  }
-
-  void _clearError() {
-    if (_isDisposed) return;
-    if (_errorMessage == null) return;
-    _errorMessage = null;
-    _notifyIfAlive();
-  }
-
-  void _notifyIfAlive() {
-    if (_isDisposed) return;
     notifyListeners();
   }
 
-  @override
-  void dispose() {
-    _isDisposed = true;
-    super.dispose();
+  void _setError(String error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  void _clearError() {
+    if (_errorMessage == null) return;
+    _errorMessage = null;
+    notifyListeners();
   }
 }

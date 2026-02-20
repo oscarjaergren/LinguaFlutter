@@ -9,17 +9,11 @@ abstract class CardManagementRepository {
   /// Get cards by language
   Future<List<CardModel>> getCardsByLanguage(String language);
 
-  /// Search cards by text
-  Future<List<CardModel>> searchCards(String query);
-
   /// Save a card (create or update)
   Future<void> saveCard(CardModel card);
 
   /// Delete a card
   Future<void> deleteCard(String cardId);
-
-  /// Get all tags
-  Future<List<String>> getTags();
 
   /// Clear all cards
   Future<void> clearAllCards();
@@ -44,18 +38,6 @@ class SupabaseCardManagementRepository implements CardManagementRepository {
   }
 
   @override
-  Future<List<CardModel>> searchCards(String query) async {
-    final allCards = await _supabaseService.loadCards();
-    final lowerQuery = query.toLowerCase();
-
-    return allCards.where((card) {
-      return card.frontText.toLowerCase().contains(lowerQuery) ||
-          card.backText.toLowerCase().contains(lowerQuery) ||
-          card.tags.any((tag) => tag.toLowerCase().contains(lowerQuery));
-    }).toList();
-  }
-
-  @override
   Future<void> saveCard(CardModel card) async {
     await _supabaseService.saveCard(card);
   }
@@ -63,12 +45,6 @@ class SupabaseCardManagementRepository implements CardManagementRepository {
   @override
   Future<void> deleteCard(String cardId) async {
     await _supabaseService.deleteCard(cardId);
-  }
-
-  @override
-  Future<List<String>> getTags() async {
-    final allCards = await _supabaseService.loadCards();
-    return allCards.expand((card) => card.tags).toSet().toList()..sort();
   }
 
   @override

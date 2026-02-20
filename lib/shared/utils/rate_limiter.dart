@@ -1,4 +1,8 @@
-/// Utility class for rate limiting user actions
+/// In-memory rate limiter for UX feedback only.
+///
+/// This is NOT a security control — limits reset on every app restart and
+/// can be bypassed trivially. Actual enforcement must happen server-side
+/// (e.g. Supabase RLS or a server-side rate limiter).
 class RateLimiter {
   static final RateLimiter _instance = RateLimiter._internal();
   factory RateLimiter() => _instance;

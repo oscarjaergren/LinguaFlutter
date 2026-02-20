@@ -521,16 +521,13 @@ class CardManagementProvider extends ChangeNotifier {
     required int maxLength,
     required bool preserveNewlines,
   }) {
-    return input
-        .trim()
-        .let(_removeScriptContent)
-        .let(_removeHtmlTags)
-        .let(
-          (s) => preserveNewlines
-              ? _normalizeWhitespacePreserveNewlines(s)
-              : _normalizeWhitespace(s),
-        )
-        .let((s) => s.length > maxLength ? s.substring(0, maxLength) : s);
+    var s = input.trim();
+    s = _removeScriptContent(s);
+    s = _removeHtmlTags(s);
+    s = preserveNewlines
+        ? _normalizeWhitespacePreserveNewlines(s)
+        : _normalizeWhitespace(s);
+    return s.length > maxLength ? s.substring(0, maxLength) : s;
   }
 
   /// Remove HTML tags
@@ -588,9 +585,4 @@ class CardManagementProvider extends ChangeNotifier {
     if (text == null) return false;
     return text.trim().isNotEmpty;
   }
-}
-
-/// Extension to enable LINQ-like .let() method for functional pipelines
-extension _FunctionalStringExtension on String {
-  String let(String Function(String) transform) => transform(this);
 }

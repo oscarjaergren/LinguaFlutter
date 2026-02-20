@@ -128,77 +128,6 @@ class StreakModel {
         .toList();
   }
 
-  /// Update streak with a new review session
-  StreakModel updateWithReview({
-    required int cardsReviewed,
-    DateTime? reviewDate,
-  }) {
-    final date = reviewDate ?? DateTime.now();
-    final dateKey = _formatDate(date);
-    final reviewDay = DateTime(date.year, date.month, date.day);
-
-    // Update daily review counts
-    final newDailyReviewCounts = Map<String, int>.from(dailyReviewCounts);
-    newDailyReviewCounts[dateKey] =
-        (newDailyReviewCounts[dateKey] ?? 0) + cardsReviewed;
-
-    // Calculate new streak
-    int newCurrentStreak;
-    DateTime? newStreakStartDate;
-
-    if (lastReviewDate == null) {
-      // First review ever
-      newCurrentStreak = 1;
-      newStreakStartDate = reviewDay;
-    } else {
-      final lastReview = DateTime(
-        lastReviewDate!.year,
-        lastReviewDate!.month,
-        lastReviewDate!.day,
-      );
-
-      final daysDiff = reviewDay.difference(lastReview).inDays;
-
-      if (daysDiff == 0) {
-        // Same day review - keep current streak
-        newCurrentStreak = currentStreak;
-        newStreakStartDate = streakStartDate;
-      } else if (daysDiff == 1) {
-        // Next day review - increment streak
-        newCurrentStreak = currentStreak + 1;
-        newStreakStartDate = streakStartDate ?? reviewDay;
-      } else {
-        // Gap in reviews - reset streak
-        newCurrentStreak = 1;
-        newStreakStartDate = reviewDay;
-      }
-    }
-
-    // Check for new best streak
-    final newBestStreak = newCurrentStreak > bestStreak
-        ? newCurrentStreak
-        : bestStreak;
-    final newBestStreakDate = newCurrentStreak > bestStreak
-        ? date
-        : bestStreakDate;
-
-    // Add new milestones
-    final newMilestones = getNewMilestones(currentStreak);
-    final updatedMilestones = [...achievedMilestones, ...newMilestones];
-
-    return StreakModel(
-      currentStreak: newCurrentStreak,
-      bestStreak: newBestStreak,
-      lastReviewDate: date,
-      totalReviewSessions: totalReviewSessions + 1,
-      totalCardsReviewed: totalCardsReviewed + cardsReviewed,
-      dailyReviewCounts: newDailyReviewCounts,
-      achievedMilestones: updatedMilestones,
-      streakStartDate: newStreakStartDate,
-      bestStreakDate: newBestStreakDate,
-    );
-  }
-
   /// Reset streak (for testing or manual reset)
   StreakModel resetStreak() {
     return copyWith(
@@ -236,10 +165,35 @@ class StreakModel {
     }
   }
 
-  /// Format date as string key
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  /// Returns a stats map for display or persistence.
+  Map<String, dynamic> toStatsMap() => {
+    'currentStreak': currentStreak,
+    'bestStreak': bestStreak,
+    'totalSessions': totalReviewSessions,
+    'totalCards': totalCardsReviewed,
+    'cardsToday': cardsReviewedToday,
+    'averageCardsPerDay': averageCardsPerDay,
+    'milestones': achievedMilestones,
+    'isActive': isStreakActive,
+    'needsReview': needsReviewToday,
+  };
+
+  /// Returns daily review counts for the last [days] days.
+  Map<String, int> dailyReviewDataForDays(int days) {
+    final now = DateTime.now();
+    final data = <String, int>{};
+
+    for (int i = 0; i < days; i++) {
+      final dateKey = _formatDate(now.subtract(Duration(days: i)));
+      data[dateKey] = dailyReviewCounts[dateKey] ?? 0;
+    }
+
+    return data;
   }
+
+  /// Format date as string key
+  String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
   /// Create a copy with updated properties
   StreakModel copyWith({

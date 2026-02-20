@@ -130,9 +130,17 @@ class SupabaseStreakService implements StreakService {
 
   @override
   Future<void> resetStreak() async {
-    final currentStreak = await loadStreak();
-    final resetStreak = currentStreak.resetStreak();
-    await saveStreak(resetStreak);
+    if (!isAuthenticated) return;
+    try {
+      await _client
+          .from(_tableName)
+          .update({'current_streak': 0, 'last_review_date': null})
+          .eq('user_id', _userId);
+      LoggerService.debug('Streak reset in Supabase');
+    } catch (e) {
+      LoggerService.error('Failed to reset streak in Supabase', e);
+      rethrow;
+    }
   }
 
   @override
@@ -208,37 +216,12 @@ class SupabaseStreakService implements StreakService {
   @override
   Future<Map<String, dynamic>> getStreakStats() async {
     final streak = await loadStreak();
-
-    return {
-      'currentStreak': streak.currentStreak,
-      'bestStreak': streak.bestStreak,
-      'totalSessions': streak.totalReviewSessions,
-      'totalCards': streak.totalCardsReviewed,
-      'cardsToday': streak.cardsReviewedToday,
-      'averageCardsPerDay': streak.averageCardsPerDay,
-      'milestones': streak.achievedMilestones,
-      'isActive': streak.isStreakActive,
-      'needsReview': streak.needsReviewToday,
-    };
+    return streak.toStatsMap();
   }
 
   @override
   Future<Map<String, int>> getDailyReviewData({int days = 30}) async {
     final streak = await loadStreak();
-    final now = DateTime.now();
-    final dailyData = <String, int>{};
-
-    for (int i = 0; i < days; i++) {
-      final date = now.subtract(Duration(days: i));
-      final dateKey = _formatDate(date);
-      dailyData[dateKey] = streak.dailyReviewCounts[dateKey] ?? 0;
-    }
-
-    return dailyData;
-  }
-
-  /// Format date as string key
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    return streak.dailyReviewDataForDays(days);
   }
 }

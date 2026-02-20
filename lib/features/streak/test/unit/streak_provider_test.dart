@@ -58,8 +58,11 @@ void main() {
     });
 
     test('should update streak with review', () async {
-      final updatedStreak = StreakModel.initial().updateWithReview(
-        cardsReviewed: 10,
+      final updatedStreak = StreakModel(
+        currentStreak: 1,
+        totalCardsReviewed: 10,
+        totalReviewSessions: 1,
+        lastReviewDate: DateTime.now(),
       );
       when(
         mockService.updateStreakWithReview(
@@ -79,8 +82,11 @@ void main() {
 
     test('should detect new milestones', () async {
       // Update streak to potentially reach milestones
-      final updatedStreak = StreakModel.initial().updateWithReview(
-        cardsReviewed: 5,
+      final updatedStreak = StreakModel(
+        currentStreak: 1,
+        totalCardsReviewed: 5,
+        totalReviewSessions: 1,
+        lastReviewDate: DateTime.now(),
       );
       when(
         mockService.updateStreakWithReview(
@@ -103,8 +109,11 @@ void main() {
 
     test('should reset streak', () async {
       // Setup: first update to have a streak
-      final updatedStreak = StreakModel.initial().updateWithReview(
-        cardsReviewed: 10,
+      final updatedStreak = StreakModel(
+        currentStreak: 1,
+        totalCardsReviewed: 10,
+        totalReviewSessions: 1,
+        lastReviewDate: DateTime.now(),
       );
       when(
         mockService.updateStreakWithReview(
@@ -140,7 +149,7 @@ void main() {
     test('should provide motivational messages', () {
       expect(
         streakProvider.getMotivationalMessage(),
-        contains('Start your learning streak'),
+        contains('Every journey begins'),
       );
     });
 
@@ -166,8 +175,11 @@ void main() {
             invocation.namedArguments[const Symbol('cardsReviewed')] as int;
         cardsByCall.add(cards);
         totalCardsPassedToService += cards;
-        return StreakModel.initial().updateWithReview(
-          cardsReviewed: totalCardsPassedToService,
+        return StreakModel(
+          currentStreak: 1,
+          totalCardsReviewed: totalCardsPassedToService,
+          totalReviewSessions: cardsByCall.length,
+          lastReviewDate: DateTime.now(),
         );
       });
 
@@ -196,7 +208,12 @@ void main() {
         if (serviceCallCount == 1) {
           throw Exception('first failure');
         }
-        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+        return StreakModel(
+          currentStreak: 1,
+          totalCardsReviewed: cards,
+          totalReviewSessions: 1,
+          lastReviewDate: DateTime.now(),
+        );
       });
 
       final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
@@ -224,7 +241,12 @@ void main() {
         updateCallCount++;
         final cards =
             invocation.namedArguments[const Symbol('cardsReviewed')] as int;
-        return StreakModel.initial().updateWithReview(cardsReviewed: cards);
+        return StreakModel(
+          currentStreak: 1,
+          totalCardsReviewed: cards,
+          totalReviewSessions: 1,
+          lastReviewDate: DateTime.now(),
+        );
       });
 
       final load = streakProvider.loadStreak();
@@ -272,7 +294,12 @@ void main() {
             reviewDate: anyNamed('reviewDate'),
           ),
         ).thenAnswer(
-          (_) async => StreakModel.initial().updateWithReview(cardsReviewed: 5),
+          (_) async => StreakModel(
+            currentStreak: 1,
+            totalCardsReviewed: 5,
+            totalReviewSessions: 1,
+            lastReviewDate: DateTime.now(),
+          ),
         );
 
         // Capture the errorMessage value at the moment the first notification
@@ -308,19 +335,13 @@ void main() {
       expect(streak.cardsReviewedToday, equals(0));
     });
 
-    test('should update with review', () {
-      final streak = StreakModel.initial();
-      final updated = streak.updateWithReview(cardsReviewed: 5);
-
-      expect(updated.currentStreak, equals(1));
-      expect(updated.totalCardsReviewed, equals(5));
-      expect(updated.totalReviewSessions, equals(1));
-    });
-
     test('should reset streak but keep stats', () {
-      final streak = StreakModel.initial().updateWithReview(cardsReviewed: 10);
-
-      expect(streak.currentStreak, equals(1));
+      final streak = StreakModel(
+        currentStreak: 1,
+        totalCardsReviewed: 10,
+        totalReviewSessions: 1,
+        lastReviewDate: DateTime.now(),
+      );
 
       final reset = streak.resetStreak();
 

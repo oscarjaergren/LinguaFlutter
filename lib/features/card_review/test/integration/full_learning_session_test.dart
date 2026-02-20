@@ -392,9 +392,46 @@ class MockStreakService implements StreakService {
     required int cardsReviewed,
     DateTime? reviewDate,
   }) async {
-    _streak = _streak.updateWithReview(
-      cardsReviewed: cardsReviewed,
-      reviewDate: reviewDate,
+    final date = reviewDate ?? DateTime.now();
+    final dateKey =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final newDailyCounts = Map<String, int>.from(_streak.dailyReviewCounts);
+    newDailyCounts[dateKey] = (newDailyCounts[dateKey] ?? 0) + cardsReviewed;
+
+    final lastReview = _streak.lastReviewDate;
+    final reviewDay = DateTime(date.year, date.month, date.day);
+    int newStreak;
+    if (lastReview == null) {
+      newStreak = 1;
+    } else {
+      final lastDay = DateTime(
+        lastReview.year,
+        lastReview.month,
+        lastReview.day,
+      );
+      final diff = reviewDay.difference(lastDay).inDays;
+
+      if (diff == 1) {
+        newStreak = _streak.currentStreak == 0 ? 1 : _streak.currentStreak + 1;
+      } else if (diff == 0) {
+        newStreak = _streak.currentStreak == 0 ? 1 : _streak.currentStreak;
+      } else if (diff > 1) {
+        newStreak = 1;
+      } else {
+        // Backdated reviews should not extend or reset the current streak.
+        newStreak = _streak.currentStreak;
+      }
+    }
+
+    _streak = _streak.copyWith(
+      currentStreak: newStreak,
+      bestStreak: newStreak > _streak.bestStreak
+          ? newStreak
+          : _streak.bestStreak,
+      lastReviewDate: date,
+      totalReviewSessions: _streak.totalReviewSessions + 1,
+      totalCardsReviewed: _streak.totalCardsReviewed + cardsReviewed,
+      dailyReviewCounts: newDailyCounts,
     );
     return _streak;
   }

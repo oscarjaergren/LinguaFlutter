@@ -11,13 +11,8 @@ class CardListViewModel extends ChangeNotifier {
   final DuplicateDetectionProvider _duplicateDetection;
   final LanguageProvider _languageProvider;
 
-  // UI-specific state
+  // UI-only state not tracked by CardManagementProvider
   bool _isSearching = false;
-  String _searchQuery = '';
-  List<String> _selectedTags = [];
-  bool _showOnlyDue = false;
-  bool _showOnlyFavorites = false;
-  bool _showOnlyDuplicates = false;
 
   CardListViewModel({
     required CardManagementProvider cardManagement,
@@ -29,9 +24,6 @@ class CardListViewModel extends ChangeNotifier {
     // Listen to provider changes
     _cardManagement.addListener(_onCardManagementChanged);
     _languageProvider.addListener(_onLanguageProviderChanged);
-
-    // Initialize with current provider state
-    _syncWithProviders();
   }
 
   @override
@@ -44,11 +36,11 @@ class CardListViewModel extends ChangeNotifier {
   // Getters for UI state
   bool get isLoading => _cardManagement.isLoading;
   bool get isSearching => _isSearching;
-  String get searchQuery => _searchQuery;
-  List<String> get selectedTags => List.unmodifiable(_selectedTags);
-  bool get showOnlyDue => _showOnlyDue;
-  bool get showOnlyFavorites => _showOnlyFavorites;
-  bool get showOnlyDuplicates => _showOnlyDuplicates;
+  String get searchQuery => _cardManagement.searchQuery;
+  List<String> get selectedTags => _cardManagement.selectedTags;
+  bool get showOnlyDue => _cardManagement.showOnlyDue;
+  bool get showOnlyFavorites => _cardManagement.showOnlyFavorites;
+  bool get showOnlyDuplicates => _cardManagement.showOnlyDuplicates;
   String? get errorMessage => _cardManagement.errorMessage;
 
   // Duplicate detection getters
@@ -71,7 +63,13 @@ class CardListViewModel extends ChangeNotifier {
   Map<String, String> get languageDetails {
     final details = _languageProvider.getLanguageDetails(
       _languageProvider.activeLanguage,
-    )!;
+    );
+    if (details == null) {
+      return <String, String>{
+        'name': _languageProvider.activeLanguage,
+        'flag': '',
+      };
+    }
     return Map<String, String>.from(details);
   }
 
@@ -87,58 +85,42 @@ class CardListViewModel extends ChangeNotifier {
 
   void stopSearch() {
     _isSearching = false;
-    _searchQuery = '';
     _cardManagement.searchCards('');
     notifyListeners();
   }
 
   void updateSearchQuery(String query) {
-    _searchQuery = query;
     _cardManagement.searchCards(query);
-    notifyListeners();
   }
 
   void toggleTag(String tag) {
-    if (_selectedTags.contains(tag)) {
-      _selectedTags.remove(tag);
+    final updated = List<String>.from(_cardManagement.selectedTags);
+    if (updated.contains(tag)) {
+      updated.remove(tag);
     } else {
-      _selectedTags.add(tag);
+      updated.add(tag);
     }
-    _cardManagement.filterByTags(_selectedTags);
-    notifyListeners();
+    _cardManagement.filterByTags(updated);
   }
 
   void clearTagFilters() {
-    _selectedTags.clear();
     _cardManagement.filterByTags([]);
-    notifyListeners();
   }
 
   void toggleShowOnlyDue() {
-    _showOnlyDue = !_showOnlyDue;
     _cardManagement.toggleShowOnlyDue();
-    notifyListeners();
   }
 
   void toggleShowOnlyFavorites() {
-    _showOnlyFavorites = !_showOnlyFavorites;
     _cardManagement.toggleShowOnlyFavorites();
-    notifyListeners();
   }
 
   void toggleShowOnlyDuplicates() {
-    _showOnlyDuplicates = !_showOnlyDuplicates;
     _cardManagement.toggleShowOnlyDuplicates();
-    notifyListeners();
   }
 
   void clearAllFilters() {
-    _selectedTags.clear();
-    _showOnlyDue = false;
-    _showOnlyFavorites = false;
-    _showOnlyDuplicates = false;
     _cardManagement.clearFilters();
-    notifyListeners();
   }
 
   // Card actions
@@ -194,14 +176,5 @@ class CardListViewModel extends ChangeNotifier {
 
   void _onLanguageProviderChanged() {
     notifyListeners();
-  }
-
-  void _syncWithProviders() {
-    // Sync any initial state if needed
-    _searchQuery = _cardManagement.searchQuery;
-    _selectedTags = List.from(_cardManagement.selectedTags);
-    _showOnlyDue = _cardManagement.showOnlyDue;
-    _showOnlyFavorites = _cardManagement.showOnlyFavorites;
-    _showOnlyDuplicates = _cardManagement.showOnlyDuplicates;
   }
 }
