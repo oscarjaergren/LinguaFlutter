@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:provider/provider.dart';
 import 'features/icon_search/icon_search.dart';
-import 'features/streak/streak.dart';
 import 'features/language/language.dart';
 import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
@@ -78,7 +77,6 @@ Future<Widget> _buildApp() async {
   // Create core providers
   final authProvider = AuthProvider();
   final languageProvider = LanguageProvider();
-  final streakProvider = StreakProvider();
   final themeProvider = ThemeProvider();
   final exercisePreferencesProvider = ExercisePreferencesProvider();
 
@@ -102,7 +100,6 @@ Future<Widget> _buildApp() async {
       );
       try {
         await cardManagementProvider.initialize();
-        await streakProvider.loadStreak();
         LoggerService.info('✅ Data providers initialized');
       } catch (e) {
         LoggerService.error('Failed to initialize data providers', e);
@@ -115,7 +112,6 @@ Future<Widget> _buildApp() async {
   // If already authenticated (e.g., session restored), initialize now
   if (authProvider.isAuthenticated) {
     await cardManagementProvider.initialize();
-    await streakProvider.loadStreak();
   }
 
   LoggerService.info('App startup: providers ready');
@@ -128,7 +124,6 @@ Future<Widget> _buildApp() async {
         // Core providers
         ChangeNotifierProvider.value(value: authProvider),
         ChangeNotifierProvider.value(value: languageProvider),
-        ChangeNotifierProvider.value(value: streakProvider),
         ChangeNotifierProvider.value(value: themeProvider),
 
         // Feature-specific providers (VSA)
@@ -149,15 +144,12 @@ Future<Widget> _buildApp() async {
           PracticeSessionProvider
         >(
           create: (context) {
-            final streakProvider = context.read<StreakProvider>();
             return PracticeSessionProvider(
               getReviewCards: () =>
                   context.read<CardManagementProvider>().reviewCards,
               getAllCards: () =>
                   context.read<CardManagementProvider>().allCards,
               updateCard: context.read<CardManagementProvider>().updateCard,
-              onReviewRecorded: (cardsReviewed) => streakProvider
-                  .updateStreakWithReview(cardsReviewed: cardsReviewed),
             );
           },
           update: (context, cardManagement, previous) => previous!,

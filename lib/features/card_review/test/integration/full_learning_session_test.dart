@@ -15,20 +15,24 @@
 /// integration tests which run against Docker.
 library;
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
 import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
 import 'package:lingua_flutter/features/streak/domain/streak_provider.dart';
 import 'package:lingua_flutter/features/streak/data/services/streak_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 void main() {
+  setUpAll(LoggerService.initialize);
+
   group('Full Learning Session Flow', () {
     late List<CardModel> testCards;
     late List<CardModel> updatedCards;
     late PracticeSessionProvider practiceProvider;
     late MockStreakService mockStreakService;
-    late StreakProvider streakProvider;
+    late ProviderContainer container;
 
     CardModel createTestCard({
       required String id,
@@ -65,20 +69,24 @@ void main() {
         },
       );
 
-      // Create mock streak service and provider
+      // Create mock streak service and notifier
       mockStreakService = MockStreakService();
-      streakProvider = StreakProvider(streakService: mockStreakService);
-      await streakProvider.loadStreak();
+      container = ProviderContainer(
+        overrides: [streakServiceProvider.overrideWithValue(mockStreakService)],
+      );
+      await container.read(streakNotifierProvider.notifier).loadStreak();
     });
+
+    tearDown(() => container.dispose());
 
     test('complete daily session: cards → exercises → streak update', () async {
       // === PHASE 1: Verify Initial State ===
       expect(testCards.length, 5);
 
-      // Load initial streak (should be empty/zero)
-      expect(streakProvider.currentStreak, 0);
-      expect(streakProvider.totalCardsReviewed, 0);
-      expect(streakProvider.totalReviewSessions, 0);
+      final s = container.read(streakNotifierProvider);
+      expect(s.streak.currentStreak, 0);
+      expect(s.streak.totalCardsReviewed, 0);
+      expect(s.streak.totalReviewSessions, 0);
 
       // === PHASE 2: Create Practice Session ===
       practiceProvider.startSession();
@@ -124,14 +132,14 @@ void main() {
       expect(practiceProvider.accuracy, closeTo(expectedAccuracy, 0.01));
 
       // === PHASE 5: Update Streak ===
-      await streakProvider.updateStreakWithReview(
-        cardsReviewed: exercisesCompleted,
-      );
+      await container
+          .read(streakNotifierProvider.notifier)
+          .updateStreakWithReview(cardsReviewed: exercisesCompleted);
 
-      // Verify streak updated
-      expect(streakProvider.currentStreak, greaterThanOrEqualTo(1));
-      expect(streakProvider.totalCardsReviewed, exercisesCompleted);
-      expect(streakProvider.totalReviewSessions, 1);
+      final s2 = container.read(streakNotifierProvider);
+      expect(s2.streak.currentStreak, greaterThanOrEqualTo(1));
+      expect(s2.streak.totalCardsReviewed, exercisesCompleted);
+      expect(s2.streak.totalReviewSessions, 1);
 
       // === PHASE 6: Verify Cards Were Updated ===
       expect(updatedCards, isNotEmpty);
@@ -140,19 +148,20 @@ void main() {
     test(
       'multiple sessions in same day increment cards reviewed but not streak',
       () async {
-        await streakProvider.loadStreak();
+        final notifier = container.read(streakNotifierProvider.notifier);
+        await notifier.loadStreak();
 
-        // First session
-        await streakProvider.updateStreakWithReview(cardsReviewed: 5);
-        expect(streakProvider.currentStreak, 1);
-        expect(streakProvider.totalCardsReviewed, 5);
-        expect(streakProvider.totalReviewSessions, 1);
+        await notifier.updateStreakWithReview(cardsReviewed: 5);
+        var s = container.read(streakNotifierProvider);
+        expect(s.streak.currentStreak, 1);
+        expect(s.streak.totalCardsReviewed, 5);
+        expect(s.streak.totalReviewSessions, 1);
 
-        // Second session same day
-        await streakProvider.updateStreakWithReview(cardsReviewed: 3);
-        expect(streakProvider.currentStreak, 1); // Still 1, same day
-        expect(streakProvider.totalCardsReviewed, 8); // Accumulated
-        expect(streakProvider.totalReviewSessions, 2);
+        await notifier.updateStreakWithReview(cardsReviewed: 3);
+        s = container.read(streakNotifierProvider);
+        expect(s.streak.currentStreak, 1);
+        expect(s.streak.totalCardsReviewed, 8);
+        expect(s.streak.totalReviewSessions, 2);
       },
     );
 
@@ -239,7 +248,7 @@ void main() {
   group('Streak updates after session completes', () {
     late List<CardModel> testCards;
     late MockStreakService mockStreakService;
-    late StreakProvider streakProvider;
+    late ProviderContainer container;
     late PracticeSessionProvider practiceProvider;
     int streakUpdateCallCount = 0;
 
@@ -289,8 +298,10 @@ void main() {
 
       streakUpdateCallCount = 0;
       mockStreakService = MockStreakService();
-      streakProvider = StreakProvider(streakService: mockStreakService);
-      await streakProvider.loadStreak();
+      container = ProviderContainer(
+        overrides: [streakServiceProvider.overrideWithValue(mockStreakService)],
+      );
+      await container.read(streakNotifierProvider.notifier).loadStreak();
 
       practiceProvider = PracticeSessionProvider(
         getReviewCards: () => testCards,
@@ -298,15 +309,15 @@ void main() {
         updateCard: (_) async {},
         onSessionComplete: (cardsReviewed) async {
           streakUpdateCallCount++;
-          await streakProvider.updateStreakWithReview(
-            cardsReviewed: cardsReviewed,
-          );
+          await container
+              .read(streakNotifierProvider.notifier)
+              .updateStreakWithReview(cardsReviewed: cardsReviewed);
         },
       );
     });
 
     tearDown(() {
-      streakProvider.dispose();
+      container.dispose();
       practiceProvider.dispose();
     });
 
@@ -318,7 +329,10 @@ void main() {
         await practiceProvider.confirmAnswerAndAdvance(markedCorrect: true);
       }
 
-      expect(streakProvider.currentStreak, greaterThanOrEqualTo(1));
+      expect(
+        container.read(streakNotifierProvider).streak.currentStreak,
+        greaterThanOrEqualTo(1),
+      );
     });
 
     test('completing a session increments total review sessions', () async {
@@ -329,7 +343,10 @@ void main() {
         await practiceProvider.confirmAnswerAndAdvance(markedCorrect: true);
       }
 
-      expect(streakProvider.totalReviewSessions, 1);
+      expect(
+        container.read(streakNotifierProvider).streak.totalReviewSessions,
+        1,
+      );
     });
 
     test('completing a session records total cards reviewed', () async {
@@ -341,7 +358,10 @@ void main() {
         await practiceProvider.confirmAnswerAndAdvance(markedCorrect: true);
       }
 
-      expect(streakProvider.totalCardsReviewed, totalExercises);
+      expect(
+        container.read(streakNotifierProvider).streak.totalCardsReviewed,
+        totalExercises,
+      );
     });
 
     test(
@@ -369,8 +389,11 @@ void main() {
           }
         }
 
-        expect(streakProvider.currentStreak, 1);
-        expect(streakProvider.totalReviewSessions, 2);
+        expect(container.read(streakNotifierProvider).streak.currentStreak, 1);
+        expect(
+          container.read(streakNotifierProvider).streak.totalReviewSessions,
+          2,
+        );
         expect(streakUpdateCallCount, 2);
       },
     );

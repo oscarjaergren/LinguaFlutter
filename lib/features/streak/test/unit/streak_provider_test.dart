@@ -1,21 +1,30 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:lingua_flutter/features/streak/domain/streak_provider.dart';
 import 'package:lingua_flutter/features/streak/domain/models/streak_model.dart';
 import 'package:lingua_flutter/features/streak/data/services/streak_service.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 @GenerateMocks([StreakService])
 import 'streak_provider_test.mocks.dart';
 
+ProviderContainer makeContainer(MockStreakService mockService) =>
+    ProviderContainer(
+      overrides: [streakServiceProvider.overrideWithValue(mockService)],
+    );
+
 void main() {
+  setUpAll(LoggerService.initialize);
+
   group('StreakProvider', () {
-    late StreakProvider streakProvider;
     late MockStreakService mockService;
+    late ProviderContainer container;
 
     setUp(() {
       mockService = MockStreakService();
-      streakProvider = StreakProvider(streakService: mockService);
+      container = makeContainer(mockService);
 
       // Default stubs
       when(
@@ -35,26 +44,27 @@ void main() {
     });
 
     tearDown(() {
-      streakProvider.dispose();
+      container.dispose();
     });
 
     test('should have initial state', () {
-      expect(streakProvider.currentStreak, equals(0));
-      expect(streakProvider.bestStreak, equals(0));
-      expect(streakProvider.totalCardsReviewed, equals(0));
-      expect(streakProvider.totalReviewSessions, equals(0));
-      expect(streakProvider.cardsReviewedToday, equals(0));
-      expect(streakProvider.isLoading, isFalse);
-      expect(streakProvider.errorMessage, isNull);
-      expect(streakProvider.newMilestones, isEmpty);
+      final s = container.read(streakNotifierProvider);
+      expect(s.streak.currentStreak, equals(0));
+      expect(s.streak.bestStreak, equals(0));
+      expect(s.streak.totalCardsReviewed, equals(0));
+      expect(s.streak.totalReviewSessions, equals(0));
+      expect(s.streak.cardsReviewedToday, equals(0));
+      expect(s.isLoading, isFalse);
+      expect(s.errorMessage, isNull);
+      expect(s.newMilestones, isEmpty);
     });
 
     test('should load streak data', () async {
-      await streakProvider.loadStreak();
+      await container.read(streakNotifierProvider.notifier).loadStreak();
 
       verify(mockService.loadStreak()).called(1);
-      expect(streakProvider.isLoading, isFalse);
-      expect(streakProvider.errorMessage, isNull);
+      expect(container.read(streakNotifierProvider).isLoading, isFalse);
+      expect(container.read(streakNotifierProvider).errorMessage, isNull);
     });
 
     test('should update streak with review', () async {
@@ -71,13 +81,21 @@ void main() {
         ),
       ).thenAnswer((_) async => updatedStreak);
 
-      await streakProvider.updateStreakWithReview(cardsReviewed: 10);
+      await container
+          .read(streakNotifierProvider.notifier)
+          .updateStreakWithReview(cardsReviewed: 10);
 
       verify(
         mockService.updateStreakWithReview(cardsReviewed: 10, reviewDate: null),
       ).called(1);
-      expect(streakProvider.currentStreak, equals(1));
-      expect(streakProvider.totalCardsReviewed, equals(10));
+      expect(
+        container.read(streakNotifierProvider).streak.currentStreak,
+        equals(1),
+      );
+      expect(
+        container.read(streakNotifierProvider).streak.totalCardsReviewed,
+        equals(10),
+      );
     });
 
     test('should detect new milestones', () async {
@@ -95,16 +113,29 @@ void main() {
         ),
       ).thenAnswer((_) async => updatedStreak);
 
-      await streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      await container
+          .read(streakNotifierProvider.notifier)
+          .updateStreakWithReview(cardsReviewed: 5);
 
-      expect(streakProvider.newMilestones, isA<List<int>>());
+      expect(
+        container.read(streakNotifierProvider).newMilestones,
+        isA<List<int>>(),
+      );
     });
 
     test('should clear new milestones', () async {
-      await streakProvider.updateStreakWithReview(cardsReviewed: 5);
+      when(
+        mockService.updateStreakWithReview(
+          cardsReviewed: anyNamed('cardsReviewed'),
+          reviewDate: anyNamed('reviewDate'),
+        ),
+      ).thenAnswer((_) async => StreakModel.initial());
+      await container
+          .read(streakNotifierProvider.notifier)
+          .updateStreakWithReview(cardsReviewed: 5);
 
-      streakProvider.clearNewMilestones();
-      expect(streakProvider.newMilestones, isEmpty);
+      container.read(streakNotifierProvider.notifier).clearNewMilestones();
+      expect(container.read(streakNotifierProvider).newMilestones, isEmpty);
     });
 
     test('should reset streak', () async {
@@ -122,43 +153,64 @@ void main() {
         ),
       ).thenAnswer((_) async => updatedStreak);
 
-      await streakProvider.updateStreakWithReview(cardsReviewed: 10);
-      expect(streakProvider.currentStreak, equals(1));
+      final notifier = container.read(streakNotifierProvider.notifier);
+      await notifier.updateStreakWithReview(cardsReviewed: 10);
+      expect(
+        container.read(streakNotifierProvider).streak.currentStreak,
+        equals(1),
+      );
 
       // Reset
       final resetStreak = updatedStreak.resetStreak();
       when(mockService.resetStreak()).thenAnswer((_) async {});
       when(mockService.loadStreak()).thenAnswer((_) async => resetStreak);
 
-      await streakProvider.resetStreak();
+      await notifier.resetStreak();
 
       verify(mockService.resetStreak()).called(1);
-      expect(streakProvider.currentStreak, equals(0));
-      expect(streakProvider.totalCardsReviewed, equals(10)); // Stats preserved
+      expect(
+        container.read(streakNotifierProvider).streak.currentStreak,
+        equals(0),
+      );
+      expect(
+        container.read(streakNotifierProvider).streak.totalCardsReviewed,
+        equals(10),
+      );
     });
 
     test('should clear streak data', () async {
       when(mockService.clearStreakData()).thenAnswer((_) async {});
 
-      await streakProvider.clearStreakData();
+      await container.read(streakNotifierProvider.notifier).clearStreakData();
 
       verify(mockService.clearStreakData()).called(1);
-      expect(streakProvider.currentStreak, equals(0));
+      expect(
+        container.read(streakNotifierProvider).streak.currentStreak,
+        equals(0),
+      );
     });
 
     test('should provide motivational messages', () {
       expect(
-        streakProvider.getMotivationalMessage(),
+        container
+            .read(streakNotifierProvider.notifier)
+            .getMotivationalMessage(),
         contains('Every journey begins'),
       );
     });
 
     test('should provide streak status colors', () {
-      expect(streakProvider.getStreakStatusColor(), equals('grey'));
+      expect(
+        container.read(streakNotifierProvider.notifier).getStreakStatusColor(),
+        equals('grey'),
+      );
     });
 
     test('should check new milestones correctly', () {
-      expect(streakProvider.isNewMilestone(7), isFalse);
+      expect(
+        container.read(streakNotifierProvider.notifier).isNewMilestone(7),
+        isFalse,
+      );
     });
 
     test('concurrent updates forward all review counts to service', () async {
@@ -183,14 +235,15 @@ void main() {
         );
       });
 
-      final first = streakProvider.updateStreakWithReview(cardsReviewed: 2);
-      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
-      final third = streakProvider.updateStreakWithReview(cardsReviewed: 4);
+      final notifier = container.read(streakNotifierProvider.notifier);
+      final first = notifier.updateStreakWithReview(cardsReviewed: 2);
+      final second = notifier.updateStreakWithReview(cardsReviewed: 3);
+      final third = notifier.updateStreakWithReview(cardsReviewed: 4);
       await Future.wait([first, second, third]);
 
       expect(cardsByCall, equals([2, 3, 4]));
       expect(totalCardsPassedToService, 9);
-      expect(streakProvider.errorMessage, isNull);
+      expect(container.read(streakNotifierProvider).errorMessage, isNull);
     });
 
     test('failed update does not block later concurrent updates', () async {
@@ -216,13 +269,17 @@ void main() {
         );
       });
 
-      final first = streakProvider.updateStreakWithReview(cardsReviewed: 5);
-      final second = streakProvider.updateStreakWithReview(cardsReviewed: 3);
+      final notifier = container.read(streakNotifierProvider.notifier);
+      final first = notifier.updateStreakWithReview(cardsReviewed: 5);
+      final second = notifier.updateStreakWithReview(cardsReviewed: 3);
       await Future.wait([first, second]);
 
       expect(serviceCallCount, 2);
-      expect(streakProvider.totalCardsReviewed, 3);
-      expect(streakProvider.isLoading, isFalse);
+      expect(
+        container.read(streakNotifierProvider).streak.totalCardsReviewed,
+        3,
+      );
+      expect(container.read(streakNotifierProvider).isLoading, isFalse);
     });
 
     test('update during loadStreak still reaches service', () async {
@@ -249,8 +306,9 @@ void main() {
         );
       });
 
-      final load = streakProvider.loadStreak();
-      final update = streakProvider.updateStreakWithReview(cardsReviewed: 7);
+      final notifier = container.read(streakNotifierProvider.notifier);
+      final load = notifier.loadStreak();
+      final update = notifier.updateStreakWithReview(cardsReviewed: 7);
       await Future.wait([load, update]);
 
       expect(updateCallCount, 1);
@@ -260,14 +318,18 @@ void main() {
     });
 
     test('should get daily review data', () async {
-      final dailyData = await streakProvider.getDailyReviewData(days: 7);
+      final dailyData = await container
+          .read(streakNotifierProvider.notifier)
+          .getDailyReviewData(days: 7);
 
       verify(mockService.getDailyReviewData(days: 7)).called(1);
       expect(dailyData, isA<Map<String, int>>());
     });
 
     test('should get streak statistics', () async {
-      final stats = await streakProvider.getStreakStats();
+      final stats = await container
+          .read(streakNotifierProvider.notifier)
+          .getStreakStats();
 
       verify(mockService.getStreakStats()).called(1);
       expect(stats.containsKey('currentStreak'), isTrue);
@@ -284,8 +346,9 @@ void main() {
           ),
         ).thenAnswer((_) async => throw Exception('first failure'));
 
-        await streakProvider.updateStreakWithReview(cardsReviewed: 1);
-        expect(streakProvider.errorMessage, isNotNull);
+        final notifier = container.read(streakNotifierProvider.notifier);
+        await notifier.updateStreakWithReview(cardsReviewed: 1);
+        expect(container.read(streakNotifierProvider).errorMessage, isNotNull);
 
         // Now make the service succeed
         when(
@@ -302,24 +365,19 @@ void main() {
           ),
         );
 
-        // Capture the errorMessage value at the moment the first notification
-        // fires after the new call starts (i.e. when _setLoading(true) is called,
-        // which happens AFTER _clearError()).
         String? errorAtFirstNotify;
         bool captured = false;
-        streakProvider.addListener(() {
+        container.listen(streakNotifierProvider, (_, next) {
           if (!captured) {
             captured = true;
-            errorAtFirstNotify = streakProvider.errorMessage;
+            errorAtFirstNotify = next.errorMessage;
           }
         });
 
-        await streakProvider.updateStreakWithReview(cardsReviewed: 5);
+        await notifier.updateStreakWithReview(cardsReviewed: 5);
 
-        // The very first notification must already see a null errorMessage,
-        // meaning _clearError notified listeners before _setLoading(true).
         expect(errorAtFirstNotify, isNull);
-        expect(streakProvider.errorMessage, isNull);
+        expect(container.read(streakNotifierProvider).errorMessage, isNull);
       },
     );
   });

@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lingua_flutter/features/streak/presentation/widgets/streak_status_widget.dart';
-import 'package:provider/provider.dart';
 import '../../../streak/domain/streak_provider.dart';
+import '../../../streak/domain/models/streak_state.dart';
 
 /// Screen showing detailed streak information and statistics
-class StreakDetailScreen extends StatefulWidget {
+class StreakDetailScreen extends ConsumerStatefulWidget {
   const StreakDetailScreen({super.key});
 
   @override
-  State<StreakDetailScreen> createState() => _StreakDetailScreenState();
+  ConsumerState<StreakDetailScreen> createState() => _StreakDetailScreenState();
 }
 
-class _StreakDetailScreenState extends State<StreakDetailScreen> {
+class _StreakDetailScreenState extends ConsumerState<StreakDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Load streak data when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<StreakProvider>().loadStreak();
+      ref.read(streakNotifierProvider.notifier).loadStreak();
     });
   }
 
@@ -64,13 +64,14 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
           ),
         ],
       ),
-      body: Consumer<StreakProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
+      body: Consumer(
+        builder: (context, WidgetRef ref, child) {
+          final state = ref.watch(streakNotifierProvider);
+          if (state.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.errorMessage != null) {
+          if (state.errorMessage != null) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -87,13 +88,14 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    provider.errorMessage!,
+                    state.errorMessage!,
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   FilledButton(
-                    onPressed: provider.loadStreak,
+                    onPressed: () =>
+                        ref.read(streakNotifierProvider.notifier).loadStreak(),
                     child: const Text('Retry'),
                   ),
                 ],
@@ -106,18 +108,15 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Main streak display
                 const StreakStatusWidget(compact: false),
 
                 const SizedBox(height: 24),
 
-                // Weekly progress (placeholder for future implementation)
-                _buildWeeklyProgress(context, provider),
+                _buildWeeklyProgress(context, state),
 
                 const SizedBox(height: 24),
 
-                // Additional statistics
-                _buildAdditionalStats(context, provider),
+                _buildAdditionalStats(context, state),
 
                 const SizedBox(height: 24),
 
@@ -131,7 +130,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
     );
   }
 
-  Widget _buildWeeklyProgress(BuildContext context, StreakProvider provider) {
+  Widget _buildWeeklyProgress(BuildContext context, StreakState state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -155,7 +154,8 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
               children: List.generate(7, (index) {
                 final date = DateTime.now().subtract(Duration(days: 6 - index));
                 final dateKey = _formatDate(date);
-                final cardsReviewed = provider.dailyReviewCounts[dateKey] ?? 0;
+                final cardsReviewed =
+                    state.streak.dailyReviewCounts[dateKey] ?? 0;
                 final isToday = _isToday(date);
 
                 return Column(
@@ -200,7 +200,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
     );
   }
 
-  Widget _buildAdditionalStats(BuildContext context, StreakProvider provider) {
+  Widget _buildAdditionalStats(BuildContext context, StreakState state) {
     final theme = Theme.of(context);
 
     return Card(
@@ -223,7 +223,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                   child: _buildStatItem(
                     context,
                     'Average per Day',
-                    '${provider.averageCardsPerDay.toStringAsFixed(1)} cards',
+                    '${state.streak.averageCardsPerDay.toStringAsFixed(1)} cards',
                     Icons.trending_up,
                   ),
                 ),
@@ -231,8 +231,8 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
                   child: _buildStatItem(
                     context,
                     'Days Active',
-                    provider.currentStreak > 0
-                        ? '${provider.currentStreak}'
+                    state.streak.currentStreak > 0
+                        ? '${state.streak.currentStreak}'
                         : '0',
                     Icons.calendar_today,
                   ),
@@ -363,7 +363,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
           ),
           FilledButton(
             onPressed: () {
-              context.read<StreakProvider>().resetStreak();
+              ref.read(streakNotifierProvider.notifier).resetStreak();
               Navigator.pop(context);
             },
             child: const Text('Reset'),
@@ -388,7 +388,7 @@ class _StreakDetailScreenState extends State<StreakDetailScreen> {
           ),
           FilledButton(
             onPressed: () {
-              context.read<StreakProvider>().clearStreakData();
+              ref.read(streakNotifierProvider.notifier).clearStreakData();
               Navigator.pop(context);
             },
             style: FilledButton.styleFrom(

@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/streak_provider.dart';
+import '../../domain/models/streak_state.dart';
 import '../screens/streak_detail_screen.dart';
 
 /// Widget to display streak status and statistics
-class StreakStatusWidget extends StatelessWidget {
+class StreakStatusWidget extends ConsumerWidget {
   final bool compact;
 
   const StreakStatusWidget({super.key, this.compact = false});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<StreakProvider>(
-      builder: (context, streakProvider, child) {
-        if (streakProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (compact) {
-          return _buildCompactView(context, streakProvider);
-        } else {
-          return _buildDetailedView(context, streakProvider);
-        }
-      },
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(streakNotifierProvider);
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (compact) {
+      return _buildCompactView(context, state);
+    } else {
+      return _buildDetailedView(context, state);
+    }
   }
 
-  Widget _buildCompactView(BuildContext context, StreakProvider provider) {
+  Widget _buildCompactView(BuildContext context, StreakState state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -48,7 +45,7 @@ class StreakStatusWidget extends StatelessWidget {
                 children: [
                   Icon(
                     Icons.local_fire_department,
-                    color: provider.currentStreak > 0
+                    color: state.streak.currentStreak > 0
                         ? Colors.orange
                         : Colors.grey,
                     size: 24,
@@ -59,13 +56,13 @@ class StreakStatusWidget extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${provider.currentStreak} day streak',
+                        '${state.streak.currentStreak} day streak',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        provider.streak.statusMessage,
+                        state.streak.statusMessage,
                         style: theme.textTheme.bodySmall,
                       ),
                     ],
@@ -75,9 +72,9 @@ class StreakStatusWidget extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (provider.cardsReviewedToday > 0)
+                  if (state.streak.cardsReviewedToday > 0)
                     Chip(
-                      label: Text('${provider.cardsReviewedToday} today'),
+                      label: Text('${state.streak.cardsReviewedToday} today'),
                       backgroundColor: colorScheme.primaryContainer,
                     ),
                   const SizedBox(width: 8),
@@ -94,7 +91,7 @@ class StreakStatusWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailedView(BuildContext context, StreakProvider provider) {
+  Widget _buildDetailedView(BuildContext context, StreakState state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -109,7 +106,7 @@ class StreakStatusWidget extends StatelessWidget {
               children: [
                 Icon(
                   Icons.local_fire_department,
-                  color: provider.currentStreak > 0
+                  color: state.streak.currentStreak > 0
                       ? Colors.orange
                       : Colors.grey,
                   size: 32,
@@ -126,7 +123,7 @@ class StreakStatusWidget extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        provider.getMotivationalMessage(),
+                        state.streak.motivationMessage,
                         style: theme.textTheme.bodyMedium,
                       ),
                     ],
@@ -138,7 +135,7 @@ class StreakStatusWidget extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Milestones (if any)
-            if (provider.achievedMilestones.isNotEmpty) ...[
+            if (state.streak.achievedMilestones.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text(
                 'Milestones Achieved',
@@ -150,8 +147,8 @@ class StreakStatusWidget extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: provider.achievedMilestones.map((milestone) {
-                  final isNew = provider.isNewMilestone(milestone);
+                children: state.streak.achievedMilestones.map((milestone) {
+                  final isNew = state.newMilestones.contains(milestone);
                   return Chip(
                     label: Text('$milestone days'),
                     backgroundColor: isNew

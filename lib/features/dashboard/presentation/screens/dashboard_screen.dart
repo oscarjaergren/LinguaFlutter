@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:provider/provider.dart';
 import '../../../../shared/navigation/app_router.dart';
 import '../../../auth/auth.dart';
@@ -7,6 +8,7 @@ import '../../../card_management/card_management.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../mascot/presentation/widgets/mascot_widget.dart';
 import '../../../streak/streak.dart';
+import '../../../streak/domain/streak_provider.dart';
 import '../../../theme/theme.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
@@ -162,15 +164,17 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Mascot with speech bubble
-                Consumer2<MascotProvider, StreakProvider>(
-                  builder: (context, mascotProvider, streakProvider, child) {
-                    // Trigger contextual message on first build
+                Consumer(
+                  builder: (context, WidgetRef ref, child) {
+                    final mascotProvider = context.watch<MascotProvider>();
+                    final streakState = ref.watch(streakNotifierProvider);
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       mascotProvider.showContextualMessage(
                         totalCards: totalCards,
                         dueCards: dueCount,
-                        currentStreak: streakProvider.currentStreak,
-                        hasStudiedToday: streakProvider.cardsReviewedToday > 0,
+                        currentStreak: streakState.streak.currentStreak,
+                        hasStudiedToday:
+                            streakState.streak.cardsReviewedToday > 0,
                       );
                     });
 
