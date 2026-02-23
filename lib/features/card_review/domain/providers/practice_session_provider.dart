@@ -401,8 +401,8 @@ class PracticeSessionProvider extends ChangeNotifier {
         final totalReviewed = _correctCount + _incorrectCount;
         try {
           await _onSessionComplete?.call(totalReviewed);
-        } catch (e) {
-          debugPrint('onSessionComplete error: $e');
+        } catch (e, stackTrace) {
+          LoggerService.error('onSessionComplete error', e, stackTrace);
         } finally {
           endSession(); // endSession calls notifyListeners(); return to avoid double-notify
         }
@@ -509,8 +509,8 @@ class PracticeSessionProvider extends ChangeNotifier {
       final totalReviewed = _correctCount + _incorrectCount;
       try {
         await _onSessionComplete?.call(totalReviewed);
-      } catch (e) {
-        debugPrint('onSessionComplete error: $e');
+      } catch (e, stackTrace) {
+        LoggerService.error('onSessionComplete error', e, stackTrace);
       } finally {
         endSession();
       }

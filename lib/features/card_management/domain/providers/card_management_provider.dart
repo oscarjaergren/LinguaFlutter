@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/domain/base_provider.dart';
 import '../../../language/domain/language_provider.dart';
 import '../../data/repositories/card_management_repository.dart';
 import '../../../../shared/utils/rate_limiter.dart';
+import '../../../../shared/services/logger_service.dart';
 import '../../../auth/data/services/supabase_auth_service.dart';
 
 /// Function type for resolving the current user ID.
@@ -29,10 +31,7 @@ class CardManagementProvider extends ChangeNotifier {
   bool _showOnlyFavorites = false;
   bool _showOnlyDuplicates = false;
   Set<String> _duplicateCardIds = {};
-
-  // UI state
-  bool _isLoading = false;
-  String? _errorMessage;
+  late final _state = ProviderState(notifyListeners);
 
   /// Create a CardManagementProvider with optional repository injection for testing.
   ///
@@ -91,8 +90,8 @@ class CardManagementProvider extends ChangeNotifier {
   bool get showOnlyDuplicates => _showOnlyDuplicates;
 
   // UI state getters
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
+  bool get isLoading => _state.isLoading;
+  String? get errorMessage => _state.errorMessage;
 
   // Computed properties
   List<String> get availableTags =>
@@ -127,15 +126,16 @@ class CardManagementProvider extends ChangeNotifier {
 
   /// Load all cards from storage
   Future<void> loadCards() async {
-    _setLoading(true);
+    _state.setLoading(true);
     try {
       _allCards = await _repository.getAllCards();
       _applyFilters();
-      _clearError();
-    } catch (e) {
-      _setError('Failed to load cards: $e');
+      _state.clearError();
+    } catch (e, stackTrace) {
+      LoggerService.error('Failed to load cards', e, stackTrace);
+      _state.setError('Failed to load cards: $e');
     } finally {
-      _setLoading(false);
+      _state.setLoading(false);
     }
   }
 
@@ -148,8 +148,9 @@ class CardManagementProvider extends ChangeNotifier {
 
       await _repository.saveCard(sanitizedCard);
       await loadCards();
-    } catch (e) {
-      _setError('Failed to save card: $e');
+    } catch (e, stackTrace) {
+      LoggerService.error('Failed to save card', e, stackTrace);
+      _state.setError('Failed to save card: $e');
       rethrow;
     }
   }
@@ -196,7 +197,7 @@ class CardManagementProvider extends ChangeNotifier {
       }
       await loadCards();
     } catch (e) {
-      _setError('Failed to add cards: $e');
+      _state.setError('Failed to add cards: $e');
       rethrow;
     }
   }
@@ -241,7 +242,7 @@ class CardManagementProvider extends ChangeNotifier {
       // Then delete from backend
       await _repository.deleteCard(cardId);
     } catch (e) {
-      _setError('Failed to delete card: $e');
+      _state.setError('Failed to delete card: $e');
       rethrow;
     }
   }
@@ -253,7 +254,7 @@ class CardManagementProvider extends ChangeNotifier {
       final updatedCard = card.copyWith(isArchived: !card.isArchived);
       await updateCard(updatedCard);
     } catch (e) {
-      _setError('Failed to toggle archive: $e');
+      _state.setError('Failed to toggle archive: $e');
     }
   }
 
@@ -264,7 +265,7 @@ class CardManagementProvider extends ChangeNotifier {
       final updatedCard = card.copyWith(isFavorite: !card.isFavorite);
       await updateCard(updatedCard);
     } catch (e) {
-      _setError('Failed to toggle favorite: $e');
+      _state.setError('Failed to toggle favorite: $e');
     }
   }
 
@@ -274,7 +275,7 @@ class CardManagementProvider extends ChangeNotifier {
       await _repository.clearAllCards();
       await loadCards();
     } catch (e) {
-      _setError('Failed to clear cards: $e');
+      _state.setError('Failed to clear cards: $e');
     }
   }
 
@@ -402,22 +403,6 @@ class CardManagementProvider extends ChangeNotifier {
 
   void _onLanguageChanged() {
     _applyFilters();
-    notifyListeners();
-  }
-
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _errorMessage = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    if (_errorMessage == null) return;
-    _errorMessage = null;
     notifyListeners();
   }
 

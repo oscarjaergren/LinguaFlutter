@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/services/supabase_auth_service.dart';
+import '../../../shared/domain/base_provider.dart';
 import '../../../shared/services/logger_service.dart';
 import '../../../shared/services/sentry_service.dart';
 import '../../../shared/utils/rate_limiter.dart';
@@ -15,9 +16,8 @@ class AuthProvider extends ChangeNotifier {
   static final _jsonMessagePattern = RegExp(r'"message"\s*:\s*"([^"]+)"');
 
   User? _user;
-  bool _isLoading = false;
-  String? _errorMessage;
   StreamSubscription<AuthState>? _authSubscription;
+  late final _state = ProviderState(notifyListeners);
 
   /// Callback to initialize data providers after auth
   OnAuthStateChanged? onAuthStateChanged;
@@ -58,15 +58,15 @@ class AuthProvider extends ChangeNotifier {
   // Getters
   User? get user => _user;
   bool get isAuthenticated => _user != null;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
+  bool get isLoading => _state.isLoading;
+  String? get errorMessage => _state.errorMessage;
   String? get userEmail => _user?.email;
   String? get userId => _user?.id;
 
   /// Sign up with email and password
   Future<bool> signUp({required String email, required String password}) async {
-    _setLoading(true);
-    _clearError();
+    _state.setLoading(true);
+    _state.clearError();
 
     try {
       LoggerService.debug('Attempting signup for: $email');
@@ -88,24 +88,24 @@ class AuthProvider extends ChangeNotifier {
         LoggerService.info(
           'Signup successful, email confirmation required for: $email',
         );
-        _setError('Please check your email to confirm your account.');
+        _state.setError('Please check your email to confirm your account.');
         return false;
       } else {
         LoggerService.warning('Signup returned no user for: $email');
-        _setError('Sign up failed. Please try again.');
+        _state.setError('Sign up failed. Please try again.');
         return false;
       }
     } on AuthException catch (e) {
       LoggerService.error('Sign up AuthException', e);
-      _setError(_parseAuthError(e));
+      _state.setError(_parseAuthError(e));
       return false;
     } catch (e, stackTrace) {
       LoggerService.error('Sign up unexpected error: ${e.runtimeType}', e);
       LoggerService.debug('Stack trace: $stackTrace');
-      _setError(_parseGenericError(e));
+      _state.setError(_parseGenericError(e));
       return false;
     } finally {
-      _setLoading(false);
+      _state.setLoading(false);
     }
   }
 
@@ -166,8 +166,8 @@ class AuthProvider extends ChangeNotifier {
 
   /// Sign in with email and password
   Future<bool> signIn({required String email, required String password}) async {
-    _setLoading(true);
-    _clearError();
+    _state.setLoading(true);
+    _state.clearError();
 
     try {
       final response = await SupabaseAuthService.signIn(
@@ -189,26 +189,26 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        _setError('Sign in failed');
+        _state.setError('Sign in failed');
         return false;
       }
     } on AuthException catch (e) {
       LoggerService.error('Sign in error', e);
-      _setError(e.message);
+      _state.setError(e.message);
       return false;
     } catch (e) {
       LoggerService.error('Sign in error', e);
-      _setError('An unexpected error occurred');
+      _state.setError('An unexpected error occurred');
       return false;
     } finally {
-      _setLoading(false);
+      _state.setLoading(false);
     }
   }
 
   /// Sign in with Google OAuth
   Future<bool> signInWithGoogle() async {
-    _setLoading(true);
-    _clearError();
+    _state.setLoading(true);
+    _state.clearError();
 
     try {
       final success = await SupabaseAuthService.signInWithGoogle();
@@ -222,17 +222,17 @@ class AuthProvider extends ChangeNotifier {
       return success;
     } catch (e) {
       LoggerService.error('Google sign in error', e);
-      _setError('Google sign in failed');
+      _state.setError('Google sign in failed');
       return false;
     } finally {
-      _setLoading(false);
+      _state.setLoading(false);
     }
   }
 
   /// Sign out
   Future<void> signOut() async {
-    _setLoading(true);
-    _clearError();
+    _state.setLoading(true);
+    _state.clearError();
 
     try {
       final userId = _user?.id;
@@ -251,19 +251,19 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
     } on AuthException catch (e) {
       LoggerService.error('Sign out error', e);
-      _setError(e.message);
+      _state.setError(e.message);
     } catch (e) {
       LoggerService.error('Sign out error', e);
-      _setError('An unexpected error occurred');
+      _state.setError('An unexpected error occurred');
     } finally {
-      _setLoading(false);
+      _state.setLoading(false);
     }
   }
 
   /// Send password reset email
   Future<bool> resetPassword(String email) async {
-    _setLoading(true);
-    _clearError();
+    _state.setLoading(true);
+    _state.clearError();
 
     try {
       await SupabaseAuthService.client.auth.resetPasswordForEmail(email);
@@ -271,37 +271,18 @@ class AuthProvider extends ChangeNotifier {
       return true;
     } on AuthException catch (e) {
       LoggerService.error('Password reset error', e);
-      _setError(e.message);
+      _state.setError(e.message);
       return false;
     } catch (e) {
       LoggerService.error('Password reset error', e);
-      _setError('An unexpected error occurred');
+      _state.setError('An unexpected error occurred');
       return false;
     } finally {
-      _setLoading(false);
+      _state.setLoading(false);
     }
   }
 
-  // Private helpers
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _errorMessage = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _errorMessage = null;
-  }
-
-  /// Clear error message (for UI)
-  void clearError() {
-    _clearError();
-    notifyListeners();
-  }
+  void clearError() => _state.clearError();
 
   @override
   void dispose() {

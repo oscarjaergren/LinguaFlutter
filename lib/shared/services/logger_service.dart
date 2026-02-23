@@ -54,6 +54,15 @@ class LoggerService {
     StackTrace? stackTrace,
   ]) {
     _talker.warning(message, exception, stackTrace);
+
+    // Send unexpected warnings with exceptions to Sentry
+    if (exception != null && SentryService.isInitialized) {
+      SentryService.captureException(
+        exception,
+        stackTrace: stackTrace,
+        hint: message,
+      );
+    }
   }
 
   static void error(

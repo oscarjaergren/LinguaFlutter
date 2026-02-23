@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'models/streak_model.dart';
 import '../data/services/streak_service.dart';
 import '../data/services/supabase_streak_service.dart';
+import '../../../shared/domain/base_provider.dart';
+import '../../../shared/services/logger_service.dart';
 
 /// Provider for managing streak state and operations.
 /// Assumes user is authenticated - callers must ensure this.
@@ -15,16 +17,16 @@ class StreakProvider extends ChangeNotifier {
   StreakProvider({StreakService? streakService})
     : _streakService = streakService ?? SupabaseStreakService();
 
+  late final _state = ProviderState(notifyListeners);
+
   StreakModel _streak = StreakModel.initial();
-  bool _isLoading = false;
-  String? _errorMessage;
   List<int> _newMilestones = [];
   Future<void> _operationQueue = Future<void>.value();
 
   // Getters
   StreakModel get streak => _streak;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
+  bool get isLoading => _state.isLoading;
+  String? get errorMessage => _state.errorMessage;
   List<int> get newMilestones => _newMilestones;
 
   // Computed properties
@@ -85,8 +87,9 @@ class StreakProvider extends ChangeNotifier {
   Future<Map<String, int>> getDailyReviewData({int days = 30}) async {
     try {
       return await _streakService.getDailyReviewData(days: days);
-    } catch (e) {
-      _setError('Failed to get daily review data: $e');
+    } catch (e, stackTrace) {
+      LoggerService.error('Failed to get daily review data', e, stackTrace);
+      _state.setError('Failed to get daily review data: $e');
       return {};
     }
   }
@@ -95,8 +98,9 @@ class StreakProvider extends ChangeNotifier {
   Future<Map<String, dynamic>> getStreakStats() async {
     try {
       return await _streakService.getStreakStats();
-    } catch (e) {
-      _setError('Failed to get streak stats: $e');
+    } catch (e, stackTrace) {
+      LoggerService.error('Failed to get streak stats', e, stackTrace);
+      _state.setError('Failed to get streak stats: $e');
       return {};
     }
   }
@@ -135,34 +139,19 @@ class StreakProvider extends ChangeNotifier {
     required String errorPrefix,
   }) {
     final future = _operationQueue.then((_) async {
-      _clearError();
-      _setLoading(true);
+      _state.clearError();
+      _state.setLoading(true);
       try {
         await action();
-      } catch (e) {
-        _setError('$errorPrefix: $e');
+      } catch (e, stackTrace) {
+        LoggerService.error(errorPrefix, e, stackTrace);
+        _state.setError('$errorPrefix: $e');
       } finally {
-        _setLoading(false);
+        _state.setLoading(false);
       }
     });
 
     _operationQueue = future.catchError((_) {});
     return future;
-  }
-
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _errorMessage = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    if (_errorMessage == null) return;
-    _errorMessage = null;
-    notifyListeners();
   }
 }

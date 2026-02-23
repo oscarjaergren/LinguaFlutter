@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/domain/base_provider.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../../shared/domain/models/word_data.dart';
 import '../../../language/domain/language_provider.dart';
@@ -47,9 +48,8 @@ class CardCreationViewModel extends ChangeNotifier {
   String? _usageNote;
 
   // UI state
-  bool _isLoading = false;
+  late final _state = ProviderState(notifyListeners);
   bool _isEditing = false;
-  String? _errorMessage;
 
   CardCreationViewModel({
     required CardManagementProvider cardManagement,
@@ -78,9 +78,9 @@ class CardCreationViewModel extends ChangeNotifier {
   }
 
   // UI state getters
-  bool get isLoading => _isLoading;
+  bool get isLoading => _state.isLoading;
   bool get isEditing => _isEditing;
-  String? get errorMessage => _errorMessage;
+  String? get errorMessage => _state.errorMessage;
 
   // Basic form getters
   String get frontText => _frontText;
@@ -127,13 +127,13 @@ class CardCreationViewModel extends ChangeNotifier {
   // Basic field updates
   void updateFrontText(String value) {
     _frontText = value.trim();
-    _clearError();
+    _state.clearError();
     notifyListeners();
   }
 
   void updateBackText(String value) {
     _backText = value.trim();
-    _clearError();
+    _state.clearError();
     notifyListeners();
   }
 
@@ -143,7 +143,7 @@ class CardCreationViewModel extends ChangeNotifier {
         .map((t) => t.trim())
         .where((t) => t.isNotEmpty)
         .toList();
-    _clearError();
+    _state.clearError();
     notifyListeners();
   }
 
@@ -294,11 +294,11 @@ class CardCreationViewModel extends ChangeNotifier {
   // Actions
   Future<bool> saveCard() async {
     if (!isFormValid) {
-      _setError('Please fill in all required fields');
+      _state.setError('Please fill in all required fields');
       return false;
     }
 
-    _setLoading(true);
+    _state.setLoading(true);
 
     try {
       final wordData = _buildWordData();
@@ -327,24 +327,24 @@ class CardCreationViewModel extends ChangeNotifier {
       }
 
       await _cardManagement.saveCard(card);
-      _setLoading(false);
+      _state.setLoading(false);
       return true;
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to save card: $e');
+      _state.setLoading(false);
+      _state.setError('Failed to save card: $e');
       return false;
     }
   }
 
   Future<void> deleteCard() async {
     if (!_isEditing || _cardToEdit == null) return;
-    _setLoading(true);
+    _state.setLoading(true);
     try {
       await _cardManagement.deleteCard(_cardToEdit.id);
-      _setLoading(false);
+      _state.setLoading(false);
     } catch (e) {
-      _setLoading(false);
-      _setError('Failed to delete card: $e');
+      _state.setLoading(false);
+      _state.setError('Failed to delete card: $e');
     }
   }
 
@@ -370,7 +370,7 @@ class CardCreationViewModel extends ChangeNotifier {
     _comparative = null;
     _superlative = null;
     _usageNote = null;
-    _clearError();
+    _state.clearError();
     notifyListeners();
   }
 
@@ -412,23 +412,6 @@ class CardCreationViewModel extends ChangeNotifier {
       case AdverbData():
         _wordType = WordType.adverb;
         _usageNote = wordData.usageNote;
-    }
-  }
-
-  void _setLoading(bool loading) {
-    _isLoading = loading;
-    notifyListeners();
-  }
-
-  void _setError(String error) {
-    _errorMessage = error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    if (_errorMessage != null) {
-      _errorMessage = null;
-      notifyListeners();
     }
   }
 
