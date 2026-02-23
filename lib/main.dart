@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:provider/provider.dart';
 import 'features/icon_search/icon_search.dart';
 import 'features/streak/streak.dart';
@@ -121,46 +122,49 @@ Future<Widget> _buildApp() async {
 
   _setupErrorHandlers();
 
-  return MultiProvider(
-    providers: [
-      // Core providers
-      ChangeNotifierProvider.value(value: authProvider),
-      ChangeNotifierProvider.value(value: languageProvider),
-      ChangeNotifierProvider.value(value: streakProvider),
-      ChangeNotifierProvider.value(value: themeProvider),
+  return ProviderScope(
+    child: MultiProvider(
+      providers: [
+        // Core providers
+        ChangeNotifierProvider.value(value: authProvider),
+        ChangeNotifierProvider.value(value: languageProvider),
+        ChangeNotifierProvider.value(value: streakProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
 
-      // Feature-specific providers (VSA)
-      ChangeNotifierProvider.value(value: cardManagementProvider),
-      ChangeNotifierProvider.value(value: duplicateDetectionProvider),
-      ChangeNotifierProvider.value(value: cardEnrichmentProvider),
+        // Feature-specific providers (VSA)
+        ChangeNotifierProvider.value(value: cardManagementProvider),
+        ChangeNotifierProvider.value(value: duplicateDetectionProvider),
+        ChangeNotifierProvider.value(value: cardEnrichmentProvider),
 
-      // UI providers
-      ChangeNotifierProvider(create: (_) => MascotProvider()),
-      ChangeNotifierProvider(create: (_) => IconProvider()),
+        // UI providers
+        ChangeNotifierProvider(create: (_) => MascotProvider()),
+        ChangeNotifierProvider(create: (_) => IconProvider()),
 
-      // Exercise preferences provider
-      ChangeNotifierProvider.value(value: exercisePreferencesProvider),
+        // Exercise preferences provider
+        ChangeNotifierProvider.value(value: exercisePreferencesProvider),
 
-      // Practice session provider
-      ChangeNotifierProxyProvider<
-        CardManagementProvider,
-        PracticeSessionProvider
-      >(
-        create: (context) {
-          final streakProvider = context.read<StreakProvider>();
-          return PracticeSessionProvider(
-            getReviewCards: () =>
-                context.read<CardManagementProvider>().reviewCards,
-            getAllCards: () => context.read<CardManagementProvider>().allCards,
-            updateCard: context.read<CardManagementProvider>().updateCard,
-            onReviewRecorded: (cardsReviewed) => streakProvider
-                .updateStreakWithReview(cardsReviewed: cardsReviewed),
-          );
-        },
-        update: (context, cardManagement, previous) => previous!,
-      ),
-    ],
-    child: const LinguaFlutterApp(),
+        // Practice session provider
+        ChangeNotifierProxyProvider<
+          CardManagementProvider,
+          PracticeSessionProvider
+        >(
+          create: (context) {
+            final streakProvider = context.read<StreakProvider>();
+            return PracticeSessionProvider(
+              getReviewCards: () =>
+                  context.read<CardManagementProvider>().reviewCards,
+              getAllCards: () =>
+                  context.read<CardManagementProvider>().allCards,
+              updateCard: context.read<CardManagementProvider>().updateCard,
+              onReviewRecorded: (cardsReviewed) => streakProvider
+                  .updateStreakWithReview(cardsReviewed: cardsReviewed),
+            );
+          },
+          update: (context, cardManagement, previous) => previous!,
+        ),
+      ],
+      child: const LinguaFlutterApp(),
+    ),
   );
 }
 
