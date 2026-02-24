@@ -1,77 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/services/logger_service.dart';
+import 'theme_state.dart';
 
-class ThemeProvider with ChangeNotifier {
+final themeNotifierProvider = NotifierProvider<ThemeNotifier, ThemeState>(() {
+  return ThemeNotifier();
+});
+
+class ThemeNotifier extends Notifier<ThemeState> {
   static const String _themeModeKey = 'themeMode';
   final SharedPreferencesAsync _prefs = SharedPreferencesAsync();
 
-  ThemeMode _themeMode;
-  bool _isInitialized = false;
+  @override
+  ThemeState build() {
+    return const ThemeState();
+  }
 
-  ThemeProvider() : _themeMode = ThemeMode.system;
-
-  ThemeMode get themeMode => _themeMode;
-  bool get isInitialized => _isInitialized;
-
-  /// Initialize the provider by loading saved theme from storage
   Future<void> initialize() async {
     final theme = await _prefs.getString(_themeModeKey);
-    LoggerService.debug('ThemeProvider: loaded theme from storage: "$theme"');
+    LoggerService.debug('ThemeNotifier: loaded theme from storage: "$theme"');
+    
+    ThemeMode mode;
     if (theme == 'dark') {
-      _themeMode = ThemeMode.dark;
+      mode = ThemeMode.dark;
     } else if (theme == 'light') {
-      _themeMode = ThemeMode.light;
+      mode = ThemeMode.light;
     } else {
-      _themeMode = ThemeMode.system;
+      mode = ThemeMode.system;
     }
-    LoggerService.debug('ThemeProvider: initialized with mode: $_themeMode');
-    _isInitialized = true;
-    notifyListeners();
+    
+    LoggerService.debug('ThemeNotifier: initialized with mode: $mode');
+    state = state.copyWith(
+      themeMode: mode,
+      isInitialized: true,
+    );
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    LoggerService.debug('ThemeProvider: setting mode to $mode');
-    _themeMode = mode;
-    notifyListeners();
+    LoggerService.debug('ThemeNotifier: setting mode to $mode');
+    state = state.copyWith(themeMode: mode);
+    
     switch (mode) {
       case ThemeMode.dark:
         await _prefs.setString(_themeModeKey, 'dark');
-        LoggerService.debug('ThemeProvider: saved "dark" to storage');
+        LoggerService.debug('ThemeNotifier: saved "dark" to storage');
         break;
       case ThemeMode.light:
         await _prefs.setString(_themeModeKey, 'light');
-        LoggerService.debug('ThemeProvider: saved "light" to storage');
+        LoggerService.debug('ThemeNotifier: saved "light" to storage');
         break;
       case ThemeMode.system:
         await _prefs.remove(_themeModeKey);
-        LoggerService.debug(
-          'ThemeProvider: removed theme from storage (system)',
-        );
+        LoggerService.debug('ThemeNotifier: removed theme from storage (system)');
         break;
     }
   }
 
-  /// Toggle between light and dark mode
-  /// Pass the current visual brightness to handle ThemeMode.system correctly
   Future<void> toggleTheme({Brightness? currentBrightness}) async {
     final ThemeMode newMode;
 
-    if (_themeMode == ThemeMode.system && currentBrightness != null) {
+    if (state.themeMode == ThemeMode.system && currentBrightness != null) {
       // When in system mode, toggle based on what's actually displayed
       newMode = currentBrightness == Brightness.dark
           ? ThemeMode.light
           : ThemeMode.dark;
     } else {
       // Otherwise toggle based on stored mode
-      newMode = _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      newMode = state.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     }
 
     await setThemeMode(newMode);
   }
 
-  /// Whether dark mode is currently active
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
+  bool get isDarkMode => state.themeMode == ThemeMode.dark;
 
   ThemeData get lightTheme {
     return ThemeData(

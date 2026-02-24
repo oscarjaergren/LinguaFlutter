@@ -79,7 +79,7 @@ Future<Widget> _buildApp() async {
 
   // Create core providers
   final authProvider = AuthProvider();
-  final themeProvider = ThemeProvider();
+
   final exercisePreferencesProvider = ExercisePreferencesProvider();
 
   // Create feature-specific providers (VSA architecture)
@@ -98,7 +98,7 @@ Future<Widget> _buildApp() async {
   final cardEnrichmentProvider = CardEnrichmentProvider();
 
   // Initialize providers that need async setup
-  await themeProvider.initialize();
+  await container.read(themeNotifierProvider.notifier).initialize();
   await cardEnrichmentProvider.initialize();
   await exercisePreferencesProvider.initialize();
 
@@ -134,7 +134,6 @@ Future<Widget> _buildApp() async {
       providers: [
         // Core providers
         ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider.value(value: themeProvider),
 
         // Feature-specific providers (VSA)
         ChangeNotifierProvider.value(value: cardManagementProvider),
@@ -217,21 +216,19 @@ class _ErrorApp extends StatelessWidget {
   }
 }
 
-class LinguaFlutterApp extends StatelessWidget {
+class LinguaFlutterApp extends ConsumerWidget {
   const LinguaFlutterApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp.router(
-          title: 'LinguaFlutter',
-          theme: themeProvider.lightTheme,
-          darkTheme: themeProvider.darkTheme,
-          themeMode: themeProvider.themeMode,
-          routerConfig: AppRouter.router,
-        );
-      },
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeState = ref.watch(themeNotifierProvider);
+    final themeNotifier = ref.read(themeNotifierProvider.notifier);
+    return MaterialApp.router(
+      title: 'LinguaFlutter',
+      theme: themeNotifier.lightTheme,
+      darkTheme: themeNotifier.darkTheme,
+      themeMode: themeState.themeMode,
+      routerConfig: AppRouter.router,
     );
   }
 }

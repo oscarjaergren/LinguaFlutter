@@ -29,21 +29,7 @@ class DashboardScreen extends StatelessWidget {
         title: const LanguageSelectorWidget(),
         actions: [
           // Theme toggle
-          Consumer<ThemeProvider>(
-            builder: (context, themeProvider, child) {
-              // Check actual visual brightness (accounts for system theme)
-              final brightness = Theme.of(context).brightness;
-              final isVisuallyDark = brightness == Brightness.dark;
-              return IconButton(
-                onPressed: () =>
-                    themeProvider.toggleTheme(currentBrightness: brightness),
-                icon: Icon(isVisuallyDark ? Icons.light_mode : Icons.dark_mode),
-                tooltip: isVisuallyDark
-                    ? 'Switch to light mode'
-                    : 'Switch to dark mode',
-              );
-            },
-          ),
+          const ThemeToggleButton(),
           // Auth/Profile button
           Consumer<AuthProvider>(
             builder: (context, authProvider, child) {
@@ -267,6 +253,23 @@ class DashboardScreen extends StatelessWidget {
         behavior: SnackBarBehavior.floating,
         duration: Duration(seconds: 2),
       ),
+    );
+  }
+}
+
+class ThemeToggleButton extends ConsumerWidget {
+  const ThemeToggleButton({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brightness = Theme.of(context).brightness;
+    final isVisuallyDark = brightness == Brightness.dark;
+    return IconButton(
+      onPressed: () => ref
+          .read(themeNotifierProvider.notifier)
+          .toggleTheme(currentBrightness: brightness),
+      icon: Icon(isVisuallyDark ? Icons.light_mode : Icons.dark_mode),
+      tooltip: isVisuallyDark ? 'Switch to light mode' : 'Switch to dark mode',
     );
   }
 }
