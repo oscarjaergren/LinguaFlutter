@@ -76,12 +76,9 @@ Future<Widget> _buildApp() async {
   // Create Riverpod container
   final container = ProviderContainer();
 
-  // Create core providers
+  // Create core providers (still ChangeNotifier — Phase 3 will migrate these)
   final authProvider = AuthProvider();
 
-  final exercisePreferencesProvider = ExercisePreferencesProvider();
-
-  // Create feature-specific providers (VSA architecture)
   final cardManagementProvider = CardManagementProvider(
     getActiveLanguage: () =>
         container.read(languageNotifierProvider).activeLanguage,
@@ -93,13 +90,15 @@ Future<Widget> _buildApp() async {
       cardManagementProvider.notifyLanguageChanged();
     }
   });
-  final duplicateDetectionProvider = DuplicateDetectionProvider();
-  final cardEnrichmentProvider = CardEnrichmentProvider();
 
   // Initialize providers that need async setup
   await container.read(themeNotifierProvider.notifier).initialize();
-  await cardEnrichmentProvider.initialize();
-  await exercisePreferencesProvider.initialize();
+
+  // Initialize Exercise Preferences and Card Enrichment via Riverpod notifiers
+  await container
+      .read(exercisePreferencesNotifierProvider.notifier)
+      .initialize();
+  await container.read(cardEnrichmentNotifierProvider.notifier).initialize();
 
   // Wire up auth state change callback to initialize data providers
   authProvider.onAuthStateChanged = (isAuthenticated) async {
@@ -136,13 +135,6 @@ Future<Widget> _buildApp() async {
 
         // Feature-specific providers (VSA)
         ChangeNotifierProvider.value(value: cardManagementProvider),
-        ChangeNotifierProvider.value(value: duplicateDetectionProvider),
-        ChangeNotifierProvider.value(value: cardEnrichmentProvider),
-
-        // UI providers
-
-        // Exercise preferences provider
-        ChangeNotifierProvider.value(value: exercisePreferencesProvider),
 
         // Practice session provider
         ChangeNotifierProxyProvider<

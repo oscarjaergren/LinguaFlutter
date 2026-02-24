@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/navigation/app_router.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
@@ -9,15 +8,16 @@ import 'card_item_widget.dart';
 import 'search_bar_widget.dart';
 
 /// Main view widget for displaying the card list
-class CardListView extends StatelessWidget {
+class CardListView extends ConsumerWidget {
   final CardListViewModel viewModel;
 
   const CardListView({super.key, required this.viewModel});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Watch CardManagementProvider directly to ensure rebuild on changes
     final cardProvider = context.watch<CardManagementProvider>();
+    final duplicateState = ref.watch(duplicateDetectionNotifierProvider);
 
     return Consumer<CardListViewModel>(
       builder: (context, vm, child) {
@@ -77,7 +77,7 @@ class CardListView extends StatelessWidget {
             Expanded(
               child: cards.isEmpty
                   ? _buildEmptyState(context, vm)
-                  : _buildCardListDirect(context, vm, cards),
+                  : _buildCardListDirect(context, vm, cards, duplicateState),
             ),
           ],
         );
@@ -113,7 +113,16 @@ class CardListView extends StatelessWidget {
             ),
           if (viewModel.showOnlyDuplicates)
             Chip(
-              label: Text('Duplicates (${viewModel.duplicateCount})'),
+              label: Consumer(
+                builder: (context, ref, _) {
+                  final duplicateCount = ref.watch(
+                    duplicateDetectionNotifierProvider.select(
+                      (s) => s.duplicateCount,
+                    ),
+                  );
+                  return Text('Duplicates ($duplicateCount)');
+                },
+              ),
               onDeleted: viewModel.toggleShowOnlyDuplicates,
               deleteIcon: const Icon(Icons.close, size: 18),
               backgroundColor: Colors.orange.withValues(alpha: 0.2),
@@ -207,6 +216,7 @@ class CardListView extends StatelessWidget {
     BuildContext context,
     CardListViewModel viewModel,
     List<CardModel> cards,
+    DuplicateDetectionState duplicateState,
   ) {
     return ListView.builder(
       key: ValueKey(cards.length),
@@ -214,7 +224,7 @@ class CardListView extends StatelessWidget {
       itemCount: cards.length,
       itemBuilder: (context, index) {
         final card = cards[index];
-        final duplicates = viewModel.getDuplicatesForCard(card.id);
+        final duplicates = duplicateState.duplicateMap[card.id] ?? [];
         return _AnimatedCardItem(
           key: ValueKey(card.id),
           card: card,

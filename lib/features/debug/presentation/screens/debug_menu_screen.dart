@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' hide Consumer;
 import 'package:uuid/uuid.dart';
 import '../../../card_management/card_management.dart';
+import '../../../card_management/domain/providers/card_enrichment_notifier.dart';
 import '../../../debug/data/debug_service.dart';
 import '../../../language/language.dart';
 
@@ -838,12 +839,13 @@ class DebugMenuScreen extends ConsumerWidget {
 
   Future<void> _importSampleCards(BuildContext context, WidgetRef ref) async {
     // Get all providers before any async operations to avoid BuildContext across async gaps
-    final aiProvider = context.read<CardEnrichmentProvider>();
+    final aiState = ref.read(cardEnrichmentNotifierProvider);
+    final aiNotifier = ref.read(cardEnrichmentNotifierProvider.notifier);
     final cardManagement = context.read<CardManagementProvider>();
     final languageNotifier = ref.read(languageNotifierProvider.notifier);
 
     // Check if AI is configured
-    if (!aiProvider.isConfigured) {
+    if (!aiState.isConfigured) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -900,7 +902,7 @@ class DebugMenuScreen extends ConsumerWidget {
 
         try {
           // Use AI to enrich the word
-          final enrichResult = await aiProvider.enrichWord(
+          final enrichResult = await aiNotifier.enrichWord(
             word: frontText,
             language: 'de',
           );
@@ -941,8 +943,9 @@ class DebugMenuScreen extends ConsumerWidget {
 
             await cardManagement.addCard(card);
             errorCount++;
+            final errorMessage = ref.read(cardEnrichmentNotifierProvider).error;
             LoggerService.warning(
-              'Imported without enrichment: $frontText (AI error: ${aiProvider.error})',
+              'Imported without enrichment: $frontText (AI error: $errorMessage)',
             );
           }
         } catch (e) {

@@ -5,7 +5,8 @@ export 'domain/models/exercise_preferences.dart';
 
 // Domain Layer - Providers
 export 'domain/providers/practice_session_provider.dart';
-export 'domain/providers/exercise_preferences_provider.dart';
+export 'domain/providers/exercise_preferences_notifier.dart';
+export 'domain/providers/exercise_preferences_state.dart';
 
 // Data Layer - Services
 export 'data/services/exercise_preferences_service.dart';

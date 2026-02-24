@@ -1,36 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider_pkg;
 import '../../../../shared/domain/models/exercise_type.dart';
 import '../../../../shared/domain/models/exercise_score.dart';
 import '../../../card_management/presentation/screens/card_creation_screen.dart';
-import '../../domain/providers/practice_session_provider.dart';
-import '../../domain/providers/exercise_preferences_provider.dart';
-import '../widgets/swipeable_exercise_card.dart';
-import '../widgets/exercises/exercise_content_widget.dart';
-import '../widgets/practice_completion_screen.dart';
-import '../widgets/practice_progress_bar.dart';
+import '../../../card_review/domain/providers/practice_session_provider.dart';
+import '../../../card_review/domain/providers/exercise_preferences_notifier.dart';
+import '../../../card_review/domain/models/exercise_preferences.dart';
 import '../widgets/exercise_filter_sheet.dart';
+import '../widgets/practice_progress_bar.dart';
+import '../widgets/practice_completion_screen.dart';
+import '../widgets/exercises/exercise_content_widget.dart';
+import '../../../../shared/domain/models/card_model.dart';
 
-/// Unified practice screen with swipeable exercise cards
-class PracticeScreen extends StatefulWidget {
+/// Screen where users practice their cards through various exercises
+class PracticeScreen extends ConsumerStatefulWidget {
   const PracticeScreen({super.key});
 
   @override
-  State<PracticeScreen> createState() => _PracticeScreenState();
+  ConsumerState<PracticeScreen> createState() => _PracticeScreenState();
 }
 
-class _PracticeScreenState extends State<PracticeScreen> {
-  final FocusNode _focusNode = FocusNode();
+class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   final GlobalKey<_SwipeableCardWrapperState> _cardKey = GlobalKey();
+  late FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startSession();
-      _focusNode.requestFocus();
-    });
+    _focusNode = FocusNode();
   }
 
   @override
@@ -39,40 +38,25 @@ class _PracticeScreenState extends State<PracticeScreen> {
     super.dispose();
   }
 
-  void _startSession() {
-    final provider = Provider.of<PracticeSessionProvider>(
-      context,
-      listen: false,
-    );
-    final prefsProvider = Provider.of<ExercisePreferencesProvider>(
-      context,
-      listen: false,
-    );
-
-    if (!provider.isSessionActive) {
-      // Start session with current exercise preferences
-      provider.startSession(preferences: prefsProvider.preferences);
-    }
-  }
-
-  Future<void> _showFilterSheet() async {
-    final provider = Provider.of<PracticeSessionProvider>(
-      context,
-      listen: false,
-    );
-    final prefsProvider = Provider.of<ExercisePreferencesProvider>(
+  void _showFilterSheet() async {
+    // We still access PracticeSessionProvider via Provider package for now
+    final provider = provider_pkg.Provider.of<PracticeSessionProvider>(
       context,
       listen: false,
     );
 
     final newPrefs = await ExerciseFilterSheet.show(
       context,
-      currentPreferences: provider.exercisePreferences,
+      currentPreferences: ref
+          .read(exercisePreferencesNotifierProvider)
+          .preferences,
     );
 
     if (newPrefs != null && mounted) {
-      // Update both providers
-      await prefsProvider.updatePreferences(newPrefs);
+      // Update Riverpod notifier and session provider
+      await ref
+          .read(exercisePreferencesNotifierProvider.notifier)
+          .updatePreferences(newPrefs);
       provider.updateExercisePreferences(newPrefs);
     }
   }
@@ -94,7 +78,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
-      final provider = Provider.of<PracticeSessionProvider>(
+      final provider = provider_pkg.Provider.of<PracticeSessionProvider>(
         context,
         listen: false,
       );
@@ -102,44 +86,47 @@ class _PracticeScreenState extends State<PracticeScreen> {
       // Allow swiping only when answer has been checked
       if (provider.canSwipe) {
         // Arrow keys or Enter to confirm answer
-        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          _cardKey.currentState?.triggerSwipe(false);
+        if (event.logicalKey == LogicalKeyboardKey.enter) {
+          provider.confirmAnswerAndAdvance(
+            markedCorrect: provider.currentAnswerCorrect ?? true,
+          );
           return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight ||
-            event.logicalKey == LogicalKeyboardKey.enter ||
-            event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-          // Enter confirms with current answer correctness
-          final isCorrect = provider.currentAnswerCorrect ?? true;
-          _cardKey.currentState?.triggerSwipe(isCorrect);
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          provider.confirmAnswerAndAdvance(markedCorrect: false);
+          return KeyEventResult.handled;
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          provider.confirmAnswerAndAdvance(markedCorrect: true);
           return KeyEventResult.handled;
         }
       } else {
-        // Before answer checked - number keys for multiple choice
-        if (event.logicalKey == LogicalKeyboardKey.digit1 ||
-            event.logicalKey == LogicalKeyboardKey.numpad1) {
-          _selectMultipleChoiceOption(provider, 0);
-          return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.digit2 ||
-            event.logicalKey == LogicalKeyboardKey.numpad2) {
-          _selectMultipleChoiceOption(provider, 1);
-          return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.digit3 ||
-            event.logicalKey == LogicalKeyboardKey.numpad3) {
-          _selectMultipleChoiceOption(provider, 2);
-          return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.digit4 ||
-            event.logicalKey == LogicalKeyboardKey.numpad4) {
-          _selectMultipleChoiceOption(provider, 3);
-          return KeyEventResult.handled;
-        } else if (event.logicalKey == LogicalKeyboardKey.enter ||
-            event.logicalKey == LogicalKeyboardKey.numpadEnter) {
-          // Enter reveals answer for reading recognition
-          _revealAnswer(provider);
-          return KeyEventResult.handled;
+        // Exercise specific shortcuts
+        if (provider.currentExerciseType == ExerciseType.readingRecognition ||
+            provider.currentExerciseType == ExerciseType.multipleChoiceText ||
+            provider.currentExerciseType == ExerciseType.multipleChoiceIcon) {
+          if (event.logicalKey == LogicalKeyboardKey.enter) {
+            _revealAnswer(provider);
+            return KeyEventResult.handled;
+          }
+
+          // Number keys 1-4 for multiple choice
+          if (provider.currentExerciseType != ExerciseType.readingRecognition) {
+            if (event.logicalKey == LogicalKeyboardKey.digit1) {
+              _selectMultipleChoiceOption(provider, 0);
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.digit2) {
+              _selectMultipleChoiceOption(provider, 1);
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.digit3) {
+              _selectMultipleChoiceOption(provider, 2);
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.digit4) {
+              _selectMultipleChoiceOption(provider, 3);
+              return KeyEventResult.handled;
+            }
+          }
         }
       }
     }
-
     return KeyEventResult.ignored;
   }
 
@@ -184,7 +171,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
               onPressed: _showFilterSheet,
             ),
             // Progress counter
-            Consumer<PracticeSessionProvider>(
+            provider_pkg.Consumer<PracticeSessionProvider>(
               builder: (context, provider, child) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 16.0),
@@ -199,7 +186,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
             ),
           ],
         ),
-        body: Consumer<PracticeSessionProvider>(
+        body: provider_pkg.Consumer<PracticeSessionProvider>(
           builder: (context, provider, child) {
             // Session completed
             if (!provider.isSessionActive) {
@@ -252,8 +239,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-
-                const SizedBox(height: 16),
               ],
             );
           },
@@ -263,7 +248,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
   }
 }
 
-/// Wrapper widget to handle swipeable card with state
 class _SwipeableCardWrapper extends StatefulWidget {
   final PracticeSessionProvider provider;
   final VoidCallback onEditCard;
@@ -279,214 +263,32 @@ class _SwipeableCardWrapper extends StatefulWidget {
 }
 
 class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
-  final GlobalKey<SwipeableExerciseCardState> _swipeCardKey = GlobalKey();
-
-  void triggerSwipe(bool isCorrect) {
-    // Access the swipeable card's keyboard swipe handler
-    _swipeCardKey.currentState?.handleKeyboardSwipe(isCorrect);
-  }
-
   @override
   Widget build(BuildContext context) {
     final card = widget.provider.currentCard!;
-    final exerciseType = widget.provider.currentExerciseType!;
-    final score = card.getExerciseScore(exerciseType);
-    final masteryLevel = score?.masteryLevel ?? "New";
-    final currentChain = score?.currentChain ?? 0;
-    final masteryProgress = score?.masteryProgress ?? 0.0;
-    final color = _getMasteryColor(masteryLevel);
+    final type = widget.provider.currentExerciseType!;
+    final options = widget.provider.multipleChoiceOptions;
 
-    return SwipeableExerciseCard(
-      key: _swipeCardKey,
-      canSwipe: widget.provider.canSwipe,
-      onSwipeRight: () async {
-        await widget.provider.confirmAnswerAndAdvance(markedCorrect: true);
-      },
-      onSwipeLeft: () async {
-        await widget.provider.confirmAnswerAndAdvance(markedCorrect: false);
-      },
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: ExerciseContentWidget(
-                  card: card,
-                  exerciseType: exerciseType,
-                  multipleChoiceOptions: widget.provider.multipleChoiceOptions,
-                  answerState: widget.provider.answerState,
-                  currentAnswerCorrect: widget.provider.currentAnswerCorrect,
-                  onCheckAnswer: (isCorrect) {
-                    widget.provider.checkAnswer(isCorrect: isCorrect);
-                  },
-                  onOverrideAnswer: (isCorrect) {
-                    widget.provider.overrideAnswer(isCorrect: isCorrect);
-                    // Trigger swipe animation when user marks answer
-                    triggerSwipe(isCorrect);
-                  },
-                ),
-              ),
-              // Mastery info bar at bottom of card
-              _buildMasteryBar(
-                context,
-                exerciseType,
-                masteryLevel,
-                currentChain,
-                masteryProgress,
-                color,
-                score,
-              ),
-            ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: ExerciseContentWidget(
+            card: card,
+            exerciseType: type,
+            answerState: widget.provider.answerState,
+            multipleChoiceOptions: options,
+            currentAnswerCorrect: widget.provider.currentAnswerCorrect,
+            onCheckAnswer: (isCorrect) {
+              widget.provider.checkAnswer(isCorrect: isCorrect);
+            },
+            onOverrideAnswer: (isCorrect) {
+              widget.provider.checkAnswer(isCorrect: isCorrect);
+            },
           ),
-          // Edit button in top-right corner of card
-          Positioned(
-            top: 8,
-            right: 8,
-            child: IconButton(
-              icon: Icon(Icons.edit, color: Colors.grey[400]),
-              tooltip: 'Edit card',
-              onPressed: widget.onEditCard,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMasteryBar(
-    BuildContext context,
-    ExerciseType exerciseType,
-    String masteryLevel,
-    int currentChain,
-    double masteryProgress,
-    Color color,
-    ExerciseScore? score,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border(
-          top: BorderSide(color: color.withValues(alpha: 0.3), width: 1),
         ),
       ),
-      child: Row(
-        children: [
-          // Exercise type icon and name
-          Icon(exerciseType.icon, size: 16, color: color),
-          const SizedBox(width: 6),
-          Text(
-            _getExerciseShortName(exerciseType),
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Chain with progress bar
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.link, size: 12, color: color),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$currentChain/5',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: masteryProgress,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Mastery level badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
-            ),
-            child: Text(
-              masteryLevel,
-              style: TextStyle(
-                fontSize: 10,
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
-  }
-
-  Color _getMasteryColor(String masteryLevel) {
-    switch (masteryLevel) {
-      case 'Mastered':
-        return Colors.green;
-      case 'Good':
-        return Colors.blue;
-      case 'Learning':
-        return Colors.orange;
-      case 'Difficult':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getExerciseShortName(ExerciseType type) {
-    switch (type) {
-      case ExerciseType.readingRecognition:
-        return 'Reading';
-      case ExerciseType.multipleChoiceText:
-        return 'Multiple Choice';
-      case ExerciseType.multipleChoiceIcon:
-        return 'Icon Choice';
-      case ExerciseType.reverseTranslation:
-        return 'Reverse';
-      case ExerciseType.listening:
-        return 'Listening';
-      case ExerciseType.speakingPronunciation:
-        return 'Speaking';
-      case ExerciseType.sentenceFill:
-        return 'Fill Blank';
-      case ExerciseType.sentenceBuilding:
-        return 'Sentence';
-      case ExerciseType.conjugationPractice:
-        return 'Conjugation';
-      case ExerciseType.articleSelection:
-        return 'Article';
-    }
   }
 }

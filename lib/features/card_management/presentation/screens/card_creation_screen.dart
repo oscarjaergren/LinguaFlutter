@@ -10,7 +10,8 @@ import '../../../../shared/widgets/ai_config_widget.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../language/language.dart';
 import '../../domain/providers/card_management_provider.dart';
-import '../../domain/providers/card_enrichment_provider.dart';
+import '../../domain/providers/card_enrichment_notifier.dart';
+import '../../domain/providers/card_enrichment_state.dart';
 
 /// Screen for creating and editing language learning cards with full model support
 class CreationCreationScreen extends ConsumerStatefulWidget {
@@ -296,8 +297,9 @@ class _CreationCreationScreenState
       return;
     }
 
-    final aiProvider = context.read<CardEnrichmentProvider>();
-    if (!aiProvider.isConfigured) {
+    final aiNotifier = ref.read(cardEnrichmentNotifierProvider.notifier);
+    final aiState = ref.read(cardEnrichmentNotifierProvider);
+    if (!aiState.isConfigured) {
       showAiConfigDialog(context, onSaved: _autoFillWithAI);
       return;
     }
@@ -306,7 +308,7 @@ class _CreationCreationScreenState
 
     try {
       final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
-      final result = await aiProvider.enrichWord(
+      final result = await aiNotifier.enrichWord(
         word: frontText,
         language: activeLanguage,
       );
@@ -345,13 +347,16 @@ class _CreationCreationScreenState
             ),
           );
         }
-      } else if (aiProvider.error != null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('AI Error: ${aiProvider.error}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+      } else {
+        final error = ref.read(cardEnrichmentNotifierProvider).error;
+        if (error != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('AI Error: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isAutoFilling = false);

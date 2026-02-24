@@ -6,7 +6,8 @@ export 'data/services/supabase_card_service.dart';
 
 // Domain Layer
 export 'domain/providers/card_management_provider.dart';
-export 'domain/providers/card_enrichment_provider.dart';
+export 'domain/providers/card_enrichment_notifier.dart';
+export 'domain/providers/card_enrichment_state.dart';
 export 'domain/models/word_enrichment_result.dart';
 
 // Presentation Layer

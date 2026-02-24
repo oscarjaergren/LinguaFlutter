@@ -3,33 +3,24 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' hide Consumer;
 import 'package:lingua_flutter/features/card_review/presentation/screens/practice_screen.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
-import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_provider.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_notifier.dart';
 import 'package:lingua_flutter/features/card_review/domain/models/exercise_preferences.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 
-@GenerateMocks([PracticeSessionProvider, ExercisePreferencesProvider])
+@GenerateMocks([PracticeSessionProvider])
 import 'keyboard_controls_test.mocks.dart';
 
 void main() {
   group('PracticeScreen Keyboard Controls', () {
     late MockPracticeSessionProvider mockProvider;
-    late MockExercisePreferencesProvider mockPrefsProvider;
 
     setUp(() {
       mockProvider = MockPracticeSessionProvider();
-      mockPrefsProvider = MockExercisePreferencesProvider();
-
-      // Setup preferences provider mock
-      when(
-        mockPrefsProvider.preferences,
-      ).thenReturn(ExercisePreferences.defaults());
-      when(mockPrefsProvider.addListener(any)).thenReturn(null);
-      when(mockPrefsProvider.removeListener(any)).thenReturn(null);
-      when(mockPrefsProvider.updatePreferences(any)).thenAnswer((_) async {});
 
       // Default mock setup
       when(mockProvider.isSessionActive).thenReturn(true);
@@ -64,6 +55,26 @@ void main() {
       ).thenReturn(null);
     });
 
+    Widget createTestWidget() {
+      return ProviderScope(
+        overrides: [
+          exercisePreferencesNotifierProvider.overrideWith(
+            () => ExercisePreferencesNotifier(),
+          ),
+        ],
+        child: MaterialApp(
+          home: MultiProvider(
+            providers: [
+              ChangeNotifierProvider<PracticeSessionProvider>.value(
+                value: mockProvider,
+              ),
+            ],
+            child: const PracticeScreen(),
+          ),
+        ),
+      );
+    }
+
     testWidgets('Space key should NOT advance exercise after answer', (
       tester,
     ) async {
@@ -71,21 +82,7 @@ void main() {
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(true);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -108,21 +105,7 @@ void main() {
       // Setup: Answer not yet checked
       when(mockProvider.canSwipe).thenReturn(false);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -140,21 +123,7 @@ void main() {
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(true);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -174,21 +143,7 @@ void main() {
       when(mockProvider.canSwipe).thenReturn(false);
       when(mockProvider.answerState).thenReturn(AnswerState.pending);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -208,21 +163,7 @@ void main() {
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(true);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -242,21 +183,7 @@ void main() {
       when(mockProvider.canSwipe).thenReturn(true);
       when(mockProvider.currentAnswerCorrect).thenReturn(false);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -289,21 +216,7 @@ void main() {
         ),
       );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-              ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                value: mockPrefsProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
-      );
+      await tester.pumpWidget(createTestWidget());
 
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
@@ -329,21 +242,7 @@ void main() {
           mockProvider.currentExerciseType,
         ).thenReturn(ExerciseType.reverseTranslation);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: MultiProvider(
-              providers: [
-                ChangeNotifierProvider<PracticeSessionProvider>.value(
-                  value: mockProvider,
-                ),
-                ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                  value: mockPrefsProvider,
-                ),
-              ],
-              child: const PracticeScreen(),
-            ),
-          ),
-        );
+        await tester.pumpWidget(createTestWidget());
 
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
@@ -369,21 +268,7 @@ void main() {
 
         when(mockProvider.canSwipe).thenReturn(false);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: MultiProvider(
-              providers: [
-                ChangeNotifierProvider<PracticeSessionProvider>.value(
-                  value: mockProvider,
-                ),
-                ChangeNotifierProvider<ExercisePreferencesProvider>.value(
-                  value: mockPrefsProvider,
-                ),
-              ],
-              child: const PracticeScreen(),
-            ),
-          ),
-        );
+        await tester.pumpWidget(createTestWidget());
 
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));

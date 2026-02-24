@@ -8,7 +8,6 @@ import '../../domain/providers/card_management_provider.dart';
 /// ViewModel for the card list screen, handling UI-specific logic and state
 class CardListViewModel extends ChangeNotifier {
   final CardManagementProvider _cardManagement;
-  final DuplicateDetectionProvider _duplicateDetection;
   final String Function() _getActiveLanguage;
   final Map<String, dynamic>? Function(String) _getLanguageDetails;
 
@@ -17,11 +16,9 @@ class CardListViewModel extends ChangeNotifier {
 
   CardListViewModel({
     required CardManagementProvider cardManagement,
-    required DuplicateDetectionProvider duplicateDetection,
     required String Function() getActiveLanguage,
     required Map<String, dynamic>? Function(String) getLanguageDetails,
   }) : _cardManagement = cardManagement,
-       _duplicateDetection = duplicateDetection,
        _getActiveLanguage = getActiveLanguage,
        _getLanguageDetails = getLanguageDetails {
     // Listen to provider changes
@@ -47,13 +44,6 @@ class CardListViewModel extends ChangeNotifier {
   bool get showOnlyFavorites => _cardManagement.showOnlyFavorites;
   bool get showOnlyDuplicates => _cardManagement.showOnlyDuplicates;
   String? get errorMessage => _cardManagement.errorMessage;
-
-  // Duplicate detection getters
-  int get duplicateCount => _duplicateDetection.duplicateCount;
-  bool cardHasDuplicates(String cardId) =>
-      _duplicateDetection.cardHasDuplicates(cardId);
-  List<DuplicateMatch> getDuplicatesForCard(String cardId) =>
-      _duplicateDetection.getDuplicatesForCard(cardId);
 
   // Getters for card data
   List<CardModel> get displayCards => _cardManagement.filteredCards;

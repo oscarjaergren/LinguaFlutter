@@ -27,7 +27,6 @@ class CardsScreen extends ConsumerWidget {
     return ChangeNotifierProvider(
       create: (context) => CardListViewModel(
         cardManagement: context.read<CardManagementProvider>(),
-        duplicateDetection: context.read<DuplicateDetectionProvider>(),
         getActiveLanguage: () =>
             ref.read(languageNotifierProvider).activeLanguage,
         getLanguageDetails: ref

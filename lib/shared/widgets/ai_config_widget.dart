@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../features/card_management/domain/providers/card_enrichment_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/card_management/domain/providers/card_enrichment_notifier.dart';
 import '../services/ai/ai.dart';
 
 /// Reusable widget for configuring AI provider and API key
-class AiConfigWidget extends StatefulWidget {
+class AiConfigWidget extends ConsumerStatefulWidget {
   /// Called after successful save
   final VoidCallback? onSaved;
 
@@ -14,10 +14,10 @@ class AiConfigWidget extends StatefulWidget {
   const AiConfigWidget({super.key, this.onSaved, this.compact = false});
 
   @override
-  State<AiConfigWidget> createState() => _AiConfigWidgetState();
+  ConsumerState<AiConfigWidget> createState() => _AiConfigWidgetState();
 }
 
-class _AiConfigWidgetState extends State<AiConfigWidget> {
+class _AiConfigWidgetState extends ConsumerState<AiConfigWidget> {
   final _apiKeyController = TextEditingController();
   bool _obscureApiKey = true;
   bool _isTestingKey = false;
@@ -27,10 +27,10 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
   @override
   void initState() {
     super.initState();
-    final provider = context.read<CardEnrichmentProvider>();
-    _apiKeyController.text = provider.config.apiKey ?? '';
-    _selectedProvider = provider.config.provider;
-    _selectedModel = provider.config.model ?? _selectedProvider.defaultModel;
+    final config = ref.read(cardEnrichmentNotifierProvider).config;
+    _apiKeyController.text = config.apiKey ?? '';
+    _selectedProvider = config.provider;
+    _selectedModel = config.model ?? _selectedProvider.defaultModel;
   }
 
   @override
@@ -40,11 +40,11 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
   }
 
   Future<void> _saveConfig() async {
-    final provider = context.read<CardEnrichmentProvider>();
+    final notifier = ref.read(cardEnrichmentNotifierProvider.notifier);
     final apiKey = _apiKeyController.text.trim();
 
     if (apiKey.isEmpty) {
-      await provider.setApiKey(null);
+      await notifier.setApiKey(null);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -53,9 +53,9 @@ class _AiConfigWidgetState extends State<AiConfigWidget> {
       return;
     }
 
-    await provider.setProvider(_selectedProvider);
-    await provider.setModel(_selectedModel);
-    await provider.setApiKey(apiKey);
+    await notifier.setProvider(_selectedProvider);
+    await notifier.setModel(_selectedModel);
+    await notifier.setApiKey(apiKey);
 
     if (mounted) {
       ScaffoldMessenger.of(
@@ -277,54 +277,51 @@ Future<void> showAiConfigDialog(BuildContext context, {VoidCallback? onSaved}) {
 }
 
 /// Status card showing current AI configuration state
-class AiConfigStatusCard extends StatelessWidget {
+class AiConfigStatusCard extends ConsumerWidget {
   const AiConfigStatusCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final state = ref.watch(cardEnrichmentNotifierProvider);
 
-    return Consumer<CardEnrichmentProvider>(
-      builder: (context, provider, child) {
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  provider.isConfigured ? Icons.check_circle : Icons.warning,
-                  color: provider.isConfigured ? Colors.green : Colors.orange,
-                  size: 32,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        provider.isConfigured
-                            ? 'AI Enrichment Enabled'
-                            : 'AI Not Configured',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        provider.isConfigured
-                            ? '${provider.config.provider.displayName} - ${provider.config.effectiveModel}'
-                            : 'Add your API key to enable word enrichment',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(
+              state.isConfigured ? Icons.check_circle : Icons.warning,
+              color: state.isConfigured ? Colors.green : Colors.orange,
+              size: 32,
             ),
-          ),
-        );
-      },
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    state.isConfigured
+                        ? 'AI Enrichment Enabled'
+                        : 'AI Not Configured',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    state.isConfigured
+                        ? '${state.config.provider.displayName} - ${state.config.effectiveModel}'
+                        : 'Add your API key to enable word enrichment',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
