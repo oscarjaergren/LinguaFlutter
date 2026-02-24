@@ -4,14 +4,13 @@ import '../../../../shared/domain/base_provider.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../../shared/domain/models/word_data.dart';
 
-import '../../../icon_search/domain/icon_provider.dart';
+import '../../../icon_search/domain/icon_notifier.dart';
 import '../../domain/providers/card_management_provider.dart';
 
 /// ViewModel for card creation and editing with full model support
 class CardCreationViewModel extends ChangeNotifier {
   final CardManagementProvider _cardManagement;
   final String Function() _getActiveLanguage;
-  final IconProvider _iconProvider;
   final CardModel? _cardToEdit;
 
   // Basic form state
@@ -54,24 +53,20 @@ class CardCreationViewModel extends ChangeNotifier {
   CardCreationViewModel({
     required CardManagementProvider cardManagement,
     required String Function() getActiveLanguage,
-    required IconProvider iconProvider,
     CardModel? cardToEdit,
   }) : _cardManagement = cardManagement,
        _getActiveLanguage = getActiveLanguage,
-       _iconProvider = iconProvider,
        _cardToEdit = cardToEdit {
     _isEditing = cardToEdit != null;
     if (_isEditing) {
       _initializeFromCard(cardToEdit!);
     }
     _cardManagement.addListener(_onProviderChanged);
-    _iconProvider.addListener(_onProviderChanged);
   }
 
   @override
   void dispose() {
     _cardManagement.removeListener(_onProviderChanged);
-    _iconProvider.removeListener(_onProviderChanged);
     super.dispose();
   }
 

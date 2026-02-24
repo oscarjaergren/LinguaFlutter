@@ -1,23 +1,23 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:lingua_flutter/features/icon_search/domain/icon_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lingua_flutter/features/icon_search/domain/icon_notifier.dart';
 import 'package:lingua_flutter/features/icon_search/presentation/widgets/icon_grid_item.dart';
 import 'package:lingua_flutter/features/icon_search/presentation/widgets/iconify_icon.dart';
 import 'package:lingua_flutter/shared/domain/models/icon_model.dart';
-import 'package:provider/provider.dart';
 
 /// Screen for searching and selecting icons
-class IconSearchScreen extends StatefulWidget {
+class IconSearchScreen extends ConsumerStatefulWidget {
   final String? initialSearchQuery;
 
   const IconSearchScreen({super.key, this.initialSearchQuery});
 
   @override
-  State<IconSearchScreen> createState() => _IconSearchScreenState();
+  ConsumerState<IconSearchScreen> createState() => _IconSearchScreenState();
 }
 
-class _IconSearchScreenState extends State<IconSearchScreen> {
+class _IconSearchScreenState extends ConsumerState<IconSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   Timer? _debounceTimer;
@@ -36,12 +36,12 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
       if (widget.initialSearchQuery != null &&
           widget.initialSearchQuery!.trim().isNotEmpty) {
         // Auto-search with the initial query
-        context.read<IconProvider>().searchIcons(
-          widget.initialSearchQuery!.trim(),
-        );
+        ref
+            .read(iconNotifierProvider.notifier)
+            .searchIcons(widget.initialSearchQuery!.trim());
       } else {
         // Load popular icons when no initial query
-        context.read<IconProvider>().loadPopularCollections();
+        ref.read(iconNotifierProvider.notifier).loadPopularCollections();
       }
     });
   }
@@ -61,14 +61,13 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
     // Start a new timer
     _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       if (mounted) {
-        context.read<IconProvider>().searchIcons(query);
+        ref.read(iconNotifierProvider.notifier).searchIcons(query);
       }
     });
   }
 
   void _onIconSelected(IconModel icon) {
-    final provider = context.read<IconProvider>();
-    provider.selectIcon(icon);
+    ref.read(iconNotifierProvider.notifier).selectIcon(icon);
 
     // Automatically close the screen and return the selected icon
     Navigator.of(context).pop(icon);
@@ -92,6 +91,9 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final iconState = ref.watch(iconNotifierProvider);
+    final iconNotifier = ref.read(iconNotifierProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Search Icons'),
@@ -116,7 +118,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                     icon: const Icon(Icons.clear),
                     onPressed: () {
                       _searchController.clear();
-                      context.read<IconProvider>().clearSearch();
+                      iconNotifier.clearSearch();
                     },
                   ),
               ],
@@ -124,106 +126,93 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
           ),
 
           // Selected icon display
-          Consumer<IconProvider>(
-            builder: (context, provider, child) {
-              if (provider.selectedIcon != null) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  padding: const EdgeInsets.all(16.0),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      IconifyIcon(icon: provider.selectedIcon!, size: 32),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Selected: ${provider.selectedIcon!.name}',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            Text(
-                              'Set: ${provider.selectedIcon!.set}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => provider.clearSelection(),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-
-          // Results counter
-          Consumer<IconProvider>(
-            builder: (context, provider, child) {
-              if (provider.searchResults.isNotEmpty && !provider.isLoading) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8.0,
-                    horizontal: 12.0,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.search,
-                        size: 16,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${provider.searchResults.length} icons found',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (provider.searchQuery.isNotEmpty) ...[
-                        const Spacer(),
+          if (iconState.selectedIcon != null)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  IconifyIcon(icon: iconState.selectedIcon!, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          'for "${provider.searchQuery}"',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.5),
-                                fontStyle: FontStyle.italic,
-                              ),
+                          'Selected: ${iconState.selectedIcon!.name}',
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        Text(
+                          'Set: ${iconState.selectedIcon!.set}',
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => iconNotifier.clearSelection(),
+                  ),
+                ],
+              ),
+            ),
+
+          // Results counter
+          if (iconState.searchResults.isNotEmpty && !iconState.isLoading)
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(
+                vertical: 8.0,
+                horizontal: 12.0,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.search,
+                    size: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${iconState.searchResults.length} icons found',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (iconState.searchQuery.isNotEmpty) ...[
+                    const Spacer(),
+                    Text(
+                      'for "${iconState.searchQuery}"',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
 
           // Search results
           Expanded(
-            child: Consumer<IconProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
+            child: Builder(
+              builder: (context) {
+                if (iconState.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                if (provider.errorMessage != null) {
+                if (iconState.errorMessage != null) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -240,17 +229,17 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          provider.errorMessage!,
+                          iconState.errorMessage!,
                           style: Theme.of(context).textTheme.bodyMedium,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
                         FilledButton(
                           onPressed: () {
-                            if (provider.searchQuery.isNotEmpty) {
-                              provider.searchIcons(provider.searchQuery);
+                            if (iconState.searchQuery.isNotEmpty) {
+                              iconNotifier.searchIcons(iconState.searchQuery);
                             } else {
-                              provider.loadPopularCollections();
+                              iconNotifier.loadPopularCollections();
                             }
                           },
                           child: const Text('Retry'),
@@ -260,7 +249,7 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                   );
                 }
 
-                if (provider.searchResults.isEmpty) {
+                if (iconState.searchResults.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -274,14 +263,14 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          provider.searchQuery.isEmpty
+                          iconState.searchQuery.isEmpty
                               ? 'Search for icons above'
                               : 'No icons found',
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          provider.searchQuery.isEmpty
+                          iconState.searchQuery.isEmpty
                               ? 'Try searching for "home", "user", or "heart"'
                               : 'Try a different search term',
                           style: Theme.of(context).textTheme.bodyMedium,
@@ -299,12 +288,11 @@ class _IconSearchScreenState extends State<IconSearchScreen> {
                     crossAxisSpacing: 4,
                     mainAxisSpacing: 4,
                   ),
-                  itemCount: provider.searchResults.length,
-                  // Add cache extent for better performance
+                  itemCount: iconState.searchResults.length,
                   cacheExtent: 200,
                   itemBuilder: (context, index) {
-                    final icon = provider.searchResults[index];
-                    final isSelected = provider.selectedIcon?.id == icon.id;
+                    final icon = iconState.searchResults[index];
+                    final isSelected = iconState.selectedIcon?.id == icon.id;
 
                     return Tooltip(
                       message: '${icon.name}\n${icon.set}',

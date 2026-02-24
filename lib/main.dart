@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
 import 'package:provider/provider.dart';
-import 'features/icon_search/icon_search.dart';
 import 'features/language/language.dart';
 import 'features/mascot/mascot.dart';
 import 'features/theme/theme.dart';
@@ -141,8 +140,6 @@ Future<Widget> _buildApp() async {
         ChangeNotifierProvider.value(value: cardEnrichmentProvider),
 
         // UI providers
-        ChangeNotifierProvider(create: (_) => MascotProvider()),
-        ChangeNotifierProvider(create: (_) => IconProvider()),
 
         // Exercise preferences provider
         ChangeNotifierProvider.value(value: exercisePreferencesProvider),

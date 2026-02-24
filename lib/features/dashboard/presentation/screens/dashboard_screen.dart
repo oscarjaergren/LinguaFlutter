@@ -1,7 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart'
+    show
+        Provider,
+        ChangeNotifierProvider,
+        MultiProvider,
+        Consumer; // Only show what's needed from provider
 import '../../../../shared/navigation/app_router.dart';
 import '../../../auth/auth.dart';
 import '../../../card_management/card_management.dart';
@@ -14,14 +19,14 @@ import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
 
 /// Main dashboard/landing screen showing overview and navigation
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Reset mascot session when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MascotProvider>().resetSession();
+      ref.read(mascotNotifierProvider.notifier).resetSession();
     });
 
     return Scaffold(
@@ -150,12 +155,15 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Mascot with speech bubble
-                Consumer(
-                  builder: (context, WidgetRef ref, child) {
-                    final mascotProvider = context.watch<MascotProvider>();
+                Builder(
+                  builder: (context) {
+                    final mascotState = ref.watch(mascotNotifierProvider);
+                    final mascotNotifier = ref.read(
+                      mascotNotifierProvider.notifier,
+                    );
                     final streakState = ref.watch(streakNotifierProvider);
                     WidgetsBinding.instance.addPostFrameCallback((_) {
-                      mascotProvider.showContextualMessage(
+                      mascotNotifier.showContextualMessage(
                         totalCards: totalCards,
                         dueCards: dueCount,
                         currentStreak: streakState.streak.currentStreak,
@@ -167,10 +175,10 @@ class DashboardScreen extends StatelessWidget {
                     return Center(
                       child: MascotWidget(
                         size: 120,
-                        message: mascotProvider.currentMessage,
-                        mascotState: mascotProvider.currentState,
+                        message: mascotState.currentMessage,
+                        mascotState: mascotState.currentState,
                         onTap: () =>
-                            mascotProvider.reactToAction(MascotAction.tapped),
+                            mascotNotifier.reactToAction(MascotAction.tapped),
                       ),
                     );
                   },

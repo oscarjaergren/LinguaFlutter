@@ -201,7 +201,7 @@ class _CreationCreationScreenState
   }
 
   Future<void> _selectIcon() async {
-    context.read<IconProvider>().clearSelection();
+    ref.read(iconNotifierProvider.notifier).clearSelection();
     // Use English translation (back) for icon search since Iconify uses English keywords
     final searchQuery = _getIconSearchQuery();
 

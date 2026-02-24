@@ -1,21 +1,25 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/widgets/mascot_widget.dart';
+import 'mascot_state.dart';
 
-/// Provider for managing mascot state and interactions
-class MascotProvider extends ChangeNotifier {
-  MascotState _currentState = MascotState.idle;
-  String? _currentMessage;
-  bool _isVisible = true;
-  bool _hasInitializedForSession = false;
-  bool animationsEnabled;
 
-  MascotProvider({this.animationsEnabled = true});
 
-  // Getters
-  MascotState get currentState => _currentState;
-  String? get currentMessage => _currentMessage;
-  bool get isVisible => _isVisible;
+// Pre-define MascotAction here instead since it's used directly in the old provider
+enum MascotAction {
+  cardCompleted,
+  streakAchieved,
+  sessionCompleted,
+  firstVisit,
+  longAbsence,
+  struggling,
+  tapped,
+}
 
+final mascotNotifierProvider = NotifierProvider<MascotNotifier, MascotStateData>(() {
+  return MascotNotifier();
+});
+
+class MascotNotifier extends Notifier<MascotStateData> {
   // Predefined messages for different contexts
   static const Map<String, List<String>> _contextMessages = {
     'welcome': [
@@ -56,18 +60,27 @@ class MascotProvider extends ChangeNotifier {
     ],
   };
 
+  @override
+  MascotStateData build() {
+    return const MascotStateData();
+  }
+  
+  void setAnimationsEnabled(bool enabled) {
+    state = state.copyWith(animationsEnabled: enabled);
+  }
+
   /// Show a message from a specific context
-  void showMessage(String context, {MascotState? state}) {
+  void showMessage(String context, {MascotState? mascotState}) {
     final messages = _contextMessages[context];
     if (messages != null && messages.isNotEmpty) {
-      final randomIndex =
-          DateTime.now().millisecondsSinceEpoch % messages.length;
-      _currentMessage = messages[randomIndex];
-      _currentState = state ?? MascotState.idle;
-      notifyListeners();
+      final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
+      state = state.copyWith(
+        currentMessage: messages[randomIndex],
+        currentState: mascotState ?? MascotState.idle,
+      );
 
       // Auto-hide message after 4 seconds
-      if (animationsEnabled) {
+      if (state.animationsEnabled) {
         Future.delayed(const Duration(seconds: 4), () {
           hideMessage();
         });
@@ -76,13 +89,14 @@ class MascotProvider extends ChangeNotifier {
   }
 
   /// Show a custom message
-  void showCustomMessage(String message, {MascotState? state}) {
-    _currentMessage = message;
-    _currentState = state ?? MascotState.idle;
-    notifyListeners();
+  void showCustomMessage(String message, {MascotState? mascotState}) {
+    state = state.copyWith(
+      currentMessage: message,
+      currentState: mascotState ?? MascotState.idle,
+    );
 
     // Auto-hide message after 4 seconds
-    if (animationsEnabled) {
+    if (state.animationsEnabled) {
       Future.delayed(const Duration(seconds: 4), () {
         hideMessage();
       });
@@ -91,34 +105,33 @@ class MascotProvider extends ChangeNotifier {
 
   /// Hide the current message
   void hideMessage() {
-    _currentMessage = null;
-    _currentState = MascotState.idle;
-    notifyListeners();
+    state = state.copyWith(
+      currentMessage: null,
+      currentState: MascotState.idle,
+    );
   }
 
   /// Set mascot state without message
-  void setState(MascotState state) {
-    _currentState = state;
-    notifyListeners();
+  void setState(MascotState mascotState) {
+    state = state.copyWith(currentState: mascotState);
   }
 
   /// Show/hide mascot
   void setVisibility(bool visible) {
-    _isVisible = visible;
-    notifyListeners();
+    state = state.copyWith(isVisible: visible);
   }
 
   /// Celebrate achievement
   void celebrate([String? customMessage]) {
-    _currentState = MascotState.celebrating;
-    _currentMessage = customMessage ?? _getRandomMessage('celebration');
-    notifyListeners();
+    state = state.copyWith(
+      currentState: MascotState.celebrating,
+      currentMessage: customMessage ?? _getRandomMessage('celebration')
+    );
 
-    if (animationsEnabled) {
+    if (state.animationsEnabled) {
       // Return to idle after celebration
       Future.delayed(const Duration(seconds: 3), () {
-        _currentState = MascotState.idle;
-        notifyListeners();
+        state = state.copyWith(currentState: MascotState.idle);
       });
 
       // Hide message after 5 seconds
@@ -130,15 +143,15 @@ class MascotProvider extends ChangeNotifier {
 
   /// Show excitement
   void showExcitement([String? customMessage]) {
-    _currentState = MascotState.excited;
-    _currentMessage = customMessage ?? _getRandomMessage('encouragement');
-    notifyListeners();
+    state = state.copyWith(
+      currentState: MascotState.excited,
+      currentMessage: customMessage ?? _getRandomMessage('encouragement')
+    );
 
-    if (animationsEnabled) {
+    if (state.animationsEnabled) {
       // Return to idle after excitement
       Future.delayed(const Duration(seconds: 2), () {
-        _currentState = MascotState.idle;
-        notifyListeners();
+        state = state.copyWith(currentState: MascotState.idle);
       });
 
       // Hide message after 4 seconds
@@ -164,16 +177,13 @@ class MascotProvider extends ChangeNotifier {
         celebrate('Session complete! Great job! 🌟');
         break;
       case MascotAction.firstVisit:
-        showMessage('welcome', state: MascotState.excited);
+        showMessage('welcome', mascotState: MascotState.excited);
         break;
       case MascotAction.longAbsence:
-        showCustomMessage(
-          'Welcome back! I missed you!',
-          state: MascotState.excited,
-        );
+        showCustomMessage('Welcome back! I missed you!', mascotState: MascotState.excited);
         break;
       case MascotAction.struggling:
-        showMessage('motivation', state: MascotState.thinking);
+        showMessage('motivation', mascotState: MascotState.thinking);
         break;
       case MascotAction.tapped:
         final messages = [
@@ -181,9 +191,8 @@ class MascotProvider extends ChangeNotifier {
           ..._contextMessages['encouragement']!,
           ..._contextMessages['motivation']!,
         ];
-        final randomIndex =
-            DateTime.now().millisecondsSinceEpoch % messages.length;
-        showCustomMessage(messages[randomIndex], state: MascotState.excited);
+        final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
+        showCustomMessage(messages[randomIndex], mascotState: MascotState.excited);
         break;
     }
   }
@@ -204,21 +213,18 @@ class MascotProvider extends ChangeNotifier {
     required bool hasStudiedToday,
   }) {
     // Only show new message if we haven't initialized for this session
-    if (_hasInitializedForSession) return;
+    if (state.hasInitializedForSession) return;
 
-    _hasInitializedForSession = true;
+    state = state.copyWith(hasInitializedForSession: true);
 
     if (!hasStudiedToday && dueCards > 0) {
-      showMessage('motivation', state: MascotState.thinking);
+      showMessage('motivation', mascotState: MascotState.thinking);
     } else if (currentStreak > 0 && currentStreak % 7 == 0) {
       celebrate('$currentStreak day streak! You\'re amazing! 🔥');
     } else if (dueCards == 0 && totalCards > 0) {
-      showMessage('celebration', state: MascotState.celebrating);
+      showMessage('celebration', mascotState: MascotState.celebrating);
     } else if (totalCards == 0) {
-      showCustomMessage(
-        'Let\'s create your first card!',
-        state: MascotState.excited,
-      );
+      showCustomMessage('Let\'s create your first card!', mascotState: MascotState.excited);
     } else {
       // Show welcome message
       showMessage('welcome');
@@ -227,17 +233,6 @@ class MascotProvider extends ChangeNotifier {
 
   /// Reset session state (call when screen is reopened)
   void resetSession() {
-    _hasInitializedForSession = false;
+    state = state.copyWith(hasInitializedForSession: false);
   }
-}
-
-/// Enum for different mascot actions/triggers
-enum MascotAction {
-  cardCompleted,
-  streakAchieved,
-  sessionCompleted,
-  firstVisit,
-  longAbsence,
-  struggling,
-  tapped,
 }

@@ -1,7 +1,8 @@
 // Mascot Feature Barrel Export
 
 // Domain Layer
-export 'domain/mascot_provider.dart';
+export 'domain/mascot_notifier.dart';
+export 'domain/mascot_state.dart';
 
 // Data Layer
 export 'data/services/mascot_service.dart';

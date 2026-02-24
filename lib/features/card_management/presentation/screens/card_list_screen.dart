@@ -5,7 +5,7 @@ import '../../../../shared/navigation/app_router.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../language/language.dart';
-import '../../../mascot/domain/mascot_provider.dart';
+import '../../../mascot/domain/mascot_notifier.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
 import '../../domain/providers/card_management_provider.dart';
 import '../view_models/card_list_view_model.dart';
@@ -21,7 +21,7 @@ class CardsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Reset mascot session when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MascotProvider>().resetSession();
+      ref.read(mascotNotifierProvider.notifier).resetSession();
     });
 
     return ChangeNotifierProvider(
