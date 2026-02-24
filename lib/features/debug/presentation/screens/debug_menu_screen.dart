@@ -5,18 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:lingua_flutter/features/tts/tts.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' hide Consumer;
 import 'package:uuid/uuid.dart';
 import '../../../card_management/card_management.dart';
 import '../../../debug/data/debug_service.dart';
 import '../../../language/language.dart';
 
 /// Debug menu for development and testing
-class DebugMenuScreen extends StatelessWidget {
+class DebugMenuScreen extends ConsumerWidget {
   const DebugMenuScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Only show debug menu in debug mode
     if (!kDebugMode) {
       return Scaffold(
@@ -67,7 +68,7 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _createCards(context, 10),
+                      onPressed: () => _createCards(context, ref, 10),
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Create 10 Cards'),
                       style: OutlinedButton.styleFrom(
@@ -83,7 +84,7 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _createCards(context, 20),
+                      onPressed: () => _createCards(context, ref, 20),
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Create 20 Cards'),
                       style: OutlinedButton.styleFrom(
@@ -99,7 +100,7 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _createCards(context, 30),
+                      onPressed: () => _createCards(context, ref, 30),
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Create 30 Cards'),
                       style: OutlinedButton.styleFrom(
@@ -117,7 +118,7 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _createDueCards(context, 5),
+                      onPressed: () => _createDueCards(context, ref, 5),
                       icon: const Icon(Icons.schedule),
                       label: const Text('Create 5 Cards Due for Review'),
                       style: FilledButton.styleFrom(
@@ -174,6 +175,7 @@ class DebugMenuScreen extends StatelessWidget {
                     child: FilledButton.icon(
                       onPressed: () => _loadGermanWords(
                         context,
+                        ref,
                         null,
                         makeAvailableNow: true,
                       ),
@@ -197,8 +199,12 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _loadGermanWords(context, 10, makeAvailableNow: true),
+                      onPressed: () => _loadGermanWords(
+                        context,
+                        ref,
+                        10,
+                        makeAvailableNow: true,
+                      ),
                       icon: const Icon(Icons.book),
                       label: const Text('Load 10 Words (Available Now)'),
                       style: OutlinedButton.styleFrom(
@@ -219,8 +225,12 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _loadGermanWords(context, 25, makeAvailableNow: true),
+                      onPressed: () => _loadGermanWords(
+                        context,
+                        ref,
+                        25,
+                        makeAvailableNow: true,
+                      ),
                       icon: const Icon(Icons.book),
                       label: const Text('Load 25 Words (Available Now)'),
                       style: OutlinedButton.styleFrom(
@@ -263,6 +273,7 @@ class DebugMenuScreen extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () => _loadGermanWords(
                         context,
+                        ref,
                         10,
                         makeAvailableNow: false,
                       ),
@@ -321,7 +332,7 @@ class DebugMenuScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton.icon(
-                      onPressed: () => _importSampleCards(context),
+                      onPressed: () => _importSampleCards(context, ref),
                       icon: const Icon(Icons.download),
                       label: const Text(
                         'Import 20 Sample Cards with AI Autofill',
@@ -515,15 +526,19 @@ class DebugMenuScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _createCards(BuildContext context, int count) async {
+  Future<void> _createCards(
+    BuildContext context,
+    WidgetRef ref,
+    int count,
+  ) async {
     try {
       final cardManagement = context.read<CardManagementProvider>();
-      final languageProvider = context.read<LanguageProvider>();
+      final languageNotifier = ref.read(languageNotifierProvider);
 
       // Get active language or default to 'en'
-      final language = languageProvider.activeLanguage.isEmpty
+      final language = languageNotifier.activeLanguage.isEmpty
           ? 'en'
-          : languageProvider.activeLanguage;
+          : languageNotifier.activeLanguage;
 
       final cards = DebugService.createBasicCards(language, count);
 
@@ -557,15 +572,19 @@ class DebugMenuScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _createDueCards(BuildContext context, int count) async {
+  Future<void> _createDueCards(
+    BuildContext context,
+    WidgetRef ref,
+    int count,
+  ) async {
     try {
       final cardManagement = context.read<CardManagementProvider>();
-      final languageProvider = context.read<LanguageProvider>();
+      final languageNotifier = ref.read(languageNotifierProvider);
 
       // Get active language or default to 'en'
-      final language = languageProvider.activeLanguage.isEmpty
+      final language = languageNotifier.activeLanguage.isEmpty
           ? 'en'
-          : languageProvider.activeLanguage;
+          : languageNotifier.activeLanguage;
 
       final cards = DebugService.createDueForReviewCards(language, count);
 
@@ -601,6 +620,7 @@ class DebugMenuScreen extends StatelessWidget {
 
   Future<void> _loadGermanWords(
     BuildContext context,
+    WidgetRef ref,
     int? limit, {
     bool makeAvailableNow = true,
   }) async {
@@ -631,10 +651,9 @@ class DebugMenuScreen extends StatelessWidget {
       }
 
       final cardManagement = context.read<CardManagementProvider>();
-      final languageProvider = context.read<LanguageProvider>();
 
       // Set active language to German
-      languageProvider.setActiveLanguage('de');
+      ref.read(languageNotifierProvider.notifier).setActiveLanguage('de');
 
       // Load German words from JSON
       LoggerService.debug(
@@ -817,11 +836,11 @@ class DebugMenuScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _importSampleCards(BuildContext context) async {
+  Future<void> _importSampleCards(BuildContext context, WidgetRef ref) async {
     // Get all providers before any async operations to avoid BuildContext across async gaps
     final aiProvider = context.read<CardEnrichmentProvider>();
     final cardManagement = context.read<CardManagementProvider>();
-    final languageProvider = context.read<LanguageProvider>();
+    final languageNotifier = ref.read(languageNotifierProvider.notifier);
 
     // Check if AI is configured
     if (!aiProvider.isConfigured) {
@@ -870,7 +889,7 @@ class DebugMenuScreen extends StatelessWidget {
           .cast<Map<String, dynamic>>();
 
       // Set active language to German
-      languageProvider.setActiveLanguage('de');
+      languageNotifier.setActiveLanguage('de');
 
       int successCount = 0;
       int errorCount = 0;

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/base_provider.dart';
-import '../../../language/domain/language_provider.dart';
+
 import '../../data/repositories/card_management_repository.dart';
 import '../../../../shared/utils/rate_limiter.dart';
 import '../../../../shared/services/logger_service.dart';
@@ -15,7 +15,7 @@ typedef UserIdResolver = String? Function();
 /// This is the primary provider for card management within the card_management feature.
 /// Assumes user is authenticated - callers must ensure this.
 class CardManagementProvider extends ChangeNotifier {
-  final LanguageProvider _languageProvider;
+  final String Function() _getActiveLanguage;
   final CardManagementRepository _repository;
   final RateLimiter _rateLimiter = RateLimiter();
   final UserIdResolver _getUserId;
@@ -38,10 +38,10 @@ class CardManagementProvider extends ChangeNotifier {
   /// By default uses [SupabaseCardManagementRepository]. Pass a mock implementation
   /// for unit testing. Pass [getUserId] to override the user ID resolver (for tests).
   CardManagementProvider({
-    required LanguageProvider languageProvider,
+    required String Function() getActiveLanguage,
     CardManagementRepository? repository,
     UserIdResolver? getUserId,
-  }) : _languageProvider = languageProvider,
+  }) : _getActiveLanguage = getActiveLanguage,
        _repository = repository ?? SupabaseCardManagementRepository(),
        _getUserId =
            getUserId ??
@@ -51,14 +51,15 @@ class CardManagementProvider extends ChangeNotifier {
              } catch (_) {
                return null;
              }
-           }) {
-    _languageProvider.addListener(_onLanguageChanged);
-  }
+           }) {}
 
   @override
   void dispose() {
-    _languageProvider.removeListener(_onLanguageChanged);
     super.dispose();
+  }
+
+  void notifyLanguageChanged() {
+    _onLanguageChanged();
   }
 
   // ============================================================
@@ -77,8 +78,8 @@ class CardManagementProvider extends ChangeNotifier {
         (card) =>
             card.isDueForReview &&
             !card.isArchived &&
-            (_languageProvider.activeLanguage.isEmpty ||
-                card.language == _languageProvider.activeLanguage),
+            (_getActiveLanguage().isEmpty ||
+                card.language == _getActiveLanguage()),
       )
       .toList();
 
@@ -100,8 +101,8 @@ class CardManagementProvider extends ChangeNotifier {
   /// Statistics for the current language filter
   Map<String, dynamic> get stats {
     final languageFilteredCards = _allCards.where((card) {
-      return _languageProvider.activeLanguage.isEmpty ||
-          card.language == _languageProvider.activeLanguage;
+      return _getActiveLanguage().isEmpty ||
+          card.language == _getActiveLanguage();
     }).toList();
 
     return {
@@ -356,8 +357,8 @@ class CardManagementProvider extends ChangeNotifier {
   void _applyFilters() {
     _filteredCards = _allCards.where((card) {
       // Language filter
-      if (_languageProvider.activeLanguage.isNotEmpty &&
-          card.language != _languageProvider.activeLanguage) {
+      if (_getActiveLanguage().isNotEmpty &&
+          card.language != _getActiveLanguage()) {
         return false;
       }
 

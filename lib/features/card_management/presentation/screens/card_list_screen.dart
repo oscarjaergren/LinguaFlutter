@@ -3,19 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../shared/navigation/app_router.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
-import '../../../language/domain/language_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../language/language.dart';
 import '../../../mascot/domain/mascot_provider.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
 import '../../domain/providers/card_management_provider.dart';
 import '../view_models/card_list_view_model.dart';
 import '../widgets/card_list_view.dart';
 
+import '../../../dashboard/presentation/widgets/language_selector_widget.dart';
+
 /// Screen for displaying and managing the list of cards
-class CardsScreen extends StatelessWidget {
+class CardsScreen extends ConsumerWidget {
   const CardsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     // Reset mascot session when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MascotProvider>().resetSession();
@@ -25,13 +28,17 @@ class CardsScreen extends StatelessWidget {
       create: (context) => CardListViewModel(
         cardManagement: context.read<CardManagementProvider>(),
         duplicateDetection: context.read<DuplicateDetectionProvider>(),
-        languageProvider: context.read<LanguageProvider>(),
+        getActiveLanguage: () =>
+            ref.read(languageNotifierProvider).activeLanguage,
+        getLanguageDetails: ref
+            .read(languageNotifierProvider.notifier)
+            .getLanguageDetails,
       ),
       child: Consumer<CardListViewModel>(
         builder: (context, viewModel, child) {
           return Scaffold(
             appBar: AppBar(
-              title: _buildLanguageSelector(context),
+              title: const LanguageSelectorWidget(),
               actions: [
                 // Search button
                 if (!viewModel.isSearching)
@@ -84,71 +91,6 @@ class CardsScreen extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildLanguageSelector(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        final activeLanguage = languageProvider.activeLanguage;
-        final languageDetails = languageProvider.getLanguageDetails(
-          activeLanguage,
-        )!;
-
-        return PopupMenuButton<String>(
-          onSelected: (String languageCode) {
-            languageProvider.setActiveLanguage(languageCode);
-            // CardManagementProvider listens to LanguageProvider automatically
-          },
-          itemBuilder: (BuildContext context) {
-            return languageProvider.availableLanguages.entries.map((entry) {
-              final code = entry.key;
-              final details = entry.value;
-              return PopupMenuItem<String>(
-                value: code,
-                child: Row(
-                  children: [
-                    Text(details['flag'], style: const TextStyle(fontSize: 20)),
-                    const SizedBox(width: 8),
-                    Text(details['name']),
-                    if (code == activeLanguage) ...[
-                      const Spacer(),
-                      Icon(
-                        Icons.check,
-                        color: languageProvider.getLanguageColor(code),
-                        size: 16,
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }).toList();
-          },
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                languageDetails['flag'],
-                style: const TextStyle(fontSize: 24),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                languageDetails['name'],
-                style: TextStyle(
-                  color: languageProvider.getLanguageColor(activeLanguage),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.arrow_drop_down,
-                color: languageProvider.getLanguageColor(activeLanguage),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

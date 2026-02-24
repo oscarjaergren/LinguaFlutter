@@ -1,0 +1,165 @@
+00:00 +0: loading C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart
+00:00 +0: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests (setUpAll)
+00:00 +0: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Sanitization sanitizes HTML tags from card text
+00:00 +1: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Sanitization sanitizes script content from notes
+00:00 +2: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Sanitization sanitizes tags by removing special characters
+00:00 +3: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Sanitization removes duplicate tags
+00:00 +4: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Sanitization limits text length
+00:00 +5: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Validation validates language code
+00:00 +6: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Validation validates front text is not empty
+[38;5;1m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+[38;5;1m│ [error] | 23:51:15 410ms | Failed to save card[0m
+[38;5;1m│ Exception: Front text is required[0m
+[38;5;1m│ StackTrace: #0      CardManagementProvider._validateCard (package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart:431:7)[0m
+[38;5;1m│ #1      CardManagementProvider.saveCard (package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart:150:7)[0m
+[38;5;1m│ #2      main.<anonymous closure>.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart:183:31)[0m
+[38;5;1m│ #3      Throws.matchAsync (package:matcher/src/expect/throws_matcher.dart:86:23)[0m
+[38;5;1m│ #4      _expect (package:matcher/src/expect/expect.dart:109:26)[0m
+[38;5;1m│ #5      expect (package:matcher/src/expect/expect.dart:56:3)[0m
+[38;5;1m│ #6      expect (package:flutter_test/src/widget_tester.dart:473:18)[0m
+[38;5;1m│ #7      main.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart:183:9)[0m
+[38;5;1m│ #8      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #9      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #10     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ }[0m
+[38;5;1m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+00:00 +7: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Validation validates back text is not empty
+[38;5;1m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+[38;5;1m│ [error] | 23:51:15 426ms | Failed to save card[0m
+[38;5;1m│ Exception: Back text is required[0m
+[38;5;1m│ StackTrace: #0      CardManagementProvider._validateCard (package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart:434:7)[0m
+[38;5;1m│ #1      CardManagementProvider.saveCard (package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart:150:7)[0m
+[38;5;1m│ #2      main.<anonymous closure>.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart:196:31)[0m
+[38;5;1m│ #3      Throws.matchAsync (package:matcher/src/expect/throws_matcher.dart:86:23)[0m
+[38;5;1m│ #4      _expect (package:matcher/src/expect/expect.dart:109:26)[0m
+[38;5;1m│ #5      expect (package:matcher/src/expect/expect.dart:56:3)[0m
+[38;5;1m│ #6      expect (package:flutter_test/src/widget_tester.dart:473:18)[0m
+[38;5;1m│ #7      main.<anonymous closure>.<anonymous closure>.<anonymous closure> (file:///C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart:196:9)[0m
+[38;5;1m│ #8      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #9      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ #10     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)[0m
+[38;5;1m│ <asynchronous suspension>[0m
+[38;5;1m│ }[0m
+[38;5;1m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+00:00 +8: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Input Validation sanitizes invalid language code to default
+00:00 +9: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Rate Limiting enforces rate limit on card creation
+00:00 +10: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Rate Limiting different users have independent rate limits
+00:00 +11: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Combined Security sanitizes and validates card in single operation
+00:00 +12: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Combined Security prevents XSS in all text fields
+00:00 +13: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests Bulk Operations Security sanitizes all cards in bulk operation
+00:00 +14: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_management/security_integration_test.dart: Card Management Security Integration Tests (tearDownAll)
+00:00 +14: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +15: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +16: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +17: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +18: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +19: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +20: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +21: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +22: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +23: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +24: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +25: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +26: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +27: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +28: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +29: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +30: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +31: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +32: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +33: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +34: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +35: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +36: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +37: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +38: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +39: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +40: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +41: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +42: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +43: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:00 +44: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +45: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +46: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +47: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +48: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +49: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +50: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +51: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +52: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +53: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +54: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +55: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +56: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +57: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +58: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +59: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +60: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +61: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT advance exercise after answer
+00:01 +62: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Space key should NOT reveal answer before checking
+00:01 +63: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Enter key is handled when answer is checked
+00:01 +64: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Enter key SHOULD reveal answer before checking
+00:01 +65: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_exercise_score_test.dart: PracticeSessionProvider Exercise Score Updates writing translation exercise score updates on correct answer
+00:01 +66: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Arrow keys are handled when answer is checked
+00:01 +67: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Arrow keys are handled when answer is checked
+00:01 +68: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Arrow keys are handled when answer is checked
+00:01 +69: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Arrow keys are handled when answer is checked
+00:01 +70: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Arrow keys are handled when answer is checked
+00:01 +71: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_exercise_score_test.dart: PracticeSessionProvider Exercise Score Updates reading recognition exercise score updates correctly
+00:01 +72: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Left arrow key is handled when answer is checked
+00:01 +73: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Left arrow key is handled when answer is checked
+00:01 +74: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Left arrow key is handled when answer is checked
+00:01 +75: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Number keys are handled for multiple choice
+00:01 +75 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Regression tests for Space key removal Space key does not interfere with text input
+00:01 +76 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/features/card_review/keyboard_controls_test.dart: PracticeScreen Keyboard Controls Regression tests for Space key removal Space key is not handled by keyboard event handler
+00:01 +77 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering startSession with preferences filters exercise types
+00:01 +78 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering updateExercisePreferences rebuilds queue mid-session
+00:01 +79 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering sentence building only appears for cards with examples
+00:01 +80 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering conjugation practice only appears for cards with word data
+00:01 +81 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering article selection only appears for cards with articles
+00:01 +82 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering multiple choice skipped when not enough cards
+00:01 +83 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering prioritize weaknesses sorts by success rate
+00:01 +84 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering disabling all types results in no session
+00:01 +85 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/unit/features/card_review/practice_session_provider_filtering_test.dart: PracticeSessionProvider Filtering enabling category enables all types in category
+00:01 +86 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/article_selection_exercise_test.dart: ArticleSelectionExercise Widget (setUpAll)
+00:01 +86 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/article_selection_exercise_test.dart: ArticleSelectionExercise Widget displays prompt and noun
+[38;5;3m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+[38;5;3m│ [warning] | 23:51:17 219ms | Google Cloud TTS not configured[0m
+[38;5;3m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+00:02 +87 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +88 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +89 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +90 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +91 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +92 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +93 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+00:02 +94 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays prompt and word
+[38;5;3m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+[38;5;3m│ [warning] | 23:51:17 406ms | Google Cloud TTS not configured[0m
+[38;5;3m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+00:02 +95 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget displays prompt and translation hint
+00:02 +96 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget displays prompt and translation hint
+[38;5;3m┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+[38;5;3m│ [warning] | 23:51:17 645ms | Google Cloud TTS not configured[0m
+[38;5;3m└──────────────────────────────────────────────────────────────────────────────────────────────────────────────[0m
+00:02 +97 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget allows entering text in field
+00:02 +98 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget allows entering text in field
+00:02 +99 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget allows selecting words to build sentence
+00:02 +100 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget allows selecting words to build sentence
+00:02 +101 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget allows selecting words to build sentence
+00:02 +102 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget allows selecting words to build sentence
+00:02 +103 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget noun with plural "die" still shows article selector not text field
+00:02 +104 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget check button enabled when all words selected
+00:02 +105 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget article selector state resets when card changes
+00:02 +106 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/sentence_building_exercise_test.dart: SentenceBuildingExercise Widget shows correct answer when wrong
+00:02 +107 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget article selection resets when answerState returns to pending on same card
+00:02 +108 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget article selection resets when answerState returns to pending on same card
+00:02 +109 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget a noun whose word data changes to empty gender shows a text field, not the article selector
+00:02 +110 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget displays form prompt
+00:02 +111 ~1: C:/Users/Aorus/source/repos/LinguaFlutter/test/widget/features/card_review/conjugation_practice_exercise_test.dart: ConjugationPracticeExercise Widget (tearDownAll)
+00:02 +111 ~1: All tests passed!

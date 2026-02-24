@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' hide Consumer;
 import '../../../card_review/domain/providers/practice_session_provider.dart';
 import '../../../card_review/presentation/widgets/exercise_mastery_widget.dart';
 import '../../../icon_search/icon_search.dart';
@@ -7,21 +7,24 @@ import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../../shared/domain/models/word_data.dart';
 import '../../../../shared/widgets/ai_config_widget.dart';
-import '../../../language/domain/language_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../language/language.dart';
 import '../../domain/providers/card_management_provider.dart';
 import '../../domain/providers/card_enrichment_provider.dart';
 
 /// Screen for creating and editing language learning cards with full model support
-class CreationCreationScreen extends StatefulWidget {
+class CreationCreationScreen extends ConsumerStatefulWidget {
   final CardModel? cardToEdit;
 
   const CreationCreationScreen({super.key, this.cardToEdit});
 
   @override
-  State<CreationCreationScreen> createState() => _CreationCreationScreenState();
+  ConsumerState<CreationCreationScreen> createState() =>
+      _CreationCreationScreenState();
 }
 
-class _CreationCreationScreenState extends State<CreationCreationScreen> {
+class _CreationCreationScreenState
+    extends ConsumerState<CreationCreationScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Basic text controllers
@@ -88,7 +91,9 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
       }
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.read<LanguageProvider>().setActiveLanguage(card.language);
+        ref
+            .read(languageNotifierProvider.notifier)
+            .setActiveLanguage(card.language);
       });
     }
   }
@@ -300,10 +305,10 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
     setState(() => _isAutoFilling = true);
 
     try {
-      final languageProvider = context.read<LanguageProvider>();
+      final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
       final result = await aiProvider.enrichWord(
         word: frontText,
-        language: languageProvider.activeLanguage,
+        language: activeLanguage,
       );
 
       if (result != null && mounted) {
@@ -383,8 +388,7 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
 
     try {
       final cardManagement = context.read<CardManagementProvider>();
-      final languageProvider = context.read<LanguageProvider>();
-      final activeLanguage = languageProvider.activeLanguage;
+      final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
 
       final tags = _tagsController.text
           .split(',')
@@ -618,15 +622,17 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   }
 
   Widget _buildLanguageCard(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, child) {
-        final activeLanguage = languageProvider.activeLanguage;
-        final languageDetails = languageProvider.getLanguageDetails(
+    return Consumer(
+      builder: (context, ref, child) {
+        final languageState = ref.watch(languageNotifierProvider);
+        final languageNotifier = ref.read(languageNotifierProvider.notifier);
+        final activeLanguage = languageState.activeLanguage;
+        final languageDetails = languageNotifier.getLanguageDetails(
           activeLanguage,
         );
         if (languageDetails == null) return const SizedBox.shrink();
 
-        final color = languageProvider.getLanguageColor(activeLanguage);
+        final color = languageNotifier.getLanguageColor(activeLanguage);
 
         return Container(
           padding: const EdgeInsets.all(12),
@@ -715,9 +721,17 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
             const SizedBox(height: 16),
 
             // Front text with Auto button
-            Consumer<LanguageProvider>(
-              builder: (context, lp, _) {
-                final details = lp.getLanguageDetails(lp.activeLanguage);
+            Consumer(
+              builder: (context, ref, _) {
+                final languageNotifier = ref.read(
+                  languageNotifierProvider.notifier,
+                );
+                final activeLanguage = ref
+                    .watch(languageNotifierProvider)
+                    .activeLanguage;
+                final details = languageNotifier.getLanguageDetails(
+                  activeLanguage,
+                );
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -963,9 +977,12 @@ class _CreationCreationScreenState extends State<CreationCreationScreen> {
   }
 
   Widget _buildNounGrammar(BuildContext context) {
-    return Consumer<LanguageProvider>(
-      builder: (context, languageProvider, _) {
-        final isGerman = languageProvider.activeLanguage == 'de';
+    return Consumer(
+      builder: (context, ref, _) {
+        final activeLanguage = ref
+            .watch(languageNotifierProvider)
+            .activeLanguage;
+        final isGerman = activeLanguage == 'de';
         final articles = isGerman
             ? ['der', 'die', 'das']
             : ['masculine', 'feminine', 'neuter'];

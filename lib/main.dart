@@ -74,16 +74,26 @@ String get _defaultEnvironment {
 }
 
 Future<Widget> _buildApp() async {
+  // Create Riverpod container
+  final container = ProviderContainer();
+
   // Create core providers
   final authProvider = AuthProvider();
-  final languageProvider = LanguageProvider();
   final themeProvider = ThemeProvider();
   final exercisePreferencesProvider = ExercisePreferencesProvider();
 
   // Create feature-specific providers (VSA architecture)
   final cardManagementProvider = CardManagementProvider(
-    languageProvider: languageProvider,
+    getActiveLanguage: () =>
+        container.read(languageNotifierProvider).activeLanguage,
   );
+
+  // Wire up language listener
+  container.listen(languageNotifierProvider, (previous, next) {
+    if (previous?.activeLanguage != next.activeLanguage) {
+      cardManagementProvider.notifyLanguageChanged();
+    }
+  });
   final duplicateDetectionProvider = DuplicateDetectionProvider();
   final cardEnrichmentProvider = CardEnrichmentProvider();
 
@@ -118,12 +128,12 @@ Future<Widget> _buildApp() async {
 
   _setupErrorHandlers();
 
-  return ProviderScope(
+  return UncontrolledProviderScope(
+    container: container,
     child: MultiProvider(
       providers: [
         // Core providers
         ChangeNotifierProvider.value(value: authProvider),
-        ChangeNotifierProvider.value(value: languageProvider),
         ChangeNotifierProvider.value(value: themeProvider),
 
         // Feature-specific providers (VSA)

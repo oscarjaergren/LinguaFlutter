@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
-import 'package:lingua_flutter/features/language/domain/language_provider.dart';
+
 import 'package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart';
 import 'package:lingua_flutter/features/card_management/data/repositories/card_management_repository.dart';
 
@@ -13,12 +13,12 @@ void main() {
   group('Card Deletion Tests', () {
     late CardManagementProvider provider;
     late MockCardManagementRepository mockRepository;
-    late LanguageProvider languageProvider;
+    late String activeLanguage;
     late List<CardModel> testCards;
 
     setUp(() {
       mockRepository = MockCardManagementRepository();
-      languageProvider = LanguageProvider();
+      activeLanguage = 'de';
 
       // Create test cards
       testCards = [
@@ -40,7 +40,7 @@ void main() {
       ];
 
       provider = CardManagementProvider(
-        languageProvider: languageProvider,
+        getActiveLanguage: () => activeLanguage,
         repository: mockRepository,
       );
     });

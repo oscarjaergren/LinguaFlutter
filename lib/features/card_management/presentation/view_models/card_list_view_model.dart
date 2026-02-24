@@ -2,14 +2,15 @@ import 'package:flutter/foundation.dart';
 import '../../../../shared/services/logger_service.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
-import '../../../language/domain/language_provider.dart';
+
 import '../../domain/providers/card_management_provider.dart';
 
 /// ViewModel for the card list screen, handling UI-specific logic and state
 class CardListViewModel extends ChangeNotifier {
   final CardManagementProvider _cardManagement;
   final DuplicateDetectionProvider _duplicateDetection;
-  final LanguageProvider _languageProvider;
+  final String Function() _getActiveLanguage;
+  final Map<String, dynamic>? Function(String) _getLanguageDetails;
 
   // UI-only state not tracked by CardManagementProvider
   bool _isSearching = false;
@@ -17,20 +18,24 @@ class CardListViewModel extends ChangeNotifier {
   CardListViewModel({
     required CardManagementProvider cardManagement,
     required DuplicateDetectionProvider duplicateDetection,
-    required LanguageProvider languageProvider,
+    required String Function() getActiveLanguage,
+    required Map<String, dynamic>? Function(String) getLanguageDetails,
   }) : _cardManagement = cardManagement,
        _duplicateDetection = duplicateDetection,
-       _languageProvider = languageProvider {
+       _getActiveLanguage = getActiveLanguage,
+       _getLanguageDetails = getLanguageDetails {
     // Listen to provider changes
     _cardManagement.addListener(_onCardManagementChanged);
-    _languageProvider.addListener(_onLanguageProviderChanged);
   }
 
   @override
   void dispose() {
     _cardManagement.removeListener(_onCardManagementChanged);
-    _languageProvider.removeListener(_onLanguageProviderChanged);
     super.dispose();
+  }
+
+  void notifyLanguageChanged() {
+    notifyListeners();
   }
 
   // Getters for UI state
@@ -57,20 +62,16 @@ class CardListViewModel extends ChangeNotifier {
   int get filteredCardsCount => _cardManagement.filteredCards.length;
 
   // Language-related getters
-  String get activeLanguage => _languageProvider.activeLanguage;
+  String get activeLanguage => _getActiveLanguage();
 
   /// Get language details for the active language
   Map<String, String> get languageDetails {
-    final details = _languageProvider.getLanguageDetails(
-      _languageProvider.activeLanguage,
-    );
+    final details = _getLanguageDetails(_getActiveLanguage());
     if (details == null) {
-      return <String, String>{
-        'name': _languageProvider.activeLanguage,
-        'flag': '',
-      };
+      return <String, String>{'name': _getActiveLanguage(), 'flag': ''};
     }
-    return Map<String, String>.from(details);
+    // Convert to Map<String, String> ensuring safety
+    return details.map((key, value) => MapEntry(key, value.toString()));
   }
 
   // Statistics getters
@@ -171,10 +172,6 @@ class CardListViewModel extends ChangeNotifier {
 
   // Private methods
   void _onCardManagementChanged() {
-    notifyListeners();
-  }
-
-  void _onLanguageProviderChanged() {
     notifyListeners();
   }
 }

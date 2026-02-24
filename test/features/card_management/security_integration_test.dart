@@ -3,29 +3,27 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:lingua_flutter/features/card_management/domain/providers/card_management_provider.dart';
 import 'package:lingua_flutter/features/card_management/data/repositories/card_management_repository.dart';
-import 'package:lingua_flutter/features/language/domain/language_provider.dart';
+
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/utils/rate_limiter.dart';
+import 'package:lingua_flutter/shared/services/logger_service.dart';
 
-@GenerateMocks([CardManagementRepository, LanguageProvider])
+@GenerateMocks([CardManagementRepository])
 import 'security_integration_test.mocks.dart';
 
 void main() {
   group('Card Management Security Integration Tests', () {
     late CardManagementProvider provider;
     late MockCardManagementRepository mockRepository;
-    late MockLanguageProvider mockLanguageProvider;
+
+    setUpAll(() {
+      LoggerService.initialize();
+    });
 
     setUp(() {
       mockRepository = MockCardManagementRepository();
-      mockLanguageProvider = MockLanguageProvider();
-
-      when(mockLanguageProvider.activeLanguage).thenReturn('de');
-      when(mockLanguageProvider.addListener(any)).thenReturn(null);
-      when(mockLanguageProvider.removeListener(any)).thenReturn(null);
-
       provider = CardManagementProvider(
-        languageProvider: mockLanguageProvider,
+        getActiveLanguage: () => 'de',
         repository: mockRepository,
       );
 

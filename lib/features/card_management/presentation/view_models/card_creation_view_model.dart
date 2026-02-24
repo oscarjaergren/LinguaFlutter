@@ -3,14 +3,14 @@ import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/base_provider.dart';
 import '../../../../shared/domain/models/icon_model.dart';
 import '../../../../shared/domain/models/word_data.dart';
-import '../../../language/domain/language_provider.dart';
+
 import '../../../icon_search/domain/icon_provider.dart';
 import '../../domain/providers/card_management_provider.dart';
 
 /// ViewModel for card creation and editing with full model support
 class CardCreationViewModel extends ChangeNotifier {
   final CardManagementProvider _cardManagement;
-  final LanguageProvider _languageProvider;
+  final String Function() _getActiveLanguage;
   final IconProvider _iconProvider;
   final CardModel? _cardToEdit;
 
@@ -53,11 +53,11 @@ class CardCreationViewModel extends ChangeNotifier {
 
   CardCreationViewModel({
     required CardManagementProvider cardManagement,
-    required LanguageProvider languageProvider,
+    required String Function() getActiveLanguage,
     required IconProvider iconProvider,
     CardModel? cardToEdit,
   }) : _cardManagement = cardManagement,
-       _languageProvider = languageProvider,
+       _getActiveLanguage = getActiveLanguage,
        _iconProvider = iconProvider,
        _cardToEdit = cardToEdit {
     _isEditing = cardToEdit != null;
@@ -65,14 +65,12 @@ class CardCreationViewModel extends ChangeNotifier {
       _initializeFromCard(cardToEdit!);
     }
     _cardManagement.addListener(_onProviderChanged);
-    _languageProvider.addListener(_onProviderChanged);
     _iconProvider.addListener(_onProviderChanged);
   }
 
   @override
   void dispose() {
     _cardManagement.removeListener(_onProviderChanged);
-    _languageProvider.removeListener(_onProviderChanged);
     _iconProvider.removeListener(_onProviderChanged);
     super.dispose();
   }
@@ -120,7 +118,7 @@ class CardCreationViewModel extends ChangeNotifier {
   bool get isFormValid => _frontText.isNotEmpty && _backText.isNotEmpty;
 
   // Language getters
-  String get activeLanguage => _languageProvider.activeLanguage;
+  String get activeLanguage => _getActiveLanguage();
   bool get isGermanLanguage => activeLanguage == 'de';
   List<String> get availableTags => _cardManagement.availableTags;
 
