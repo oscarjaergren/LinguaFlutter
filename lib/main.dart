@@ -100,7 +100,29 @@ Future<Widget> _buildApp() async {
       .initialize();
   await container.read(cardEnrichmentNotifierProvider.notifier).initialize();
 
-  // Wire up auth state change callback to initialize data providers
+  // Initialize Card Management if already authenticated
+  if (container.read(authNotifierProvider).isAuthenticated) {
+    await container.read(cardManagementNotifierProvider.notifier).initialize();
+  }
+
+  // Listen for auth state changes to initialize card management
+  container.listen<AuthState>(authNotifierProvider, (previous, next) async {
+    if (previous?.isAuthenticated != true && next.isAuthenticated) {
+      LoggerService.info(
+        '🔐 User authenticated (Riverpod), initializing CardManagementNotifier...',
+      );
+      try {
+        await container
+            .read(cardManagementNotifierProvider.notifier)
+            .initialize();
+        LoggerService.info('✅ CardManagementNotifier initialized');
+      } catch (e) {
+        LoggerService.error('Failed to initialize CardManagementNotifier', e);
+      }
+    }
+  });
+
+  // Wire up auth state change callback for legacy provider (keeps it in sync)
   authProvider.onAuthStateChanged = (isAuthenticated) async {
     if (isAuthenticated) {
       LoggerService.info(

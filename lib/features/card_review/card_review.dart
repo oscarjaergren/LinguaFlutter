@@ -4,7 +4,10 @@
 export 'domain/models/exercise_preferences.dart';
 
 // Domain Layer - Providers
+export 'domain/providers/practice_session_types.dart';
 export 'domain/providers/practice_session_provider.dart';
+export 'domain/providers/practice_session_notifier.dart';
+export 'domain/providers/practice_session_state.dart';
 export 'domain/providers/exercise_preferences_notifier.dart';
 export 'domain/providers/exercise_preferences_state.dart';
 

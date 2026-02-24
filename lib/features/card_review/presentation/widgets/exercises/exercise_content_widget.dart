@@ -3,7 +3,7 @@ import '../../../../../shared/domain/models/card_model.dart';
 import '../../../../../shared/domain/models/exercise_type.dart';
 import '../../../../../shared/domain/models/word_data.dart';
 import '../../../../tts/presentation/widgets/speaker_button.dart';
-import '../../../domain/providers/practice_session_provider.dart';
+import '../../../domain/providers/practice_session_types.dart';
 import 'sentence_building_exercise.dart';
 import 'conjugation_practice_exercise.dart';
 import 'article_selection_exercise.dart';

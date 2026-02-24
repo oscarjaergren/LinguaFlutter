@@ -4,74 +4,73 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' hide Consumer;
 import 'package:lingua_flutter/features/card_review/presentation/screens/practice_screen.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_state.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_notifier.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
 import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_notifier.dart';
-import 'package:lingua_flutter/features/card_review/domain/models/exercise_preferences.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 
-@GenerateMocks([PracticeSessionProvider])
+@GenerateMocks([PracticeSessionNotifier])
 import 'keyboard_controls_test.mocks.dart';
 
 void main() {
   group('PracticeScreen Keyboard Controls', () {
-    late MockPracticeSessionProvider mockProvider;
+    late MockPracticeSessionNotifier mockNotifier;
+    late PracticeSessionState testState;
 
     setUp(() {
-      mockProvider = MockPracticeSessionProvider();
+      mockNotifier = MockPracticeSessionNotifier();
+      testState = const PracticeSessionState(
+        isSessionActive: true,
+        answerState: AnswerState.pending,
+        currentIndex: 0,
+        sessionQueue: [
+          PracticeItem(
+            card: CardModel(
+              id: 'test-1',
+              frontText: 'Front',
+              backText: 'Back',
+              language: 'de',
+              createdAt: DateTime.now(),
+              updatedAt: DateTime.now(),
+            ),
+            exerciseType: ExerciseType.readingRecognition,
+          ),
+        ],
+      );
 
       // Default mock setup
-      when(mockProvider.isSessionActive).thenReturn(true);
-      when(mockProvider.canSwipe).thenReturn(false);
-      when(mockProvider.currentAnswerCorrect).thenReturn(null);
-      when(mockProvider.currentCard).thenReturn(null);
+      when(mockNotifier.state).thenReturn(testState);
+      when(mockNotifier.canSwipe).thenReturn(false);
       when(
-        mockProvider.currentExerciseType,
+        mockNotifier.currentCard,
+      ).thenReturn(testState.sessionQueue.first.card);
+      when(
+        mockNotifier.currentExerciseType,
       ).thenReturn(ExerciseType.readingRecognition);
-      when(mockProvider.multipleChoiceOptions).thenReturn([]);
-      when(mockProvider.answerState).thenReturn(AnswerState.pending);
-      when(mockProvider.currentIndex).thenReturn(0);
-      when(mockProvider.totalCount).thenReturn(1);
-      when(mockProvider.progress).thenReturn(0.0);
-      when(mockProvider.remainingCount).thenReturn(0);
-      when(mockProvider.correctCount).thenReturn(0);
-      when(mockProvider.incorrectCount).thenReturn(0);
-      when(mockProvider.accuracy).thenReturn(0.0);
-      when(mockProvider.sessionDuration).thenReturn(Duration.zero);
-      when(mockProvider.userInput).thenReturn(null);
-      when(mockProvider.addListener(any)).thenReturn(null);
-      when(mockProvider.removeListener(any)).thenReturn(null);
 
       // Stub async methods
       when(
-        mockProvider.confirmAnswerAndAdvance(
+        mockNotifier.confirmAnswerAndAdvance(
           markedCorrect: anyNamed('markedCorrect'),
         ),
       ).thenAnswer((_) async {});
       when(
-        mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')),
+        mockNotifier.checkAnswer(isCorrect: anyNamed('isCorrect')),
       ).thenReturn(null);
     });
 
     Widget createTestWidget() {
       return ProviderScope(
         overrides: [
+          practiceSessionNotifierProvider.overrideWith(() => mockNotifier),
           exercisePreferencesNotifierProvider.overrideWith(
             () => ExercisePreferencesNotifier(),
           ),
         ],
-        child: MaterialApp(
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider<PracticeSessionProvider>.value(
-                value: mockProvider,
-              ),
-            ],
-            child: const PracticeScreen(),
-          ),
-        ),
+        child: const MaterialApp(home: PracticeScreen()),
       );
     }
 
@@ -79,21 +78,20 @@ void main() {
       tester,
     ) async {
       // Setup: Answer has been checked
-      when(mockProvider.canSwipe).thenReturn(true);
-      when(mockProvider.currentAnswerCorrect).thenReturn(true);
+      when(mockNotifier.canSwipe).thenReturn(true);
+      testState = testState.copyWith(currentAnswerCorrect: true);
+      when(mockNotifier.state).thenReturn(testState);
 
       await tester.pumpWidget(createTestWidget());
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
 
       // Simulate Space key press
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Verify that confirmAnswerAndAdvance was NOT called (Space should be ignored)
+      // Verify that confirmAnswerAndAdvance was NOT called
       verifyNever(
-        mockProvider.confirmAnswerAndAdvance(
+        mockNotifier.confirmAnswerAndAdvance(
           markedCorrect: anyNamed('markedCorrect'),
         ),
       );
@@ -103,34 +101,31 @@ void main() {
       tester,
     ) async {
       // Setup: Answer not yet checked
-      when(mockProvider.canSwipe).thenReturn(false);
+      when(mockNotifier.canSwipe).thenReturn(false);
 
       await tester.pumpWidget(createTestWidget());
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
 
       // Simulate Space key press
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       await tester.pump();
 
-      // Verify that no action was taken (Space should be ignored)
-      verifyNever(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')));
+      // Verify that no action was taken
+      verifyNever(mockNotifier.checkAnswer(isCorrect: anyNamed('isCorrect')));
     });
 
     testWidgets('Enter key is handled when answer is checked', (tester) async {
       // Setup: Answer has been checked
-      when(mockProvider.canSwipe).thenReturn(true);
-      when(mockProvider.currentAnswerCorrect).thenReturn(true);
+      when(mockNotifier.canSwipe).thenReturn(true);
+      testState = testState.copyWith(currentAnswerCorrect: true);
+      when(mockNotifier.state).thenReturn(testState);
 
       await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      // Simulate Enter key press - should be handled
+      // Simulate Enter key press
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       // Verify the key was handled
       expect(result, isTrue);
@@ -140,39 +135,36 @@ void main() {
       tester,
     ) async {
       // Setup: Answer not yet checked
-      when(mockProvider.canSwipe).thenReturn(false);
-      when(mockProvider.answerState).thenReturn(AnswerState.pending);
+      when(mockNotifier.canSwipe).thenReturn(false);
+      testState = testState.copyWith(answerState: AnswerState.pending);
+      when(mockNotifier.state).thenReturn(testState);
 
       await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      // Simulate Enter key press - reveals answer for reading recognition
+      // Simulate Enter key press
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Verify that checkAnswer was called to reveal answer
-      verify(mockProvider.checkAnswer(isCorrect: true)).called(1);
+      // Verify that checkAnswer was called
+      verify(mockNotifier.checkAnswer(isCorrect: true)).called(1);
     });
 
     testWidgets('Arrow keys are handled when answer is checked', (
       tester,
     ) async {
       // Setup: Answer has been checked
-      when(mockProvider.canSwipe).thenReturn(true);
-      when(mockProvider.currentAnswerCorrect).thenReturn(true);
+      when(mockNotifier.canSwipe).thenReturn(true);
+      testState = testState.copyWith(currentAnswerCorrect: true);
+      when(mockNotifier.state).thenReturn(testState);
 
       await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      // Test right arrow - should be handled by keyboard handler
+      // Test right arrow
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Verify the key was handled
       expect(result, isTrue);
     });
 
@@ -180,55 +172,41 @@ void main() {
       tester,
     ) async {
       // Setup: Answer has been checked
-      when(mockProvider.canSwipe).thenReturn(true);
-      when(mockProvider.currentAnswerCorrect).thenReturn(false);
+      when(mockNotifier.canSwipe).thenReturn(true);
+      testState = testState.copyWith(currentAnswerCorrect: false);
+      when(mockNotifier.state).thenReturn(testState);
 
       await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      // Send left arrow key event
       final result = await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Verify the key was handled
       expect(result, isTrue);
     });
 
     testWidgets('Number keys are handled for multiple choice', (tester) async {
-      // Setup: Multiple choice exercise with options
-      when(mockProvider.canSwipe).thenReturn(false);
+      // Setup: Multiple choice exercise
+      when(mockNotifier.canSwipe).thenReturn(false);
       when(
-        mockProvider.currentExerciseType,
+        mockNotifier.currentExerciseType,
       ).thenReturn(ExerciseType.multipleChoiceText);
-      when(
-        mockProvider.multipleChoiceOptions,
-      ).thenReturn(['Option 1', 'Option 2', 'Option 3', 'Option 4']);
-      when(mockProvider.currentCard).thenReturn(
-        CardModel(
-          id: 'test-1',
-          frontText: 'Test',
-          backText: 'Option 1',
-          language: 'en',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
+
+      testState = testState.copyWith(
+        multipleChoiceOptions: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
       );
+      when(mockNotifier.state).thenReturn(testState);
 
       await tester.pumpWidget(createTestWidget());
+      await tester.pumpAndSettle();
 
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-
-      // Send number key 1 - should trigger checkAnswer
       await tester.sendKeyEvent(LogicalKeyboardKey.digit1);
+      await tester.pumpAndSettle();
 
-      // Verify checkAnswer was called
       verify(
-        mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')),
+        mockNotifier.checkAnswer(isCorrect: anyNamed('isCorrect')),
       ).called(1);
-    }, skip: true);
+    });
 
     group('Regression tests for Space key removal', () {
       testWidgets('Space key does not interfere with text input', (
@@ -237,9 +215,9 @@ void main() {
         // This test verifies that Space key is ignored by keyboard handler
         // allowing it to be used in text fields for multi-word answers
 
-        when(mockProvider.canSwipe).thenReturn(false);
+        when(mockNotifier.canSwipe).thenReturn(false);
         when(
-          mockProvider.currentExerciseType,
+          mockNotifier.currentExerciseType,
         ).thenReturn(ExerciseType.reverseTranslation);
 
         await tester.pumpWidget(createTestWidget());
@@ -253,11 +231,11 @@ void main() {
 
         // Verify that Space key did NOT trigger any navigation
         verifyNever(
-          mockProvider.confirmAnswerAndAdvance(
+          mockNotifier.confirmAnswerAndAdvance(
             markedCorrect: anyNamed('markedCorrect'),
           ),
         );
-        verifyNever(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')));
+        verifyNever(mockNotifier.checkAnswer(isCorrect: anyNamed('isCorrect')));
       });
 
       testWidgets('Space key is not handled by keyboard event handler', (
@@ -266,7 +244,7 @@ void main() {
         // This test verifies the keyboard handler ignores Space key
         // The actual UI hints are implementation details that may change
 
-        when(mockProvider.canSwipe).thenReturn(false);
+        when(mockNotifier.canSwipe).thenReturn(false);
 
         await tester.pumpWidget(createTestWidget());
 
@@ -279,11 +257,11 @@ void main() {
 
         // Verify Space key triggered no provider methods
         verifyNever(
-          mockProvider.confirmAnswerAndAdvance(
+          mockNotifier.confirmAnswerAndAdvance(
             markedCorrect: anyNamed('markedCorrect'),
           ),
         );
-        verifyNever(mockProvider.checkAnswer(isCorrect: anyNamed('isCorrect')));
+        verifyNever(mockNotifier.checkAnswer(isCorrect: anyNamed('isCorrect')));
       });
     });
   });

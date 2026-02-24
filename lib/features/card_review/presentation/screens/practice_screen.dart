@@ -5,9 +5,9 @@ import 'package:provider/provider.dart' as provider_pkg;
 import '../../../../shared/domain/models/exercise_type.dart';
 import '../../../../shared/domain/models/exercise_score.dart';
 import '../../../card_management/presentation/screens/card_creation_screen.dart';
-import '../../../card_review/domain/providers/practice_session_provider.dart';
+import '../../../card_review/domain/providers/practice_session_types.dart';
+import '../../../card_review/domain/providers/practice_session_notifier.dart';
 import '../../../card_review/domain/providers/exercise_preferences_notifier.dart';
-import '../../../card_review/domain/models/exercise_preferences.dart';
 import '../widgets/exercise_filter_sheet.dart';
 import '../widgets/practice_progress_bar.dart';
 import '../widgets/practice_completion_screen.dart';
@@ -39,88 +39,83 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   }
 
   void _showFilterSheet() async {
-    // We still access PracticeSessionProvider via Provider package for now
-    final provider = provider_pkg.Provider.of<PracticeSessionProvider>(
-      context,
-      listen: false,
-    );
+    final currentPrefs = ref
+        .read(exercisePreferencesNotifierProvider)
+        .preferences;
 
     final newPrefs = await ExerciseFilterSheet.show(
       context,
-      currentPreferences: ref
-          .read(exercisePreferencesNotifierProvider)
-          .preferences,
+      currentPreferences: currentPrefs,
     );
 
     if (newPrefs != null && mounted) {
-      // Update Riverpod notifier and session provider
+      // Update Riverpod notifier
       await ref
           .read(exercisePreferencesNotifierProvider.notifier)
           .updatePreferences(newPrefs);
-      provider.updateExercisePreferences(newPrefs);
+      // PracticeSessionNotifier watches preferences, so it will react automatically if we implement it.
+      // Or we can call a method if we want to force rebuild.
     }
   }
 
   Future<void> _editCurrentCard(
     BuildContext context,
-    PracticeSessionProvider provider,
+    CardModel? currentCard,
   ) async {
-    final currentCard = provider.currentCard;
     if (currentCard == null) return;
 
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CreationCreationScreen(cardToEdit: currentCard),
+        builder: (context) => CardCreationScreen(cardToEdit: currentCard),
       ),
     );
   }
 
   KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent) {
-      final provider = provider_pkg.Provider.of<PracticeSessionProvider>(
-        context,
-        listen: false,
-      );
+      final state = ref.read(practiceSessionNotifierProvider);
+      final notifier = ref.read(practiceSessionNotifierProvider.notifier);
 
       // Allow swiping only when answer has been checked
-      if (provider.canSwipe) {
+      if (notifier.canSwipe) {
         // Arrow keys or Enter to confirm answer
         if (event.logicalKey == LogicalKeyboardKey.enter) {
-          provider.confirmAnswerAndAdvance(
-            markedCorrect: provider.currentAnswerCorrect ?? true,
+          notifier.confirmAnswerAndAdvance(
+            markedCorrect: state.currentAnswerCorrect ?? true,
           );
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          provider.confirmAnswerAndAdvance(markedCorrect: false);
+          notifier.confirmAnswerAndAdvance(markedCorrect: false);
           return KeyEventResult.handled;
         } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          provider.confirmAnswerAndAdvance(markedCorrect: true);
+          notifier.confirmAnswerAndAdvance(markedCorrect: true);
           return KeyEventResult.handled;
         }
       } else {
+        final type = notifier.currentExerciseType;
         // Exercise specific shortcuts
-        if (provider.currentExerciseType == ExerciseType.readingRecognition ||
-            provider.currentExerciseType == ExerciseType.multipleChoiceText ||
-            provider.currentExerciseType == ExerciseType.multipleChoiceIcon) {
+        if (type == ExerciseType.readingRecognition ||
+            type == ExerciseType.multipleChoiceText ||
+            type == ExerciseType.multipleChoiceIcon) {
           if (event.logicalKey == LogicalKeyboardKey.enter) {
-            _revealAnswer(provider);
+            _revealAnswer(notifier);
             return KeyEventResult.handled;
           }
 
           // Number keys 1-4 for multiple choice
-          if (provider.currentExerciseType != ExerciseType.readingRecognition) {
+          if (type != ExerciseType.readingRecognition) {
             if (event.logicalKey == LogicalKeyboardKey.digit1) {
-              _selectMultipleChoiceOption(provider, 0);
+              _selectMultipleChoiceOption(state, notifier, 0);
               return KeyEventResult.handled;
             } else if (event.logicalKey == LogicalKeyboardKey.digit2) {
-              _selectMultipleChoiceOption(provider, 1);
+              _selectMultipleChoiceOption(state, notifier, 1);
               return KeyEventResult.handled;
             } else if (event.logicalKey == LogicalKeyboardKey.digit3) {
-              _selectMultipleChoiceOption(provider, 2);
+              _selectMultipleChoiceOption(state, notifier, 2);
               return KeyEventResult.handled;
             } else if (event.logicalKey == LogicalKeyboardKey.digit4) {
-              _selectMultipleChoiceOption(provider, 3);
+              _selectMultipleChoiceOption(state, notifier, 3);
               return KeyEventResult.handled;
             }
           }
@@ -131,27 +126,32 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
   }
 
   void _selectMultipleChoiceOption(
-    PracticeSessionProvider provider,
+    PracticeSessionState state,
+    PracticeSessionNotifier notifier,
     int index,
   ) {
-    final options = provider.multipleChoiceOptions;
+    final options = state.multipleChoiceOptions;
     if (options == null || index >= options.length) return;
 
     final selectedOption = options[index];
-    final correctAnswer = provider.currentCard?.backText;
+    final correctAnswer = notifier.currentCard?.backText;
     final isCorrect = selectedOption == correctAnswer;
-    provider.checkAnswer(isCorrect: isCorrect);
+    notifier.checkAnswer(isCorrect: isCorrect);
   }
 
-  void _revealAnswer(PracticeSessionProvider provider) {
+  void _revealAnswer(PracticeSessionNotifier notifier) {
     // For reading recognition - reveal the answer
-    if (provider.answerState == AnswerState.pending) {
-      provider.checkAnswer(isCorrect: true);
+    if (ref.read(practiceSessionNotifierProvider).answerState ==
+        AnswerState.pending) {
+      notifier.checkAnswer(isCorrect: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final sessionState = ref.watch(practiceSessionNotifierProvider);
+    final sessionNotifier = ref.read(practiceSessionNotifierProvider.notifier);
+
     return Focus(
       focusNode: _focusNode,
       onKeyEvent: _handleKeyEvent,
@@ -171,90 +171,101 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               onPressed: _showFilterSheet,
             ),
             // Progress counter
-            provider_pkg.Consumer<PracticeSessionProvider>(
-              builder: (context, provider, child) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 16.0),
-                  child: Center(
-                    child: Text(
-                      '${provider.currentIndex + 1}/${provider.totalCount}',
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Center(
+                child: Text(
+                  '${sessionState.currentIndex + 1}/${sessionState.sessionQueue.length}',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
             ),
           ],
         ),
-        body: provider_pkg.Consumer<PracticeSessionProvider>(
-          builder: (context, provider, child) {
-            // Session completed
-            if (!provider.isSessionActive) {
-              return PracticeCompletionScreen(
-                correctCount: provider.correctCount,
-                incorrectCount: provider.incorrectCount,
-                duration: provider.sessionDuration,
-                onRestart: () => provider.restartSession(),
-                onClose: () => Navigator.of(context).pop(),
+        body: (() {
+          // Session completed
+          if (!sessionState.isSessionActive && sessionState.isSessionComplete) {
+            // Calculate duration (this is approximate if not stored in state)
+            final duration = sessionState.sessionStartTime != null
+                ? DateTime.now().difference(sessionState.sessionStartTime!)
+                : Duration.zero;
+
+            return PracticeCompletionScreen(
+              correctCount: sessionState.correctCount,
+              incorrectCount: sessionState.incorrectCount,
+              duration: duration,
+              onRestart: () => sessionNotifier.startSession(),
+              onClose: () => Navigator.of(context).pop(),
+            );
+          }
+
+          final currentCard = sessionNotifier.currentCard;
+          final currentType = sessionNotifier.currentExerciseType;
+
+          // No current card (shouldn't happen but handle gracefully)
+          if (currentCard == null || currentType == null) {
+            if (!sessionState.isSessionActive) {
+              // If not active and not complete, maybe we need to start?
+              // Or just show a message.
+              return const Center(
+                child: Text("Start a session from the card list"),
               );
             }
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            // No current card (shouldn't happen but handle gracefully)
-            if (provider.currentCard == null ||
-                provider.currentExerciseType == null) {
-              return const Center(child: CircularProgressIndicator());
-            }
+          return Column(
+            children: [
+              // Progress bar
+              PracticeProgressBar(
+                progress: sessionState.progress,
+                correctCount: sessionState.correctCount,
+                incorrectCount: sessionState.incorrectCount,
+              ),
 
-            return Column(
-              children: [
-                // Progress bar
-                PracticeProgressBar(
-                  progress: provider.progress,
-                  correctCount: provider.correctCount,
-                  incorrectCount: provider.incorrectCount,
+              const SizedBox(height: 16),
+
+              // Swipeable card with exercise content
+              Expanded(
+                child: _SwipeableCardWrapper(
+                  key: _cardKey,
+                  sessionState: sessionState,
+                  sessionNotifier: sessionNotifier,
+                  onEditCard: () => _editCurrentCard(context, currentCard),
                 ),
+              ),
 
-                const SizedBox(height: 16),
-
-                // Swipeable card with exercise content
-                Expanded(
-                  child: _SwipeableCardWrapper(
-                    key: _cardKey,
-                    provider: provider,
-                    onEditCard: () => _editCurrentCard(context, provider),
-                  ),
+              // Keyboard hints
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
                 ),
-
-                // Keyboard hints
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 16,
-                  ),
-                  child: Text(
-                    provider.canSwipe
-                        ? 'Enter = Confirm • ← = Wrong • → = Correct'
-                        : '1-4 = Select option • Enter = Reveal',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
-                    textAlign: TextAlign.center,
-                  ),
+                child: Text(
+                  sessionNotifier.canSwipe
+                      ? 'Enter = Confirm • ← = Wrong • → = Correct'
+                      : '1-4 = Select option • Enter = Reveal',
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  textAlign: TextAlign.center,
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ],
+          );
+        })(),
       ),
     );
   }
 }
 
 class _SwipeableCardWrapper extends StatefulWidget {
-  final PracticeSessionProvider provider;
+  final PracticeSessionState sessionState;
+  final PracticeSessionNotifier sessionNotifier;
   final VoidCallback onEditCard;
 
   const _SwipeableCardWrapper({
     super.key,
-    required this.provider,
+    required this.sessionState,
+    required this.sessionNotifier,
     required this.onEditCard,
   });
 
@@ -265,9 +276,9 @@ class _SwipeableCardWrapper extends StatefulWidget {
 class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
   @override
   Widget build(BuildContext context) {
-    final card = widget.provider.currentCard!;
-    final type = widget.provider.currentExerciseType!;
-    final options = widget.provider.multipleChoiceOptions;
+    final card = widget.sessionNotifier.currentCard!;
+    final type = widget.sessionNotifier.currentExerciseType!;
+    final options = widget.sessionState.multipleChoiceOptions;
 
     return Center(
       child: ConstrainedBox(
@@ -277,14 +288,14 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
           child: ExerciseContentWidget(
             card: card,
             exerciseType: type,
-            answerState: widget.provider.answerState,
+            answerState: widget.sessionState.answerState,
             multipleChoiceOptions: options,
-            currentAnswerCorrect: widget.provider.currentAnswerCorrect,
+            currentAnswerCorrect: widget.sessionState.currentAnswerCorrect,
             onCheckAnswer: (isCorrect) {
-              widget.provider.checkAnswer(isCorrect: isCorrect);
+              widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
             },
             onOverrideAnswer: (isCorrect) {
-              widget.provider.checkAnswer(isCorrect: isCorrect);
+              widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
             },
           ),
         ),

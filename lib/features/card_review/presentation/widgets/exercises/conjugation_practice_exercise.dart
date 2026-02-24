@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../shared/domain/models/card_model.dart';
 import '../../../../../shared/domain/models/word_data.dart';
 import '../../../../tts/presentation/widgets/speaker_button.dart';
-import '../../../domain/providers/practice_session_provider.dart';
+import '../../../domain/providers/practice_session_types.dart';
 
 /// Exercise widget for conjugation practice - provide correct verb form
 class ConjugationPracticeExercise extends StatefulWidget {

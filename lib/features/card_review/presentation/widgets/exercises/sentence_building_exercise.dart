@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../shared/domain/models/card_model.dart';
 import '../../../../tts/presentation/widgets/speaker_button.dart';
-import '../../../domain/providers/practice_session_provider.dart';
+import '../../../domain/providers/practice_session_types.dart';
 
 /// Exercise widget for sentence building - arrange scrambled words
 class SentenceBuildingExercise extends StatefulWidget {
