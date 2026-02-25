@@ -4,7 +4,7 @@ import '../../../../shared/domain/models/card_model.dart';
 part 'card_management_state.freezed.dart';
 
 @freezed
-class CardManagementState with _$CardManagementState {
+sealed class CardManagementState with _$CardManagementState {
   const factory CardManagementState({
     @Default([]) List<CardModel> allCards,
     @Default([]) List<CardModel> filteredCards,
@@ -17,4 +17,10 @@ class CardManagementState with _$CardManagementState {
     @Default(false) bool isLoading,
     String? errorMessage,
   }) = _CardManagementState;
+}
+
+extension CardManagementStateExtension on CardManagementState {
+  int get dueCount => filteredCards.where((card) => card.isDueForReview).length;
+  List<CardModel> get reviewCards =>
+      allCards.where((card) => card.isDueForReview).toList();
 }

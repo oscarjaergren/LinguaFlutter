@@ -20,7 +20,7 @@ class ThemeNotifier extends Notifier<ThemeState> {
   Future<void> initialize() async {
     final theme = await _prefs.getString(_themeModeKey);
     LoggerService.debug('ThemeNotifier: loaded theme from storage: "$theme"');
-    
+
     ThemeMode mode;
     if (theme == 'dark') {
       mode = ThemeMode.dark;
@@ -29,18 +29,15 @@ class ThemeNotifier extends Notifier<ThemeState> {
     } else {
       mode = ThemeMode.system;
     }
-    
+
     LoggerService.debug('ThemeNotifier: initialized with mode: $mode');
-    state = state.copyWith(
-      themeMode: mode,
-      isInitialized: true,
-    );
+    state = state.copyWith(themeMode: mode, isInitialized: true);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
     LoggerService.debug('ThemeNotifier: setting mode to $mode');
     state = state.copyWith(themeMode: mode);
-    
+
     switch (mode) {
       case ThemeMode.dark:
         await _prefs.setString(_themeModeKey, 'dark');
@@ -52,7 +49,9 @@ class ThemeNotifier extends Notifier<ThemeState> {
         break;
       case ThemeMode.system:
         await _prefs.remove(_themeModeKey);
-        LoggerService.debug('ThemeNotifier: removed theme from storage (system)');
+        LoggerService.debug(
+          'ThemeNotifier: removed theme from storage (system)',
+        );
         break;
     }
   }
@@ -67,7 +66,9 @@ class ThemeNotifier extends Notifier<ThemeState> {
           : ThemeMode.dark;
     } else {
       // Otherwise toggle based on stored mode
-      newMode = state.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+      newMode = state.themeMode == ThemeMode.dark
+          ? ThemeMode.light
+          : ThemeMode.dark;
     }
 
     await setThemeMode(newMode);

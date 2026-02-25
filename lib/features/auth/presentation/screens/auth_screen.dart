@@ -1,18 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import '../../domain/auth_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/auth_notifier.dart';
 
 /// Authentication screen with login/signup tabs
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
 
   @override
-  State<AuthScreen> createState() => _AuthScreenState();
+  ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen>
+class _AuthScreenState extends ConsumerState<AuthScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _emailController = TextEditingController();
@@ -101,15 +101,17 @@ class _AuthScreenState extends State<AuthScreen>
               const SizedBox(height: 24),
 
               // Form
-              Consumer<AuthProvider>(
-                builder: (context, authProvider, child) {
+              Consumer(
+                builder: (context, ref, child) {
+                  final authState = ref.watch(authNotifierProvider);
+                  final authNotifier = ref.read(authNotifierProvider.notifier);
                   return Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Error message
-                        if (authProvider.errorMessage != null) ...[
+                        if (authState.errorMessage != null) ...[
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -125,7 +127,7 @@ class _AuthScreenState extends State<AuthScreen>
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    authProvider.errorMessage!,
+                                    authState.errorMessage!,
                                     style: TextStyle(
                                       color: theme.colorScheme.onErrorContainer,
                                     ),
@@ -133,7 +135,7 @@ class _AuthScreenState extends State<AuthScreen>
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.close),
-                                  onPressed: authProvider.clearError,
+                                  onPressed: authNotifier.clearError,
                                   color: theme.colorScheme.onErrorContainer,
                                   iconSize: 18,
                                 ),
@@ -265,9 +267,9 @@ class _AuthScreenState extends State<AuthScreen>
                             animation: _tabController,
                             builder: (context, child) {
                               return ElevatedButton(
-                                onPressed: authProvider.isLoading
+                                onPressed: authState.isLoading
                                     ? null
-                                    : () => _submit(authProvider),
+                                    : () => _submit(authNotifier),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: theme.colorScheme.primary,
                                   foregroundColor: theme.colorScheme.onPrimary,
@@ -275,7 +277,7 @@ class _AuthScreenState extends State<AuthScreen>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: authProvider.isLoading
+                                child: authState.isLoading
                                     ? SizedBox(
                                         height: 24,
                                         width: 24,
@@ -309,7 +311,7 @@ class _AuthScreenState extends State<AuthScreen>
                             }
                             return TextButton(
                               onPressed: () =>
-                                  _showForgotPasswordDialog(authProvider),
+                                  _showForgotPasswordDialog(authNotifier),
                               child: const Text('Forgot Password?'),
                             );
                           },
@@ -342,9 +344,9 @@ class _AuthScreenState extends State<AuthScreen>
                         SizedBox(
                           height: 56,
                           child: OutlinedButton.icon(
-                            onPressed: authProvider.isLoading
+                            onPressed: authState.isLoading
                                 ? null
-                                : () => _signInWithGoogle(authProvider),
+                                : () => _signInWithGoogle(authNotifier),
                             icon: Image.network(
                               'https://www.google.com/favicon.ico',
                               height: 24,
@@ -384,9 +386,9 @@ class _AuthScreenState extends State<AuthScreen>
                           ),
                           const SizedBox(height: 8),
                           OutlinedButton.icon(
-                            onPressed: authProvider.isLoading
+                            onPressed: authState.isLoading
                                 ? null
-                                : () => _debugQuickLogin(authProvider),
+                                : () => _debugQuickLogin(authNotifier),
                             icon: const Icon(Icons.bug_report),
                             label: const Text('Quick Login (Test User)'),
                             style: OutlinedButton.styleFrom(
@@ -407,7 +409,7 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 
-  Future<void> _submit(AuthProvider authProvider) async {
+  Future<void> _submit(AuthNotifier authNotifier) async {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
@@ -415,9 +417,9 @@ class _AuthScreenState extends State<AuthScreen>
 
     bool success;
     if (_tabController.index == 0) {
-      success = await authProvider.signIn(email: email, password: password);
+      success = await authNotifier.signIn(email: email, password: password);
     } else {
-      success = await authProvider.signUp(email: email, password: password);
+      success = await authNotifier.signUp(email: email, password: password);
     }
 
     if (success && mounted) {
@@ -425,19 +427,19 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
-  Future<void> _signInWithGoogle(AuthProvider authProvider) async {
-    final success = await authProvider.signInWithGoogle();
+  Future<void> _signInWithGoogle(AuthNotifier authNotifier) async {
+    final success = await authNotifier.signInWithGoogle();
     if (success && mounted) {
       context.go('/');
     }
   }
 
-  Future<void> _debugQuickLogin(AuthProvider authProvider) async {
+  Future<void> _debugQuickLogin(AuthNotifier authNotifier) async {
     // Test user credentials from Docker test infrastructure
     const testEmail = 'test@linguaflutter.dev';
     const testPassword = 'testpass123';
 
-    final success = await authProvider.signIn(
+    final success = await authNotifier.signIn(
       email: testEmail,
       password: testPassword,
     );
@@ -447,7 +449,7 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
-  void _showForgotPasswordDialog(AuthProvider authProvider) {
+  void _showForgotPasswordDialog(AuthNotifier authNotifier) {
     final emailController = TextEditingController(text: _emailController.text);
 
     showDialog(
@@ -480,13 +482,23 @@ class _AuthScreenState extends State<AuthScreen>
             onPressed: () async {
               final email = emailController.text.trim();
               if (email.isNotEmpty) {
-                final success = await authProvider.resetPassword(email);
+                final success = await authNotifier.resetPassword(email);
                 if (context.mounted) {
                   Navigator.pop(context);
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Password reset email sent!'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  } else {
+                    final error = ref.read(authNotifierProvider).errorMessage;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          error ?? 'Failed to send password reset email.',
+                        ),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );

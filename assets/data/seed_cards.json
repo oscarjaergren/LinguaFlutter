@@ -17,8 +17,8 @@
         "isRegular": false,
         "isSeparable": false,
         "auxiliary": "haben",
-        "presentDu": "sprichst",
-        "presentEr": "spricht",
+        "presentSecondPerson": "sprichst",
+        "presentThirdPerson": "spricht",
         "pastSimple": "sprach",
         "pastParticiple": "gesprochen"
       }
@@ -41,8 +41,8 @@
         "isSeparable": true,
         "separablePrefix": "ab",
         "auxiliary": "haben",
-        "presentDu": "sprichst ab",
-        "presentEr": "spricht ab",
+        "presentSecondPerson": "sprichst ab",
+        "presentThirdPerson": "spricht ab",
         "pastSimple": "sprach ab",
         "pastParticiple": "abgesprochen"
       }

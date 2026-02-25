@@ -137,6 +137,17 @@ class SupabaseAuthService {
     }
   }
 
+  /// Sends a password reset email.
+  static Future<void> resetPasswordForEmail(String email) async {
+    try {
+      await client.auth.resetPasswordForEmail(email);
+      LoggerService.info('Password reset email requested: $email');
+    } catch (e) {
+      LoggerService.error('Password reset request failed', e);
+      rethrow;
+    }
+  }
+
   /// Listen to auth state changes
   static Stream<AuthState> get authStateChanges =>
       client.auth.onAuthStateChange;

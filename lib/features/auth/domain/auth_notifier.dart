@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../data/services/supabase_auth_service.dart';
-import '../../../shared/services/logger_service.dart';
 import '../../../shared/services/sentry_service.dart';
 import '../../../shared/utils/rate_limiter.dart';
 import 'auth_state.dart';
@@ -13,7 +12,6 @@ final authNotifierProvider = NotifierProvider<AuthNotifier, AuthState>(
 
 class AuthNotifier extends Notifier<AuthState> {
   static final _jsonMessagePattern = RegExp(r'"message"\s*:\s*"([^"]+)"');
-  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   AuthState build() {
@@ -110,6 +108,24 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  Future<bool> resetPassword(String email) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+    try {
+      await SupabaseAuthService.resetPasswordForEmail(email);
+      return true;
+    } on AuthException catch (e) {
+      state = state.copyWith(errorMessage: _parseAuthError(e));
+      return false;
+    } catch (_) {
+      state = state.copyWith(
+        errorMessage: 'Failed to send password reset email',
+      );
+      return false;
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
     try {
@@ -118,12 +134,17 @@ class AuthNotifier extends Notifier<AuthState> {
       if (userId != null) {
         RateLimiter().clearUser(userId);
       }
-      state = state.copyWith(user: null);
+      state = state.copyWith(user: null, errorMessage: null);
     } catch (e) {
       state = state.copyWith(errorMessage: 'Sign out failed');
     } finally {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  void clearError() {
+    if (state.errorMessage == null) return;
+    state = state.copyWith(errorMessage: null);
   }
 
   String _parseAuthError(AuthException e) {
@@ -134,10 +155,12 @@ class AuthNotifier extends Notifier<AuthState> {
         if (match != null) return match.group(1)!;
       } catch (_) {}
     }
-    if (message.contains('email already registered'))
+    if (message.contains('email already registered')) {
       return 'This email is already registered.';
-    if (message.contains('invalid email'))
+    }
+    if (message.contains('invalid email')) {
       return 'Please enter a valid email address.';
+    }
     return e.message;
   }
 }

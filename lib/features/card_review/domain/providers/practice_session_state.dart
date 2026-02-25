@@ -1,13 +1,10 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../../shared/domain/models/card_model.dart';
-import '../../../../shared/domain/models/exercise_type.dart';
-import '../models/exercise_preferences.dart';
 import 'practice_session_types.dart';
 
 part 'practice_session_state.freezed.dart';
 
 @freezed
-class PracticeSessionState with _$PracticeSessionState {
+sealed class PracticeSessionState with _$PracticeSessionState {
   const factory PracticeSessionState({
     @Default([]) List<PracticeItem> sessionQueue,
     @Default(0) int currentIndex,

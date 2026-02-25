@@ -27,13 +27,13 @@ sealed class WordData with _$WordData {
     /// Auxiliary verb for Perfekt: "haben" or "sein"
     @Default('haben') String auxiliary,
 
-    /// 2nd person singular present (du form) - only if irregular
+    /// 2nd person singular present form - only if irregular.
     /// e.g., "sprichst" for sprechen (stem change e→i)
-    String? presentDu,
+    String? presentSecondPerson,
 
-    /// 3rd person singular present (er/sie/es form) - only if irregular
+    /// 3rd person singular present form - only if irregular.
     /// e.g., "spricht" for sprechen
-    String? presentEr,
+    String? presentThirdPerson,
 
     /// Simple past stem (Präteritum)
     /// e.g., "sprach" for sprechen

@@ -1,14 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../../shared/navigation/app_router.dart';
-import '../../../duplicate_detection/duplicate_detection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../language/language.dart';
 import '../../../mascot/domain/mascot_notifier.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
-import '../../domain/providers/card_management_provider.dart';
-import '../view_models/card_list_view_model.dart';
+import '../../domain/providers/card_management_notifier.dart';
+import '../view_models/card_list_notifier.dart';
 import '../widgets/card_list_view.dart';
 
 import '../../../dashboard/presentation/widgets/language_selector_widget.dart';
@@ -24,76 +21,75 @@ class CardsScreen extends ConsumerWidget {
       ref.read(mascotNotifierProvider.notifier).resetSession();
     });
 
-    return ChangeNotifierProvider(
-      create: (context) => CardListViewModel(
-        cardManagement: context.read<CardManagementProvider>(),
-        getActiveLanguage: () =>
-            ref.read(languageNotifierProvider).activeLanguage,
-        getLanguageDetails: ref
-            .read(languageNotifierProvider.notifier)
-            .getLanguageDetails,
+    final listState = ref.watch(cardListNotifierProvider);
+    final listNotifier = ref.read(cardListNotifierProvider.notifier);
+    final managementState = ref.watch(cardManagementNotifierProvider);
+    final dueCount = managementState.filteredCards
+        .where((card) => card.isDueForReview)
+        .length;
+    final canStartReview = dueCount > 0;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const LanguageSelectorWidget(),
+        actions: [
+          // Search button
+          if (!listState.isSearching)
+            IconButton(
+              onPressed: listNotifier.toggleSearch,
+              icon: const Icon(Icons.search),
+            ),
+          // Filter button
+          IconButton(
+            onPressed: () => _showFilterDialog(context, ref),
+            icon: const Icon(Icons.filter_list),
+          ),
+          // Debug menu
+          if (kDebugMode)
+            IconButton(
+              onPressed: () => context.pushDebug(),
+              icon: const Icon(Icons.bug_report),
+            ),
+        ],
       ),
-      child: Consumer<CardListViewModel>(
-        builder: (context, viewModel, child) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const LanguageSelectorWidget(),
-              actions: [
-                // Search button
-                if (!viewModel.isSearching)
-                  IconButton(
-                    onPressed: viewModel.startSearch,
-                    icon: const Icon(Icons.search),
-                  ),
-                // Filter button
-                IconButton(
-                  onPressed: () => _showFilterDialog(context, viewModel),
-                  icon: const Icon(Icons.filter_list),
-                ),
-                // Debug menu
-                if (kDebugMode)
-                  IconButton(
-                    onPressed: () => context.pushDebug(),
-                    icon: const Icon(Icons.bug_report),
-                  ),
-              ],
-            ),
-            body: Column(
-              children: [
-                // Streak status
-                const StreakStatusWidget(),
-                // Main content
-                Expanded(child: CardListView(viewModel: viewModel)),
-              ],
-            ),
-            floatingActionButton: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                // Review button
-                if (viewModel.canStartReview)
-                  FloatingActionButton.extended(
-                    onPressed: () => _startReview(context),
-                    heroTag: 'review',
-                    icon: const Icon(Icons.quiz),
-                    label: Text('Review (${viewModel.cardsToReview})'),
-                  ),
-                const SizedBox(height: 16),
-                // Add card button
-                FloatingActionButton(
-                  onPressed: () => _createNewCard(context),
-                  heroTag: 'add',
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),
-            floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          );
-        },
+      body: Column(
+        children: [
+          // Streak status
+          const StreakStatusWidget(),
+          // Main content
+          const Expanded(child: CardListView()),
+        ],
       ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // Review button
+          if (canStartReview)
+            FloatingActionButton.extended(
+              onPressed: () => _startReview(context),
+              heroTag: 'review',
+              icon: const Icon(Icons.quiz),
+              label: Text('Review ($dueCount)'),
+            ),
+          const SizedBox(height: 16),
+          // Add card button
+          FloatingActionButton(
+            onPressed: () => _createNewCard(context),
+            heroTag: 'add',
+            child: const Icon(Icons.add),
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
-  void _showFilterDialog(BuildContext context, CardListViewModel viewModel) {
+  void _showFilterDialog(BuildContext context, WidgetRef ref) {
+    final managementState = ref.watch(cardManagementNotifierProvider);
+    final managementNotifier = ref.read(
+      cardManagementNotifierProvider.notifier,
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -103,13 +99,13 @@ class CardsScreen extends ConsumerWidget {
           children: [
             CheckboxListTile(
               title: const Text('Show only due cards'),
-              value: viewModel.showOnlyDue,
-              onChanged: (_) => viewModel.toggleShowOnlyDue(),
+              value: managementState.showOnlyDue,
+              onChanged: (_) => managementNotifier.toggleShowOnlyDue(),
             ),
             CheckboxListTile(
               title: const Text('Show only favorites'),
-              value: viewModel.showOnlyFavorites,
-              onChanged: (_) => viewModel.toggleShowOnlyFavorites(),
+              value: managementState.showOnlyFavorites,
+              onChanged: (_) => managementNotifier.toggleShowOnlyFavorites(),
             ),
           ],
         ),
@@ -120,7 +116,7 @@ class CardsScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              viewModel.clearAllFilters();
+              managementNotifier.clearAllFilters();
               Navigator.of(context).pop();
             },
             child: const Text('Clear All'),

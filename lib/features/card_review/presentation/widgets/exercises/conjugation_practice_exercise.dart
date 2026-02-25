@@ -77,9 +77,10 @@ class _ConjugationPracticeExerciseState
     if (wordData is VerbData) {
       // _canDoExercise guarantees at least one conjugation field is non-null.
       final forms = <String, String>{
-        if (wordData.presentDu != null) 'du (present)': wordData.presentDu!,
-        if (wordData.presentEr != null)
-          'er/sie/es (present)': wordData.presentEr!,
+        if (wordData.presentSecondPerson != null)
+          'du (present)': wordData.presentSecondPerson!,
+        if (wordData.presentThirdPerson != null)
+          'er/sie/es (present)': wordData.presentThirdPerson!,
         if (wordData.pastSimple != null) 'past simple': wordData.pastSimple!,
         if (wordData.pastParticiple != null)
           'past participle': wordData.pastParticiple!,

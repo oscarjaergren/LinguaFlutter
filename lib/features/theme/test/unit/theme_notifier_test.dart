@@ -123,7 +123,7 @@ void main() {
 
       test('should notify listeners when theme changes', () async {
         var notificationCount = 0;
-        container.listen(themeNotifierProvider, (_, __) => notificationCount++);
+        container.listen(themeNotifierProvider, (_, _) => notificationCount++);
 
         await container
             .read(themeNotifierProvider.notifier)
@@ -133,7 +133,7 @@ void main() {
 
       test('should notify on every mode change', () async {
         var notificationCount = 0;
-        container.listen(themeNotifierProvider, (_, __) => notificationCount++);
+        container.listen(themeNotifierProvider, (_, _) => notificationCount++);
 
         await container
             .read(themeNotifierProvider.notifier)

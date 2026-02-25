@@ -176,8 +176,8 @@ extension ExerciseTypeExtension on ExerciseType {
       case ExerciseType.conjugationPractice:
         final wordData = card.wordData;
         if (wordData is VerbData) {
-          return wordData.presentDu != null ||
-              wordData.presentEr != null ||
+          return wordData.presentSecondPerson != null ||
+              wordData.presentThirdPerson != null ||
               wordData.pastSimple != null ||
               wordData.pastParticiple != null;
         }

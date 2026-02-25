@@ -132,7 +132,7 @@ Return a JSON object with these fields:
 - "wordType": one of "verb", "noun", "adjective", "adverb", "phrase", "other"
 - "translation": English translation
 - "grammar": object with type-specific fields:
-  - For verbs: {"isRegular": bool, "isSeparable": bool, "separablePrefix": string or null, "auxiliary": "haben" or "sein", "presentDu": string or null, "presentEr": string or null, "pastSimple": string or null, "pastParticiple": string}
+  - For verbs: {"isRegular": bool, "isSeparable": bool, "separablePrefix": string or null, "auxiliary": "haben" or "sein", "presentSecondPerson": string or null, "presentThirdPerson": string or null, "pastSimple": string or null, "pastParticiple": string}
   - For nouns: {"gender": "der"/"die"/"das" for German or "masculine"/"feminine"/"neuter", "plural": string, "genitive": string or null}
   - For adjectives: {"comparative": string, "superlative": string}
   - For adverbs: {"usageNote": string or null}

@@ -1,14 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' hide Consumer;
-import 'package:provider/provider.dart';
-import 'features/language/language.dart';
-import 'features/mascot/mascot.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'features/theme/theme.dart';
 import 'features/card_review/card_review.dart';
 import 'features/card_management/card_management.dart';
 import 'features/auth/auth.dart';
-import 'features/duplicate_detection/duplicate_detection.dart';
 import 'shared/navigation/app_router.dart';
 import 'shared/services/logger_service.dart';
 import 'shared/services/sentry_service.dart';
@@ -76,25 +72,8 @@ Future<Widget> _buildApp() async {
   // Create Riverpod container
   final container = ProviderContainer();
 
-  // Create core providers (still ChangeNotifier — Phase 3 will migrate these)
-  final authProvider = AuthProvider();
-
-  final cardManagementProvider = CardManagementProvider(
-    getActiveLanguage: () =>
-        container.read(languageNotifierProvider).activeLanguage,
-  );
-
-  // Wire up language listener
-  container.listen(languageNotifierProvider, (previous, next) {
-    if (previous?.activeLanguage != next.activeLanguage) {
-      cardManagementProvider.notifyLanguageChanged();
-    }
-  });
-
   // Initialize providers that need async setup
   await container.read(themeNotifierProvider.notifier).initialize();
-
-  // Initialize Exercise Preferences and Card Enrichment via Riverpod notifiers
   await container
       .read(exercisePreferencesNotifierProvider.notifier)
       .initialize();
@@ -109,7 +88,7 @@ Future<Widget> _buildApp() async {
   container.listen<AuthState>(authNotifierProvider, (previous, next) async {
     if (previous?.isAuthenticated != true && next.isAuthenticated) {
       LoggerService.info(
-        '🔐 User authenticated (Riverpod), initializing CardManagementNotifier...',
+        '🔐 User authenticated, initializing CardManagementNotifier...',
       );
       try {
         await container
@@ -122,61 +101,13 @@ Future<Widget> _buildApp() async {
     }
   });
 
-  // Wire up auth state change callback for legacy provider (keeps it in sync)
-  authProvider.onAuthStateChanged = (isAuthenticated) async {
-    if (isAuthenticated) {
-      LoggerService.info(
-        '🔐 User authenticated, initializing data providers...',
-      );
-      try {
-        await cardManagementProvider.initialize();
-        LoggerService.info('✅ Data providers initialized');
-      } catch (e) {
-        LoggerService.error('Failed to initialize data providers', e);
-      }
-    } else {
-      LoggerService.info('🔓 User signed out');
-    }
-  };
-
-  // If already authenticated (e.g., session restored), initialize now
-  if (authProvider.isAuthenticated) {
-    await cardManagementProvider.initialize();
-  }
-
   LoggerService.info('App startup: providers ready');
 
   _setupErrorHandlers();
 
   return UncontrolledProviderScope(
     container: container,
-    child: MultiProvider(
-      providers: [
-        // Core providers
-        ChangeNotifierProvider.value(value: authProvider),
-
-        // Feature-specific providers (VSA)
-        ChangeNotifierProvider.value(value: cardManagementProvider),
-
-        // Practice session provider
-        ChangeNotifierProxyProvider<
-          CardManagementProvider,
-          PracticeSessionProvider
-        >(
-          create: (context) {
-            return PracticeSessionProvider(
-              getReviewCards: () =>
-                  context.read<CardManagementProvider>().reviewCards,
-              getAllCards: () =>
-                  context.read<CardManagementProvider>().allCards,
-              updateCard: context.read<CardManagementProvider>().updateCard,
-            );
-          },
-          update: (context, cardManagement, previous) => previous!,
-        ),
-      ],
-      child: const LinguaFlutterApp(),
-    ),
+    child: const LinguaFlutterApp(),
   );
 }
 

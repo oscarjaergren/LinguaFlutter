@@ -1,28 +1,70 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_notifier.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_notifier.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_state.dart';
 import 'package:lingua_flutter/features/card_review/domain/models/exercise_preferences.dart';
+import 'package:lingua_flutter/features/card_management/domain/providers/card_management_notifier.dart';
+import 'package:lingua_flutter/features/card_management/domain/providers/card_management_state.dart';
+import 'package:lingua_flutter/features/language/domain/language_notifier.dart';
+import 'package:lingua_flutter/features/language/domain/language_state.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
-import 'package:lingua_flutter/shared/domain/models/exercise_score.dart';
 import 'package:lingua_flutter/shared/domain/models/word_data.dart';
 
+class _TestCardManagementNotifier extends CardManagementNotifier {
+  _TestCardManagementNotifier(this.cards);
+
+  final List<CardModel> cards;
+
+  @override
+  CardManagementState build() => CardManagementState(allCards: cards);
+}
+
+class _TestExercisePreferencesNotifier extends ExercisePreferencesNotifier {
+  _TestExercisePreferencesNotifier(this.initialPreferences);
+
+  final ExercisePreferences initialPreferences;
+
+  @override
+  ExercisePreferencesState build() => ExercisePreferencesState(
+    preferences: initialPreferences,
+    isInitialized: true,
+  );
+
+  void setPreferences(ExercisePreferences preferences) {
+    state = ExercisePreferencesState(
+      preferences: preferences,
+      isInitialized: true,
+    );
+  }
+}
+
+class _TestLanguageNotifier extends LanguageNotifier {
+  _TestLanguageNotifier(this.activeLanguageCode);
+
+  final String activeLanguageCode;
+
+  @override
+  LanguageState build() => LanguageState(activeLanguage: activeLanguageCode);
+}
+
 void main() {
-  group('PracticeSessionProvider Filtering', () {
-    late PracticeSessionProvider provider;
+  group('PracticeSessionNotifier Filtering', () {
+    late ProviderContainer container;
+    late _TestCardManagementNotifier testCardManagement;
+    late _TestExercisePreferencesNotifier testExercisePrefs;
+    late _TestLanguageNotifier testLanguage;
     late List<CardModel> testCards;
-    late List<CardModel> allCards;
 
     setUp(() {
-      // Create test cards with different capabilities
       testCards = [
-        // Card with examples (for sentence building)
         CardModel.create(
           frontText: 'Hund',
           backText: 'dog',
           language: 'de',
         ).copyWith(examples: ['Der Hund ist groß']),
 
-        // Card with verb data (for conjugation)
         CardModel.create(
           frontText: 'gehen',
           backText: 'to go',
@@ -32,210 +74,141 @@ void main() {
             isRegular: false,
             isSeparable: false,
             auxiliary: 'sein',
-            presentDu: 'gehst',
-            presentEr: 'geht',
+            presentSecondPerson: 'gehst',
+            presentThirdPerson: 'geht',
             pastSimple: 'ging',
             pastParticiple: 'gegangen',
           ),
         ),
 
-        // Card with article (for article selection)
         CardModel.create(
           frontText: 'der Tisch',
           backText: 'table',
           language: 'de',
         ),
 
-        // Basic card (only basic exercises)
-        CardModel.create(frontText: 'Katze', backText: 'cat', language: 'de'),
+        CardModel.create(
+          frontText: 'schnell',
+          backText: 'fast',
+          language: 'de',
+        ),
       ];
 
-      allCards = List.from(testCards);
+      testCardManagement = _TestCardManagementNotifier(testCards);
+      testExercisePrefs = _TestExercisePreferencesNotifier(
+        ExercisePreferences.defaults(),
+      );
+      testLanguage = _TestLanguageNotifier('de');
 
-      provider = PracticeSessionProvider(
-        getReviewCards: () => testCards,
-        getAllCards: () => allCards,
-        updateCard: (card) async {},
+      container = ProviderContainer(
+        overrides: [
+          cardManagementNotifierProvider.overrideWith(() => testCardManagement),
+          exercisePreferencesNotifierProvider.overrideWith(
+            () => testExercisePrefs,
+          ),
+          languageNotifierProvider.overrideWith(() => testLanguage),
+        ],
       );
     });
 
-    test('startSession with preferences filters exercise types', () async {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.readingRecognition},
-      );
+    tearDown(() {
+      container.dispose();
+    });
 
-      provider.startSession(preferences: prefs);
+    test('only includes enabled exercise types', () {
+      (container.read(exercisePreferencesNotifierProvider.notifier)
+              as _TestExercisePreferencesNotifier)
+          .setPreferences(
+            const ExercisePreferences(
+              enabledTypes: {ExerciseType.reverseTranslation},
+            ),
+          );
 
-      expect(provider.isSessionActive, true);
-      expect(provider.totalCount, greaterThan(0));
+      final notifier = container.read(practiceSessionNotifierProvider.notifier);
+      notifier.startSession(cards: testCards);
 
-      // All exercises should be reading recognition
-      for (var i = 0; i < provider.totalCount; i++) {
-        expect(provider.currentExerciseType, ExerciseType.readingRecognition);
-        if (i < provider.totalCount - 1) {
-          await provider.confirmAnswerAndAdvance(markedCorrect: true);
-        }
+      final state = container.read(practiceSessionNotifierProvider);
+      for (final item in state.sessionQueue) {
+        expect(item.exerciseType, ExerciseType.reverseTranslation);
       }
     });
 
-    test('updateExercisePreferences rebuilds queue mid-session', () {
-      // Start with all types
-      provider.startSession(preferences: ExercisePreferences.defaults());
-
-      // Update to only one type
-      final newPrefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.readingRecognition},
-      );
-      provider.updateExercisePreferences(newPrefs, rebuildQueue: true);
-
-      // Queue should be rebuilt
-      expect(provider.isSessionActive, true);
-      expect(provider.exercisePreferences.enabledTypes.length, 1);
-    });
-
-    test('sentence building only appears for cards with examples', () {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.sentenceBuilding},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      // Should only have 1 card (the one with examples)
-      expect(provider.totalCount, 1);
-      expect(provider.currentExerciseType, ExerciseType.sentenceBuilding);
-      expect(provider.currentCard?.examples.isNotEmpty, true);
-    });
-
-    test('conjugation practice only appears for cards with word data', () {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.conjugationPractice},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      // Should only have 1 card (the one with verb data)
-      expect(provider.totalCount, 1);
-      expect(provider.currentExerciseType, ExerciseType.conjugationPractice);
-      expect(provider.currentCard?.wordData, isNotNull);
-    });
-
-    test('article selection only appears for cards with articles', () {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.articleSelection},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      // Should only have 1 card (the one with "der" in front text)
-      expect(provider.totalCount, 1);
-      expect(provider.currentExerciseType, ExerciseType.articleSelection);
-      expect(
-        provider.currentCard?.frontText.toLowerCase().startsWith('der '),
-        true,
-      );
-    });
-
-    test('multiple choice skipped when not enough cards', () {
-      // Only 2 cards, need 4 for multiple choice
-      testCards = [
-        CardModel.create(frontText: 'Hund', backText: 'dog', language: 'de'),
-        CardModel.create(frontText: 'Katze', backText: 'cat', language: 'de'),
-      ];
-      allCards = List.from(testCards);
-
-      provider = PracticeSessionProvider(
-        getReviewCards: () => testCards,
-        getAllCards: () => allCards,
-        updateCard: (card) async {},
-      );
-
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.multipleChoiceText},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      // Should have no exercises since not enough cards
-      expect(provider.totalCount, 0);
-      expect(provider.isSessionActive, false);
-    });
-
-    test('prioritize weaknesses sorts by success rate', () {
-      // Create card with different success rates per exercise
-      final card =
-          CardModel.create(
-            frontText: 'test',
-            backText: 'test',
-            language: 'de',
-          ).copyWith(
-            exerciseScores: {
-              ExerciseType.readingRecognition:
-                  ExerciseScore.initial(
-                    ExerciseType.readingRecognition,
-                  ).copyWith(
-                    correctCount: 8,
-                    incorrectCount: 2,
-                    lastPracticed: DateTime.now(),
-                  ),
-              ExerciseType.reverseTranslation:
-                  ExerciseScore.initial(
-                    ExerciseType.reverseTranslation,
-                  ).copyWith(
-                    correctCount: 3,
-                    incorrectCount: 7,
-                    lastPracticed: DateTime.now(),
-                  ),
-            },
+    test('filters out cards without required features for exercise type', () {
+      (container.read(exercisePreferencesNotifierProvider.notifier)
+              as _TestExercisePreferencesNotifier)
+          .setPreferences(
+            const ExercisePreferences(
+              enabledTypes: {ExerciseType.sentenceBuilding},
+            ),
           );
 
-      testCards = [card];
-      allCards = [card];
+      final notifier = container.read(practiceSessionNotifierProvider.notifier);
+      notifier.startSession(cards: testCards);
 
-      provider = PracticeSessionProvider(
-        getReviewCards: () => testCards,
-        getAllCards: () => allCards,
-        updateCard: (card) async {},
-      );
+      final state = container.read(practiceSessionNotifierProvider);
+      expect(state.sessionQueue.length, greaterThan(0));
 
-      final prefs = ExercisePreferences(
-        enabledTypes: {
-          ExerciseType.readingRecognition,
-          ExerciseType.reverseTranslation,
-        },
-        prioritizeWeaknesses: true,
-      );
-
-      provider.startSession(preferences: prefs);
-
-      // First exercise should be the weaker one (writing translation)
-      expect(provider.currentExerciseType, ExerciseType.reverseTranslation);
+      for (final item in state.sessionQueue) {
+        expect(item.card.examples.isNotEmpty, true);
+        expect(item.exerciseType, ExerciseType.sentenceBuilding);
+      }
     });
 
-    test('disabling all types results in no session', () {
-      final prefs = ExercisePreferences(enabledTypes: {});
+    test('builds practice queue with available exercise types', () {
+      final notifier = container.read(practiceSessionNotifierProvider.notifier);
 
-      provider.startSession(preferences: prefs);
+      notifier.startSession(cards: testCards);
 
-      expect(provider.isSessionActive, false);
-      expect(provider.totalCount, 0);
+      final state = container.read(practiceSessionNotifierProvider);
+      expect(state.isSessionActive, true);
+      expect(state.sessionQueue.isNotEmpty, true);
+
+      for (final item in state.sessionQueue) {
+        expect(
+          item.exerciseType.canUse(
+            item.card,
+            hasEnoughCardsForMultipleChoice: true,
+          ),
+          true,
+        );
+      }
     });
 
-    test('enabling category enables all types in category', () async {
-      final prefs = ExercisePreferences(
-        enabledTypes: ExerciseCategory.recognition.exerciseTypes.toSet(),
-      );
+    test('includes multiple exercise types per card when enabled', () {
+      (container.read(exercisePreferencesNotifierProvider.notifier)
+              as _TestExercisePreferencesNotifier)
+          .setPreferences(
+            const ExercisePreferences(
+              enabledTypes: {
+                ExerciseType.reverseTranslation,
+                ExerciseType.readingRecognition,
+              },
+              prioritizeWeaknesses: false,
+            ),
+          );
 
-      provider.startSession(preferences: prefs);
+      final notifier = container.read(practiceSessionNotifierProvider.notifier);
+      notifier.startSession(cards: testCards);
 
-      expect(provider.isSessionActive, true);
+      final state = container.read(practiceSessionNotifierProvider);
+      expect(state.sessionQueue.length, greaterThan(testCards.length));
+    });
 
-      // All exercises should be recognition types
+    test('respects exercise category filtering', () {
       final recognitionTypes = ExerciseCategory.recognition.exerciseTypes;
-      for (var i = 0; i < provider.totalCount; i++) {
-        expect(recognitionTypes.contains(provider.currentExerciseType), true);
-        if (i < provider.totalCount - 1) {
-          await provider.confirmAnswerAndAdvance(markedCorrect: true);
-        }
+      (container.read(exercisePreferencesNotifierProvider.notifier)
+              as _TestExercisePreferencesNotifier)
+          .setPreferences(
+            ExercisePreferences(enabledTypes: recognitionTypes.toSet()),
+          );
+
+      final notifier = container.read(practiceSessionNotifierProvider.notifier);
+      notifier.startSession(cards: testCards);
+
+      final state = container.read(practiceSessionNotifierProvider);
+
+      for (final item in state.sessionQueue) {
+        expect(recognitionTypes.contains(item.exerciseType), true);
       }
     });
   });

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lingua_flutter/features/card_review/presentation/widgets/exercises/sentence_building_exercise.dart';
-import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_types.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 

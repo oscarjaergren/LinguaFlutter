@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
-import '../../../../shared/services/logger_service.dart';
 import '../../../card_management/domain/providers/card_management_notifier.dart';
 import '../../domain/providers/exercise_preferences_notifier.dart';
 import '../../../language/language.dart';
@@ -19,10 +18,8 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
   @override
   PracticeSessionState build() {
-    // Watch relevant dependencies
-    ref.watch(cardManagementNotifierProvider);
-    ref.watch(exercisePreferencesNotifierProvider);
-
+    // Keep this notifier state stable across dependency updates.
+    // Dependencies are read on demand in methods to avoid resetting sessions.
     return const PracticeSessionState();
   }
 
@@ -196,6 +193,96 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       sessionQueue: [],
       currentIndex: 0,
     );
+  }
+
+  /// Update a card in the session queue when it's edited externally
+  void updateCardInQueue(CardModel updatedCard) {
+    if (!state.isSessionActive) return;
+
+    final updatedQueue = List<PracticeItem>.from(state.sessionQueue);
+    bool changed = false;
+
+    // Update all practice items for this card
+    for (int i = 0; i < updatedQueue.length; i++) {
+      if (updatedQueue[i].card.id == updatedCard.id) {
+        updatedQueue[i] = PracticeItem(
+          card: updatedCard,
+          exerciseType: updatedQueue[i].exerciseType,
+        );
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      state = state.copyWith(sessionQueue: updatedQueue);
+      // If current card was updated, regenerate options if needed
+      if (currentCard?.id == updatedCard.id) {
+        _prepareCurrentExercise();
+      }
+    }
+  }
+
+  /// Remove a deleted card from the queue and skip if it's the current card
+  Future<void> removeCardFromQueue(String cardId) async {
+    if (!state.isSessionActive) return;
+
+    final currentCardId = currentCard?.id;
+    final wasCurrentCard = currentCardId == cardId;
+
+    final updatedQueue = List<PracticeItem>.from(state.sessionQueue);
+
+    // Count how many entries for this card appear strictly before the current
+    // index — needed to correctly adjust the index after removal.
+    final removedBeforeCount = updatedQueue
+        .take(state.currentIndex)
+        .where((item) => item.card.id == cardId)
+        .length;
+
+    // Remove all practice items for this card
+    updatedQueue.removeWhere((item) => item.card.id == cardId);
+
+    if (wasCurrentCard) {
+      int nextIndex = state.currentIndex - removedBeforeCount;
+      if (nextIndex < 0) nextIndex = 0;
+
+      // Clamp index to valid range after removal
+      if (nextIndex >= updatedQueue.length) {
+        nextIndex = updatedQueue.isEmpty ? 0 : updatedQueue.length - 1;
+      }
+
+      // Check if session is now complete
+      if (updatedQueue.isEmpty) {
+        state = state.copyWith(
+          sessionQueue: [],
+          currentIndex: 0,
+          isSessionComplete: true,
+          isSessionActive: false,
+          incorrectCount: state.incorrectCount + 1,
+        );
+        // endSession(); // Potentially call this after a delay or on user action
+        return;
+      }
+
+      state = state.copyWith(
+        sessionQueue: updatedQueue,
+        currentIndex: nextIndex,
+        incorrectCount: state.incorrectCount + 1,
+        answerState: AnswerState.pending,
+        currentAnswerCorrect: null,
+        userInput: null,
+      );
+
+      _prepareCurrentExercise();
+    } else if (removedBeforeCount > 0) {
+      int nextIndex = state.currentIndex - removedBeforeCount;
+      if (nextIndex < 0) nextIndex = 0;
+      state = state.copyWith(
+        sessionQueue: updatedQueue,
+        currentIndex: nextIndex,
+      );
+    } else {
+      state = state.copyWith(sessionQueue: updatedQueue);
+    }
   }
 
   // === Answer Handling ===

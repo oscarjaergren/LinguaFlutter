@@ -1,117 +1,121 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/navigation/app_router.dart';
 import '../../../duplicate_detection/duplicate_detection.dart';
-import '../../domain/providers/card_management_provider.dart';
-import '../view_models/card_list_view_model.dart';
+import '../../domain/providers/card_management_notifier.dart';
+import '../../domain/providers/card_management_state.dart';
+import '../view_models/card_list_notifier.dart';
 import 'card_item_widget.dart';
 import 'search_bar_widget.dart';
 
 /// Main view widget for displaying the card list
 class CardListView extends ConsumerWidget {
-  final CardListViewModel viewModel;
-
-  const CardListView({super.key, required this.viewModel});
+  const CardListView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch CardManagementProvider directly to ensure rebuild on changes
-    final cardProvider = context.watch<CardManagementProvider>();
+    final listState = ref.watch(cardListNotifierProvider);
+    final listNotifier = ref.read(cardListNotifierProvider.notifier);
+    final managementState = ref.watch(cardManagementNotifierProvider);
+    final managementNotifier = ref.read(
+      cardManagementNotifierProvider.notifier,
+    );
     final duplicateState = ref.watch(duplicateDetectionNotifierProvider);
 
-    return Consumer<CardListViewModel>(
-      builder: (context, vm, child) {
-        // Use cardProvider.filteredCards to get fresh data
-        final cards = cardProvider.filteredCards;
-        if (cardProvider.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final cards = managementState.filteredCards;
 
-        if (vm.errorMessage != null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error: ${vm.errorMessage}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => vm.refreshCards(),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          );
-        }
+    if (managementState.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        return Column(
+    if (managementState.errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Search bar
-            if (vm.isSearching)
-              SearchBarWidget(
-                onSearchChanged: vm.updateSearchQuery,
-                onSearchClosed: vm.stopSearch,
-                initialQuery: vm.searchQuery,
-              ),
-
-            // Filter chips
-            if (vm.selectedTags.isNotEmpty ||
-                vm.showOnlyDue ||
-                vm.showOnlyFavorites ||
-                vm.showOnlyDuplicates)
-              _buildFilterChips(context, vm),
-
-            // Cards count and stats
-            _buildStatsRow(context, vm),
-
-            // Card list - use cards from cardProvider for fresh data
-            Expanded(
-              child: cards.isEmpty
-                  ? _buildEmptyState(context, vm)
-                  : _buildCardListDirect(context, vm, cards, duplicateState),
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error: ${managementState.errorMessage}',
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: managementNotifier.loadCards,
+              child: const Text('Retry'),
             ),
           ],
-        );
-      },
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        // Search bar
+        if (listState.isSearching)
+          SearchBarWidget(
+            onSearchChanged: listNotifier.updateSearchQuery,
+            onSearchClosed: listNotifier.toggleSearch,
+            initialQuery: managementState.searchQuery,
+          ),
+
+        // Filter chips
+        if (managementState.selectedTags.isNotEmpty ||
+            managementState.showOnlyDue ||
+            managementState.showOnlyFavorites ||
+            managementState.showOnlyDuplicates)
+          _buildFilterChips(context, managementState, managementNotifier),
+
+        // Cards count and stats
+        _buildStatsRow(context, managementState),
+
+        // Card list
+        Expanded(
+          child: cards.isEmpty
+              ? _buildEmptyState(context, managementState, managementNotifier)
+              : _buildCardListDirect(context, cards, duplicateState),
+        ),
+      ],
     );
   }
 
-  Widget _buildFilterChips(BuildContext context, CardListViewModel viewModel) {
+  Widget _buildFilterChips(
+    BuildContext context,
+    CardManagementState state,
+    CardManagementNotifier notifier,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Wrap(
         spacing: 8,
         children: [
-          if (viewModel.selectedTags.isNotEmpty)
-            ...viewModel.selectedTags.map(
+          if (state.selectedTags.isNotEmpty)
+            ...state.selectedTags.map(
               (tag) => Chip(
                 label: Text('Tag: $tag'),
-                onDeleted: () => viewModel.toggleTag(tag),
+                onDeleted: () => notifier.toggleTag(tag),
                 deleteIcon: const Icon(Icons.close, size: 18),
               ),
             ),
-          if (viewModel.showOnlyDue)
+          if (state.showOnlyDue)
             Chip(
               label: const Text('Due for review'),
-              onDeleted: viewModel.toggleShowOnlyDue,
+              onDeleted: notifier.toggleShowOnlyDue,
               deleteIcon: const Icon(Icons.close, size: 18),
             ),
-          if (viewModel.showOnlyFavorites)
+          if (state.showOnlyFavorites)
             Chip(
               label: const Text('Favorites'),
-              onDeleted: viewModel.toggleShowOnlyFavorites,
+              onDeleted: notifier.toggleShowOnlyFavorites,
               deleteIcon: const Icon(Icons.close, size: 18),
             ),
-          if (viewModel.showOnlyDuplicates)
+          if (state.showOnlyDuplicates)
             Chip(
               label: Consumer(
                 builder: (context, ref, _) {
@@ -123,12 +127,12 @@ class CardListView extends ConsumerWidget {
                   return Text('Duplicates ($duplicateCount)');
                 },
               ),
-              onDeleted: viewModel.toggleShowOnlyDuplicates,
+              onDeleted: notifier.toggleShowOnlyDuplicates,
               deleteIcon: const Icon(Icons.close, size: 18),
               backgroundColor: Colors.orange.withValues(alpha: 0.2),
             ),
           TextButton(
-            onPressed: viewModel.clearAllFilters,
+            onPressed: notifier.clearAllFilters,
             child: const Text('Clear all'),
           ),
         ],
@@ -136,20 +140,26 @@ class CardListView extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, CardListViewModel viewModel) {
+  Widget _buildStatsRow(BuildContext context, CardManagementState state) {
+    final count = state.filteredCards.length;
+    final total = state.allCards.length;
+    final countText = count == total
+        ? 'Showing all $total cards'
+        : 'Showing $count of $total cards';
+    final reviewText = state.dueCount > 0
+        ? 'Review ${state.dueCount} cards'
+        : 'Nothing to review';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          Text(
-            viewModel.getCardCountText(),
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(countText, style: Theme.of(context).textTheme.bodyMedium),
           const Spacer(),
           Text(
-            viewModel.getReviewStatusText(),
+            reviewText,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: viewModel.canStartReview
+              color: state.dueCount > 0
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(
                       context,
@@ -161,12 +171,16 @@ class CardListView extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, CardListViewModel viewModel) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    CardManagementState state,
+    CardManagementNotifier notifier,
+  ) {
     final hasFilters =
-        viewModel.selectedTags.isNotEmpty ||
-        viewModel.showOnlyDue ||
-        viewModel.showOnlyFavorites ||
-        viewModel.searchQuery.isNotEmpty;
+        state.selectedTags.isNotEmpty ||
+        state.showOnlyDue ||
+        state.showOnlyFavorites ||
+        state.searchQuery.isNotEmpty;
 
     return Center(
       child: Column(
@@ -203,7 +217,7 @@ class CardListView extends ConsumerWidget {
           if (hasFilters) ...[
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: viewModel.clearAllFilters,
+              onPressed: notifier.clearAllFilters,
               child: const Text('Clear filters'),
             ),
           ],
@@ -214,7 +228,6 @@ class CardListView extends ConsumerWidget {
 
   Widget _buildCardListDirect(
     BuildContext context,
-    CardListViewModel viewModel,
     List<CardModel> cards,
     DuplicateDetectionState duplicateState,
   ) {
@@ -229,13 +242,13 @@ class CardListView extends ConsumerWidget {
           key: ValueKey(card.id),
           card: card,
           duplicates: duplicates,
-          viewModel: viewModel,
           onTap: () => _onCardTap(context, card),
           onEdit: () => _onCardEdit(context, card),
-          onDelete: () => _onCardDelete(context, viewModel, card),
+          onDelete: (ref) => _onCardDelete(context, ref, card),
+          onUndoDismiss: (ref) =>
+              ref.read(cardManagementNotifierProvider.notifier).saveCard(card),
           onDuplicateTap: duplicates.isNotEmpty
-              ? () =>
-                    _showDuplicatesDialog(context, card, duplicates, viewModel)
+              ? (ref) => _showDuplicatesDialog(context, card, duplicates, ref)
               : null,
         );
       },
@@ -265,11 +278,9 @@ class CardListView extends ConsumerWidget {
     context.pushCardEdit(card.id);
   }
 
-  void _onCardDelete(
-    BuildContext context,
-    CardListViewModel viewModel,
-    CardModel card,
-  ) {
+  void _onCardDelete(BuildContext context, WidgetRef ref, CardModel card) {
+    final listNotifier = ref.read(cardListNotifierProvider.notifier);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -283,7 +294,7 @@ class CardListView extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              viewModel.deleteCard(card.id);
+              listNotifier.deleteCard(card.id);
             },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
@@ -299,43 +310,86 @@ class CardListView extends ConsumerWidget {
     BuildContext context,
     CardModel card,
     List<DuplicateMatch> duplicates,
-    CardListViewModel viewModel,
+    WidgetRef ref,
   ) {
     DuplicatesDialog.show(
       context,
       card: card,
       duplicates: duplicates,
-      onDeleteCard: (cardToDelete) =>
-          _onCardDelete(context, viewModel, cardToDelete),
+      onDeleteCard: (cardToDelete) => _onCardDelete(context, ref, cardToDelete),
     );
   }
 }
 
-class _AnimatedCardItem extends StatefulWidget {
+class _AnimatedCardItem extends ConsumerWidget {
   final CardModel card;
   final List<DuplicateMatch> duplicates;
-  final CardListViewModel viewModel;
   final VoidCallback onTap;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final VoidCallback? onDuplicateTap;
+  final void Function(WidgetRef) onDelete;
+  final void Function(WidgetRef)? onDuplicateTap;
+  final Future<void> Function(WidgetRef) onUndoDismiss;
 
   const _AnimatedCardItem({
     super.key,
     required this.card,
     required this.duplicates,
-    required this.viewModel,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
+    required this.onUndoDismiss,
     this.onDuplicateTap,
   });
 
   @override
-  State<_AnimatedCardItem> createState() => _AnimatedCardItemState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    return _AnimatedCardItemInternal(
+      card: card,
+      duplicates: duplicates,
+      onTap: onTap,
+      onEdit: onEdit,
+      onDelete: () => onDelete(ref),
+      onToggleFavorite: () =>
+          ref.read(cardListNotifierProvider.notifier).toggleFavorite(card.id),
+      onDuplicateTap: onDuplicateTap != null
+          ? () => onDuplicateTap!(ref)
+          : null,
+      onDismissed: () =>
+          ref.read(cardListNotifierProvider.notifier).deleteCard(card.id),
+      onUndoDismiss: () => onUndoDismiss(ref),
+    );
+  }
 }
 
-class _AnimatedCardItemState extends State<_AnimatedCardItem>
+class _AnimatedCardItemInternal extends StatefulWidget {
+  final CardModel card;
+  final List<DuplicateMatch> duplicates;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback? onDuplicateTap;
+  final VoidCallback onDismissed;
+  final Future<void> Function() onUndoDismiss;
+
+  const _AnimatedCardItemInternal({
+    required this.card,
+    required this.duplicates,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onToggleFavorite,
+    required this.onDismissed,
+    required this.onUndoDismiss,
+    this.onDuplicateTap,
+  });
+
+  @override
+  State<_AnimatedCardItemInternal> createState() =>
+      _AnimatedCardItemInternalState();
+}
+
+class _AnimatedCardItemInternalState extends State<_AnimatedCardItemInternal>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -414,15 +468,13 @@ class _AnimatedCardItemState extends State<_AnimatedCardItem>
             );
           },
           onDismissed: (direction) {
-            widget.viewModel.deleteCard(widget.card.id);
+            widget.onDismissed();
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('${widget.card.frontText} deleted'),
                 action: SnackBarAction(
                   label: 'Undo',
-                  onPressed: () {
-                    // TODO: Implement undo functionality
-                  },
+                  onPressed: widget.onUndoDismiss,
                 ),
               ),
             );
@@ -432,8 +484,7 @@ class _AnimatedCardItemState extends State<_AnimatedCardItem>
             onTap: widget.onTap,
             onEdit: widget.onEdit,
             onDelete: widget.onDelete,
-            onToggleFavorite: () =>
-                widget.viewModel.toggleCardFavorite(widget.card.id),
+            onToggleFavorite: widget.onToggleFavorite,
             duplicates: widget.duplicates.isNotEmpty ? widget.duplicates : null,
             onDuplicateTap: widget.onDuplicateTap,
           ),

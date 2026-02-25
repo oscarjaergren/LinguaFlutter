@@ -2,8 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../presentation/widgets/mascot_widget.dart';
 import 'mascot_state.dart';
 
-
-
 // Pre-define MascotAction here instead since it's used directly in the old provider
 enum MascotAction {
   cardCompleted,
@@ -15,9 +13,10 @@ enum MascotAction {
   tapped,
 }
 
-final mascotNotifierProvider = NotifierProvider<MascotNotifier, MascotStateData>(() {
-  return MascotNotifier();
-});
+final mascotNotifierProvider =
+    NotifierProvider<MascotNotifier, MascotStateData>(() {
+      return MascotNotifier();
+    });
 
 class MascotNotifier extends Notifier<MascotStateData> {
   // Predefined messages for different contexts
@@ -64,7 +63,7 @@ class MascotNotifier extends Notifier<MascotStateData> {
   MascotStateData build() {
     return const MascotStateData();
   }
-  
+
   void setAnimationsEnabled(bool enabled) {
     state = state.copyWith(animationsEnabled: enabled);
   }
@@ -73,7 +72,8 @@ class MascotNotifier extends Notifier<MascotStateData> {
   void showMessage(String context, {MascotState? mascotState}) {
     final messages = _contextMessages[context];
     if (messages != null && messages.isNotEmpty) {
-      final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
+      final randomIndex =
+          DateTime.now().millisecondsSinceEpoch % messages.length;
       state = state.copyWith(
         currentMessage: messages[randomIndex],
         currentState: mascotState ?? MascotState.idle,
@@ -125,7 +125,7 @@ class MascotNotifier extends Notifier<MascotStateData> {
   void celebrate([String? customMessage]) {
     state = state.copyWith(
       currentState: MascotState.celebrating,
-      currentMessage: customMessage ?? _getRandomMessage('celebration')
+      currentMessage: customMessage ?? _getRandomMessage('celebration'),
     );
 
     if (state.animationsEnabled) {
@@ -145,7 +145,7 @@ class MascotNotifier extends Notifier<MascotStateData> {
   void showExcitement([String? customMessage]) {
     state = state.copyWith(
       currentState: MascotState.excited,
-      currentMessage: customMessage ?? _getRandomMessage('encouragement')
+      currentMessage: customMessage ?? _getRandomMessage('encouragement'),
     );
 
     if (state.animationsEnabled) {
@@ -180,7 +180,10 @@ class MascotNotifier extends Notifier<MascotStateData> {
         showMessage('welcome', mascotState: MascotState.excited);
         break;
       case MascotAction.longAbsence:
-        showCustomMessage('Welcome back! I missed you!', mascotState: MascotState.excited);
+        showCustomMessage(
+          'Welcome back! I missed you!',
+          mascotState: MascotState.excited,
+        );
         break;
       case MascotAction.struggling:
         showMessage('motivation', mascotState: MascotState.thinking);
@@ -191,8 +194,12 @@ class MascotNotifier extends Notifier<MascotStateData> {
           ..._contextMessages['encouragement']!,
           ..._contextMessages['motivation']!,
         ];
-        final randomIndex = DateTime.now().millisecondsSinceEpoch % messages.length;
-        showCustomMessage(messages[randomIndex], mascotState: MascotState.excited);
+        final randomIndex =
+            DateTime.now().millisecondsSinceEpoch % messages.length;
+        showCustomMessage(
+          messages[randomIndex],
+          mascotState: MascotState.excited,
+        );
         break;
     }
   }
@@ -224,7 +231,10 @@ class MascotNotifier extends Notifier<MascotStateData> {
     } else if (dueCards == 0 && totalCards > 0) {
       showMessage('celebration', mascotState: MascotState.celebrating);
     } else if (totalCards == 0) {
-      showCustomMessage('Let\'s create your first card!', mascotState: MascotState.excited);
+      showCustomMessage(
+        'Let\'s create your first card!',
+        mascotState: MascotState.excited,
+      );
     } else {
       // Show welcome message
       showMessage('welcome');

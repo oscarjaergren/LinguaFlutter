@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../features/auth/auth.dart';
@@ -109,7 +109,7 @@ class AppRouter {
       GoRoute(
         path: cardCreation,
         name: 'card-creation',
-        builder: (context, state) => const CreationCreationScreen(),
+        builder: (context, state) => const CardCreationScreen(),
       ),
 
       // Card Edit Screen
@@ -118,34 +118,57 @@ class AppRouter {
         name: 'card-edit',
         builder: (context, state) {
           final cardId = state.pathParameters['cardId']!;
-          final cardManagement = context.read<CardManagementProvider>();
-          final cards = cardManagement.allCards;
-          final index = cards.indexWhere((c) => c.id == cardId);
-          if (index == -1) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Card Not Found')),
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('This card no longer exists.'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => context.go(AppRouter.cards),
-                      child: const Text('Back to Cards'),
-                    ),
-                  ],
+          return Consumer(
+            builder: (context, ref, _) {
+              final cardState = ref.watch(cardManagementNotifierProvider);
+              final cardNotifier = ref.read(
+                cardManagementNotifierProvider.notifier,
+              );
+
+              if (cardState.allCards.isEmpty && !cardState.isLoading) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  cardNotifier.loadCards();
+                });
+              }
+
+              for (final card in cardState.allCards) {
+                if (card.id == cardId) {
+                  return CardCreationScreen(cardToEdit: card);
+                }
+              }
+
+              if (cardState.isLoading) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              return Scaffold(
+                appBar: AppBar(title: const Text('Card Not Found')),
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('This card no longer exists.'),
+                      const SizedBox(height: 8),
+                      Text('Card ID: $cardId'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.go(AppRouter.cards),
+                        child: const Text('Back to Cards'),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
-          return CreationCreationScreen(cardToEdit: cards[index]);
+              );
+            },
+          );
         },
       ),
 

@@ -3,7 +3,6 @@ import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lingua_flutter/features/card_management/domain/providers/card_management_notifier.dart';
-import 'package:lingua_flutter/features/card_management/domain/providers/card_management_state.dart';
 import 'package:lingua_flutter/features/card_management/data/repositories/card_management_repository.dart';
 import 'package:lingua_flutter/features/language/language.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';

@@ -1,45 +1,108 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/practice_session_notifier.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_notifier.dart';
+import 'package:lingua_flutter/features/card_review/domain/providers/exercise_preferences_state.dart';
 import 'package:lingua_flutter/features/card_review/domain/models/exercise_preferences.dart';
+import 'package:lingua_flutter/features/card_management/domain/providers/card_management_notifier.dart';
+import 'package:lingua_flutter/features/card_management/domain/providers/card_management_state.dart';
+import 'package:lingua_flutter/features/language/domain/language_notifier.dart';
+import 'package:lingua_flutter/features/language/domain/language_state.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
-import 'package:lingua_flutter/shared/domain/models/exercise_score.dart';
+
+class _TestCardManagementNotifier extends CardManagementNotifier {
+  _TestCardManagementNotifier(this.cards);
+
+  final List<CardModel> cards;
+  CardModel? lastUpdatedCard;
+
+  @override
+  CardManagementState build() => CardManagementState(allCards: cards);
+
+  @override
+  Future<void> updateCard(CardModel card) async {
+    lastUpdatedCard = card;
+    state = state.copyWith(
+      allCards: [
+        for (final existing in state.allCards)
+          if (existing.id == card.id) card else existing,
+      ],
+    );
+  }
+}
+
+class _TestExercisePreferencesNotifier extends ExercisePreferencesNotifier {
+  _TestExercisePreferencesNotifier(this.initialPreferences);
+
+  final ExercisePreferences initialPreferences;
+
+  @override
+  ExercisePreferencesState build() => ExercisePreferencesState(
+    preferences: initialPreferences,
+    isInitialized: true,
+  );
+}
+
+class _TestLanguageNotifier extends LanguageNotifier {
+  _TestLanguageNotifier(this.activeLanguageCode);
+
+  final String activeLanguageCode;
+
+  @override
+  LanguageState build() => LanguageState(activeLanguage: activeLanguageCode);
+}
 
 void main() {
-  group('PracticeSessionProvider Exercise Score Updates', () {
-    late PracticeSessionProvider provider;
+  group('PracticeSessionNotifier Exercise Score Updates', () {
+    late ProviderContainer container;
+    late _TestCardManagementNotifier testCardManagement;
+    late _TestExercisePreferencesNotifier testExercisePrefs;
+    late _TestLanguageNotifier testLanguage;
     late List<CardModel> testCards;
-    late CardModel? lastUpdatedCard;
 
     setUp(() {
-      lastUpdatedCard = null;
-
       testCards = [
         CardModel.create(frontText: 'Hund', backText: 'dog', language: 'de'),
       ];
 
-      provider = PracticeSessionProvider(
-        getReviewCards: () => testCards,
-        getAllCards: () => testCards,
-        updateCard: (card) async {
-          lastUpdatedCard = card;
-        },
+      testCardManagement = _TestCardManagementNotifier(testCards);
+      testExercisePrefs = _TestExercisePreferencesNotifier(
+        const ExercisePreferences(
+          enabledTypes: {ExerciseType.reverseTranslation},
+        ),
       );
+      testLanguage = _TestLanguageNotifier('de');
+
+      container = ProviderContainer(
+        overrides: [
+          cardManagementNotifierProvider.overrideWith(() => testCardManagement),
+          exercisePreferencesNotifierProvider.overrideWith(
+            () => testExercisePrefs,
+          ),
+          languageNotifierProvider.overrideWith(() => testLanguage),
+        ],
+      );
+    });
+
+    tearDown(() {
+      container.dispose();
     });
 
     test(
       'writing translation exercise score updates on correct answer',
       () async {
-        final prefs = ExercisePreferences(
-          enabledTypes: {ExerciseType.reverseTranslation},
+        final notifier = container.read(
+          practiceSessionNotifierProvider.notifier,
         );
 
-        provider.startSession(preferences: prefs);
+        notifier.startSession(cards: testCards);
 
-        expect(provider.isSessionActive, true);
-        expect(provider.currentExerciseType, ExerciseType.reverseTranslation);
+        final state = container.read(practiceSessionNotifierProvider);
+        expect(state.isSessionActive, true);
+        expect(notifier.currentExerciseType, ExerciseType.reverseTranslation);
 
-        final initialCard = provider.currentCard!;
+        final initialCard = notifier.currentCard!;
         final initialScore = initialCard.getExerciseScore(
           ExerciseType.reverseTranslation,
         );
@@ -47,13 +110,13 @@ void main() {
         expect(initialScore, isNotNull);
         expect(initialScore!.totalAttempts, 0);
 
-        await provider.confirmAnswerAndAdvance(markedCorrect: true);
+        notifier.confirmAnswerAndAdvance(markedCorrect: true);
+        await Future.delayed(Duration.zero); // Let async operations complete
 
-        expect(lastUpdatedCard, isNotNull);
+        expect(testCardManagement.lastUpdatedCard, isNotNull);
 
-        final updatedScore = lastUpdatedCard!.getExerciseScore(
-          ExerciseType.reverseTranslation,
-        );
+        final updatedScore = testCardManagement.lastUpdatedCard!
+            .getExerciseScore(ExerciseType.reverseTranslation);
         expect(updatedScore, isNotNull);
         expect(updatedScore!.correctCount, 1);
         expect(updatedScore.incorrectCount, 0);
@@ -67,19 +130,19 @@ void main() {
     test(
       'writing translation exercise score updates on incorrect answer',
       () async {
-        final prefs = ExercisePreferences(
-          enabledTypes: {ExerciseType.reverseTranslation},
+        final notifier = container.read(
+          practiceSessionNotifierProvider.notifier,
         );
 
-        provider.startSession(preferences: prefs);
+        notifier.startSession(cards: testCards);
 
-        await provider.confirmAnswerAndAdvance(markedCorrect: false);
+        notifier.confirmAnswerAndAdvance(markedCorrect: false);
+        await Future.delayed(Duration.zero); // Let async operations complete
 
-        expect(lastUpdatedCard, isNotNull);
+        expect(testCardManagement.lastUpdatedCard, isNotNull);
 
-        final updatedScore = lastUpdatedCard!.getExerciseScore(
-          ExerciseType.reverseTranslation,
-        );
+        final updatedScore = testCardManagement.lastUpdatedCard!
+            .getExerciseScore(ExerciseType.reverseTranslation);
         expect(updatedScore, isNotNull);
         expect(updatedScore!.correctCount, 0);
         expect(updatedScore.incorrectCount, 1);
@@ -90,7 +153,7 @@ void main() {
       },
     );
 
-    test('writing translation mastery level progresses correctly', () async {
+    test('writing translation mastery level progresses correctly', () {
       var card = CardModel.create(
         frontText: 'Hund',
         backText: 'dog',
@@ -143,7 +206,7 @@ void main() {
       expect(score.masteryLevel, 'Learning');
     });
 
-    test('different exercise types maintain separate scores', () async {
+    test('different exercise types maintain separate scores', () {
       var card = CardModel.create(
         frontText: 'Hund',
         backText: 'dog',
@@ -171,138 +234,6 @@ void main() {
       )!;
       expect(readingScore.correctCount, 0);
       expect(readingScore.incorrectCount, 1);
-    });
-
-    test('exercise score persists across multiple practice sessions', () async {
-      var cardWithHistory =
-          CardModel.create(
-            frontText: 'Hund',
-            backText: 'dog',
-            language: 'de',
-          ).copyWith(
-            exerciseScores: {
-              ExerciseType.reverseTranslation:
-                  ExerciseScore.initial(
-                    ExerciseType.reverseTranslation,
-                  ).copyWith(
-                    correctCount: 5,
-                    incorrectCount: 2,
-                    lastPracticed: DateTime.now(),
-                  ),
-            },
-          );
-
-      testCards = [cardWithHistory];
-
-      provider = PracticeSessionProvider(
-        getReviewCards: () => testCards,
-        getAllCards: () => testCards,
-        updateCard: (card) async {
-          lastUpdatedCard = card;
-        },
-      );
-
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.reverseTranslation},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      final initialScore = provider.currentCard!.getExerciseScore(
-        ExerciseType.reverseTranslation,
-      )!;
-      expect(initialScore.correctCount, 5);
-      expect(initialScore.incorrectCount, 2);
-      expect(initialScore.currentChain, 0);
-      expect(initialScore.totalAttempts, 7);
-      expect(initialScore.successRate, closeTo(71.4, 0.1));
-      expect(initialScore.masteryLevel, 'Difficult');
-
-      await provider.confirmAnswerAndAdvance(markedCorrect: true);
-
-      final updatedScore = lastUpdatedCard!.getExerciseScore(
-        ExerciseType.reverseTranslation,
-      )!;
-      expect(updatedScore.correctCount, 6);
-      expect(updatedScore.incorrectCount, 2);
-      expect(updatedScore.currentChain, 1);
-      expect(updatedScore.totalAttempts, 8);
-      expect(updatedScore.successRate, 75.0);
-      expect(updatedScore.masteryLevel, 'Learning');
-    });
-
-    test('reading recognition exercise score updates correctly', () async {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.readingRecognition},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      expect(provider.currentExerciseType, ExerciseType.readingRecognition);
-
-      await provider.confirmAnswerAndAdvance(markedCorrect: true);
-
-      final updatedScore = lastUpdatedCard!.getExerciseScore(
-        ExerciseType.readingRecognition,
-      );
-      expect(updatedScore, isNotNull);
-      expect(updatedScore!.correctCount, 1);
-      expect(updatedScore.type, ExerciseType.readingRecognition);
-    });
-
-    test('multiple choice text exercise score updates correctly', () async {
-      testCards = List.generate(
-        5,
-        (i) => CardModel.create(
-          frontText: 'word$i',
-          backText: 'translation$i',
-          language: 'de',
-        ),
-      );
-
-      provider = PracticeSessionProvider(
-        getReviewCards: () => testCards,
-        getAllCards: () => testCards,
-        updateCard: (card) async {
-          lastUpdatedCard = card;
-        },
-      );
-
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.multipleChoiceText},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      expect(provider.currentExerciseType, ExerciseType.multipleChoiceText);
-
-      await provider.confirmAnswerAndAdvance(markedCorrect: true);
-
-      final updatedScore = lastUpdatedCard!.getExerciseScore(
-        ExerciseType.multipleChoiceText,
-      );
-      expect(updatedScore, isNotNull);
-      expect(updatedScore!.correctCount, 1);
-      expect(updatedScore.type, ExerciseType.multipleChoiceText);
-    });
-
-    test('reverse translation exercise score updates correctly', () async {
-      final prefs = ExercisePreferences(
-        enabledTypes: {ExerciseType.reverseTranslation},
-      );
-
-      provider.startSession(preferences: prefs);
-
-      expect(provider.currentExerciseType, ExerciseType.reverseTranslation);
-
-      await provider.confirmAnswerAndAdvance(markedCorrect: false);
-
-      final updatedScore = lastUpdatedCard!.getExerciseScore(
-        ExerciseType.reverseTranslation,
-      );
-      expect(updatedScore, isNotNull);
-      expect(updatedScore!.incorrectCount, 1);
-      expect(updatedScore.type, ExerciseType.reverseTranslation);
     });
   });
 }

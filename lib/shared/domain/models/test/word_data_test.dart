@@ -25,8 +25,8 @@ void main() {
         expect(verbData.isSeparable, false);
         expect(verbData.separablePrefix, isNull);
         expect(verbData.auxiliary, 'haben');
-        expect(verbData.presentDu, isNull);
-        expect(verbData.presentEr, isNull);
+        expect(verbData.presentSecondPerson, isNull);
+        expect(verbData.presentThirdPerson, isNull);
         expect(verbData.pastSimple, isNull);
         expect(verbData.pastParticiple, isNull);
       });
@@ -42,16 +42,16 @@ void main() {
       test('should create irregular verb with conjugations', () {
         const verb = WordData.verb(
           isRegular: false,
-          presentDu: 'sprichst',
-          presentEr: 'spricht',
+          presentSecondPerson: 'sprichst',
+          presentThirdPerson: 'spricht',
           pastSimple: 'sprach',
           pastParticiple: 'gesprochen',
         );
 
         final verbData = verb as VerbData;
         expect(verbData.isRegular, false);
-        expect(verbData.presentDu, 'sprichst');
-        expect(verbData.presentEr, 'spricht');
+        expect(verbData.presentSecondPerson, 'sprichst');
+        expect(verbData.presentThirdPerson, 'spricht');
         expect(verbData.pastSimple, 'sprach');
         expect(verbData.pastParticiple, 'gesprochen');
       });
@@ -81,8 +81,8 @@ void main() {
           isSeparable: true,
           separablePrefix: 'an',
           auxiliary: 'haben',
-          presentDu: 'rufst an',
-          presentEr: 'ruft an',
+          presentSecondPerson: 'rufst an',
+          presentThirdPerson: 'ruft an',
           pastSimple: 'rief an',
           pastParticiple: 'angerufen',
         );

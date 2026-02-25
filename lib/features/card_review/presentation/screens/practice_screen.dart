@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' as provider_pkg;
 import '../../../../shared/domain/models/exercise_type.dart';
-import '../../../../shared/domain/models/exercise_score.dart';
 import '../../../card_management/presentation/screens/card_creation_screen.dart';
 import '../../../card_review/domain/providers/practice_session_types.dart';
 import '../../../card_review/domain/providers/practice_session_notifier.dart';
+import '../../../card_review/domain/providers/practice_session_state.dart';
 import '../../../card_review/domain/providers/exercise_preferences_notifier.dart';
 import '../widgets/exercise_filter_sheet.dart';
 import '../widgets/practice_progress_bar.dart';

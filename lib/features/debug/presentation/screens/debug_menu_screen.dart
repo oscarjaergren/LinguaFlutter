@@ -6,10 +6,8 @@ import 'package:lingua_flutter/features/tts/tts.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart' hide Consumer;
 import 'package:uuid/uuid.dart';
 import '../../../card_management/card_management.dart';
-import '../../../card_management/domain/providers/card_enrichment_notifier.dart';
 import '../../../debug/data/debug_service.dart';
 import '../../../language/language.dart';
 
@@ -382,7 +380,7 @@ class DebugMenuScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _showClearAllDialog(context),
+                      onPressed: () => _showClearAllDialog(context, ref),
                       icon: const Icon(Icons.delete_sweep, color: Colors.red),
                       label: const Text(
                         'Clear All Cards',
@@ -405,7 +403,7 @@ class DebugMenuScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _showCardStatistics(context),
+                      onPressed: () => _showCardStatistics(context, ref),
                       icon: const Icon(Icons.analytics_outlined),
                       label: const Text('Show Card Statistics'),
                       style: OutlinedButton.styleFrom(
@@ -446,8 +444,8 @@ class DebugMenuScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Consumer<CardManagementProvider>(
-                    builder: (context, cardManagement, child) {
+                  Builder(
+                    builder: (context) {
                       final ttsService = GoogleCloudTtsService();
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -533,7 +531,9 @@ class DebugMenuScreen extends ConsumerWidget {
     int count,
   ) async {
     try {
-      final cardManagement = context.read<CardManagementProvider>();
+      final cardManagementNotifier = ref.read(
+        cardManagementNotifierProvider.notifier,
+      );
       final languageNotifier = ref.read(languageNotifierProvider);
 
       // Get active language or default to 'en'
@@ -544,7 +544,7 @@ class DebugMenuScreen extends ConsumerWidget {
       final cards = DebugService.createBasicCards(language, count);
 
       // Batch add all cards
-      await cardManagement.addMultipleCards(cards);
+      await cardManagementNotifier.addMultipleCards(cards);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -579,7 +579,9 @@ class DebugMenuScreen extends ConsumerWidget {
     int count,
   ) async {
     try {
-      final cardManagement = context.read<CardManagementProvider>();
+      final cardManagementNotifier = ref.read(
+        cardManagementNotifierProvider.notifier,
+      );
       final languageNotifier = ref.read(languageNotifierProvider);
 
       // Get active language or default to 'en'
@@ -590,7 +592,7 @@ class DebugMenuScreen extends ConsumerWidget {
       final cards = DebugService.createDueForReviewCards(language, count);
 
       // Batch add all cards
-      await cardManagement.addMultipleCards(cards);
+      await cardManagementNotifier.addMultipleCards(cards);
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -651,7 +653,9 @@ class DebugMenuScreen extends ConsumerWidget {
         );
       }
 
-      final cardManagement = context.read<CardManagementProvider>();
+      final cardManagementNotifier = ref.read(
+        cardManagementNotifierProvider.notifier,
+      );
 
       // Set active language to German
       ref.read(languageNotifierProvider.notifier).setActiveLanguage('de');
@@ -668,7 +672,7 @@ class DebugMenuScreen extends ConsumerWidget {
       LoggerService.debug('Received ${cards.length} cards from service');
 
       // Batch add all cards
-      await cardManagement.addMultipleCards(cards);
+      await cardManagementNotifier.addMultipleCards(cards);
 
       final availabilityText = makeAvailableNow
           ? 'available now for review'
@@ -704,7 +708,7 @@ class DebugMenuScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _showClearAllDialog(BuildContext context) async {
+  Future<void> _showClearAllDialog(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -728,7 +732,7 @@ class DebugMenuScreen extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       try {
-        await context.read<CardManagementProvider>().clearAllCards();
+        await ref.read(cardManagementNotifierProvider.notifier).clearAllCards();
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -751,9 +755,9 @@ class DebugMenuScreen extends ConsumerWidget {
     }
   }
 
-  void _showCardStatistics(BuildContext context) {
-    final cardManagement = context.read<CardManagementProvider>();
-    final allCards = cardManagement.allCards;
+  void _showCardStatistics(BuildContext context, WidgetRef ref) {
+    final managementState = ref.read(cardManagementNotifierProvider);
+    final allCards = managementState.allCards;
 
     // Calculate statistics
     final totalCards = allCards.length;
@@ -841,7 +845,9 @@ class DebugMenuScreen extends ConsumerWidget {
     // Get all providers before any async operations to avoid BuildContext across async gaps
     final aiState = ref.read(cardEnrichmentNotifierProvider);
     final aiNotifier = ref.read(cardEnrichmentNotifierProvider.notifier);
-    final cardManagement = context.read<CardManagementProvider>();
+    final cardManagementNotifier = ref.read(
+      cardManagementNotifierProvider.notifier,
+    );
     final languageNotifier = ref.read(languageNotifierProvider.notifier);
 
     // Check if AI is configured
@@ -924,7 +930,7 @@ class DebugMenuScreen extends ConsumerWidget {
               nextReview: now,
             );
 
-            await cardManagement.addCard(card);
+            await cardManagementNotifier.addCard(card);
             successCount++;
             LoggerService.debug('Imported with enrichment: $frontText');
           } else {
@@ -941,7 +947,7 @@ class DebugMenuScreen extends ConsumerWidget {
               nextReview: now,
             );
 
-            await cardManagement.addCard(card);
+            await cardManagementNotifier.addCard(card);
             errorCount++;
             final errorMessage = ref.read(cardEnrichmentNotifierProvider).error;
             LoggerService.warning(

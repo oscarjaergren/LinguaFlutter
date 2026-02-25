@@ -208,6 +208,17 @@ class CardManagementNotifier extends Notifier<CardManagementState> {
     _applyFilters();
   }
 
+  void toggleTag(String tag) {
+    final currentTags = List<String>.from(state.selectedTags);
+    if (currentTags.contains(tag)) {
+      currentTags.remove(tag);
+    } else {
+      currentTags.add(tag);
+    }
+    state = state.copyWith(selectedTags: currentTags);
+    _applyFilters();
+  }
+
   void toggleShowOnlyDue() {
     state = state.copyWith(showOnlyDue: !state.showOnlyDue);
     _applyFilters();
@@ -233,6 +244,8 @@ class CardManagementNotifier extends Notifier<CardManagementState> {
     );
     _applyFilters();
   }
+
+  void clearAllFilters() => clearFilters();
 
   // ============================================================
   // Duplicate Detection Integration

@@ -1,19 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:provider/provider.dart'
-    show
-        Provider,
-        ChangeNotifierProvider,
-        MultiProvider,
-        Consumer; // Only show what's needed from provider
 import '../../../../shared/navigation/app_router.dart';
 import '../../../auth/auth.dart';
 import '../../../card_management/card_management.dart';
-import '../../../mascot/domain/mascot_provider.dart';
+import '../../../mascot/domain/mascot_notifier.dart';
 import '../../../mascot/presentation/widgets/mascot_widget.dart';
 import '../../../streak/streak.dart';
-import '../../../streak/domain/streak_provider.dart';
 import '../../../theme/theme.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/language_selector_widget.dart';
@@ -36,9 +29,11 @@ class DashboardScreen extends ConsumerWidget {
           // Theme toggle
           const ThemeToggleButton(),
           // Auth/Profile button
-          Consumer<AuthProvider>(
-            builder: (context, authProvider, child) {
-              if (authProvider.isAuthenticated) {
+          Consumer(
+            builder: (context, ref, child) {
+              final authState = ref.watch(authNotifierProvider);
+              final authNotifier = ref.read(authNotifierProvider.notifier);
+              if (authState.isAuthenticated) {
                 return PopupMenuButton<String>(
                   icon: const Icon(Icons.account_circle),
                   tooltip: 'Account',
@@ -46,14 +41,14 @@ class DashboardScreen extends ConsumerWidget {
                     if (value == 'settings') {
                       context.pushSettings();
                     } else if (value == 'signout') {
-                      authProvider.signOut();
+                      authNotifier.signOut();
                     }
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       enabled: false,
                       child: Text(
-                        authProvider.userEmail ?? 'Signed in',
+                        authState.userEmail ?? 'Signed in',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -99,20 +94,21 @@ class DashboardScreen extends ConsumerWidget {
             ),
         ],
       ),
-      body: Consumer<CardManagementProvider>(
-        builder: (context, cardManagement, child) {
-          final dueCount = cardManagement.filteredCards
+      body: Consumer(
+        builder: (context, ref, child) {
+          final managementState = ref.watch(cardManagementNotifierProvider);
+          final dueCount = managementState.filteredCards
               .where((c) => !c.isArchived && c.isDueForReview)
               .length;
-          final learningCount = cardManagement.filteredCards
+          final learningCount = managementState.filteredCards
               .where(
                 (c) => !c.isArchived && !c.isDueForReview && c.reviewCount > 0,
               )
               .length;
-          final masteredCount = cardManagement.filteredCards
+          final masteredCount = managementState.filteredCards
               .where((c) => !c.isArchived && c.masteryLevel == 'Mastered')
               .length;
-          final totalCards = cardManagement.filteredCards
+          final totalCards = managementState.filteredCards
               .where((c) => !c.isArchived)
               .length;
 
@@ -192,7 +188,7 @@ class DashboardScreen extends ConsumerWidget {
                   height: 56,
                   child: ElevatedButton.icon(
                     onPressed: dueCount > 0
-                        ? () => _startExerciseSession(context, cardManagement)
+                        ? () => _startExerciseSession(context, managementState)
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -243,9 +239,9 @@ class DashboardScreen extends ConsumerWidget {
 
   void _startExerciseSession(
     BuildContext context,
-    CardManagementProvider cardManagement,
+    CardManagementState managementState,
   ) {
-    if (cardManagement.reviewCards.isNotEmpty) {
+    if (managementState.reviewCards.isNotEmpty) {
       context.pushPractice();
     } else {
       _showNoCardsMessage(context);
