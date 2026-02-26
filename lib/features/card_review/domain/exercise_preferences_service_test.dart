@@ -8,9 +8,10 @@ void main() {
   group('ExercisePreferencesService', () {
     late ExercisePreferencesService service;
 
-    setUp(() {
-      service = ExercisePreferencesService();
+    setUp(() async {
+      // Clear any existing SharedPreferences data
       SharedPreferences.setMockInitialValues({});
+      service = ExercisePreferencesService();
     });
 
     test('loadPreferences returns defaults when no data stored', () async {

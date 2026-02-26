@@ -11,6 +11,7 @@ import '../widgets/exercise_filter_sheet.dart';
 import '../widgets/practice_progress_bar.dart';
 import '../widgets/practice_completion_screen.dart';
 import '../widgets/exercises/exercise_content_widget.dart';
+import '../widgets/swipeable_exercise_card.dart';
 import '../../../../shared/domain/models/card_model.dart';
 
 /// Screen where users practice their cards through various exercises
@@ -289,20 +290,31 @@ class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: ExerciseContentWidget(
-            card: card,
-            exerciseType: type,
-            answerState: widget.sessionState.answerState,
-            multipleChoiceOptions: options,
-            currentAnswerCorrect: widget.sessionState.currentAnswerCorrect,
-            onCheckAnswer: (isCorrect) {
-              widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
-            },
-            onOverrideAnswer: (isCorrect) {
-              widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
-            },
+        child: SwipeableExerciseCard(
+          canSwipe: widget.sessionNotifier.canSwipe,
+          onSwipeRight: () async {
+            widget.sessionNotifier.confirmAnswerAndAdvance(markedCorrect: true);
+          },
+          onSwipeLeft: () async {
+            widget.sessionNotifier.confirmAnswerAndAdvance(
+              markedCorrect: false,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: ExerciseContentWidget(
+              card: card,
+              exerciseType: type,
+              answerState: widget.sessionState.answerState,
+              multipleChoiceOptions: options,
+              currentAnswerCorrect: widget.sessionState.currentAnswerCorrect,
+              onCheckAnswer: (isCorrect) {
+                widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
+              },
+              onOverrideAnswer: (isCorrect) {
+                widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
+              },
+            ),
           ),
         ),
       ),
