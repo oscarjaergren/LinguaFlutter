@@ -525,9 +525,8 @@ class _CardCreationScreenState extends ConsumerState<CardCreationScreen> {
         final languageState = ref.watch(languageNotifierProvider);
         final languageNotifier = ref.read(languageNotifierProvider.notifier);
         final activeLanguage = languageState.activeLanguage;
-        final languageDetails = languageNotifier.getLanguageDetails(
-          activeLanguage,
-        );
+        final languageDetails =
+            languageState.availableLanguages[activeLanguage];
         if (languageDetails == null) return const SizedBox.shrink();
 
         final color = languageNotifier.getLanguageColor(activeLanguage);
@@ -628,12 +627,10 @@ class _CardCreationScreenState extends ConsumerState<CardCreationScreen> {
                 final languageNotifier = ref.read(
                   languageNotifierProvider.notifier,
                 );
-                final activeLanguage = ref
-                    .watch(languageNotifierProvider)
-                    .activeLanguage;
-                final details = languageNotifier.getLanguageDetails(
-                  activeLanguage,
-                );
+                final languageState = ref.watch(languageNotifierProvider);
+                final activeLanguage = languageState.activeLanguage;
+                final details =
+                    languageState.availableLanguages[activeLanguage];
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

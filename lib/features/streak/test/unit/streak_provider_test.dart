@@ -192,9 +192,7 @@ void main() {
 
     test('should provide motivational messages', () {
       expect(
-        container
-            .read(streakNotifierProvider.notifier)
-            .getMotivationalMessage(),
+        container.read(streakNotifierProvider).streak.motivationMessage,
         contains('Every journey begins'),
       );
     });

@@ -94,9 +94,6 @@ class StreakNotifier extends Notifier<StreakState> {
   /// Record a single card review.
   Future<void> recordCardReview() => updateStreakWithReview(cardsReviewed: 1);
 
-  /// Get motivational message based on current streak.
-  String getMotivationalMessage() => state.streak.motivationMessage;
-
   /// Get streak status color.
   String getStreakStatusColor() {
     final current = state.streak.currentStreak;

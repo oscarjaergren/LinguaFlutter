@@ -12,9 +12,7 @@ class LanguageSelectorWidget extends ConsumerWidget {
     final languageNotifier = ref.read(languageNotifierProvider.notifier);
 
     final activeLanguage = languageState.activeLanguage;
-    final languageDetails = languageNotifier.getLanguageDetails(
-      activeLanguage,
-    )!;
+    final languageDetails = languageState.availableLanguages[activeLanguage]!;
 
     return PopupMenuButton<String>(
       onSelected: (String languageCode) {

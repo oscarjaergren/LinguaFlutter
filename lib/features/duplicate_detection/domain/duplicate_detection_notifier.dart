@@ -43,10 +43,4 @@ class DuplicateDetectionNotifier extends Notifier<DuplicateDetectionState> {
   void clear() {
     state = const DuplicateDetectionState();
   }
-
-  bool cardHasDuplicates(String cardId) =>
-      state.duplicateMap.containsKey(cardId);
-
-  List<DuplicateMatch> getDuplicatesForCard(String cardId) =>
-      state.duplicateMap[cardId] ?? [];
 }

@@ -14,11 +14,6 @@ class LanguageNotifier extends Notifier<LanguageState> {
   Map<String, Map<String, dynamic>> get availableLanguages =>
       state.availableLanguages;
 
-  /// Get language details by code
-  Map<String, dynamic>? getLanguageDetails(String languageCode) {
-    return state.availableLanguages[languageCode];
-  }
-
   /// Set the active language for filtering/viewing cards and creating new cards
   void setActiveLanguage(String languageCode) {
     if (state.availableLanguages.containsKey(languageCode)) {
