@@ -5,11 +5,13 @@ import 'package:lingua_flutter/features/card_review/domain/models/exercise_prefe
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('ExercisePreferencesService', () {
     late ExercisePreferencesService service;
 
     setUp(() async {
-      // Clear any existing SharedPreferences data
+      // Set up mock SharedPreferences for testing
       SharedPreferences.setMockInitialValues({});
       service = ExercisePreferencesService();
     });
