@@ -201,7 +201,7 @@ jobs:
 
     - name: Start Supabase
       run: |
-        supabase init
+        supabase init --force
         supabase start --workdir supabase
       env:
         POSTGRES_PASSWORD: postgres
