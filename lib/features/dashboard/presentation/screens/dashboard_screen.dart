@@ -237,18 +237,6 @@ class DashboardScreen extends ConsumerWidget {
     // PracticeScreen will auto-start the session when opened
     context.pushPractice();
   }
-
-  void _showNoCardsMessage(BuildContext context) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    scaffoldMessenger.removeCurrentSnackBar();
-    scaffoldMessenger.showSnackBar(
-      const SnackBar(
-        content: Text('No cards available for review'),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
 }
 
 class ThemeToggleButton extends ConsumerWidget {

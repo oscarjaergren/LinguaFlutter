@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/domain/models/card_model.dart';
 import '../data/services/duplicate_detection_service.dart';
-import 'models/duplicate_match.dart';
 import 'duplicate_detection_state.dart';
 
 final duplicateDetectionNotifierProvider =

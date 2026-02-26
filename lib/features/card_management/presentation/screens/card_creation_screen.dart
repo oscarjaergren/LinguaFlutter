@@ -624,9 +624,6 @@ class _CardCreationScreenState extends ConsumerState<CardCreationScreen> {
             // Front text with Auto button
             Consumer(
               builder: (context, ref, _) {
-                final languageNotifier = ref.read(
-                  languageNotifierProvider.notifier,
-                );
                 final languageState = ref.watch(languageNotifierProvider);
                 final activeLanguage = languageState.activeLanguage;
                 final details =

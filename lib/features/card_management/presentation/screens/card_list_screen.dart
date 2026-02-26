@@ -7,6 +7,7 @@ import '../../../dashboard/presentation/widgets/language_selector_widget.dart';
 import '../../../mascot/domain/mascot_notifier.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
 import '../../domain/providers/card_management_notifier.dart';
+import '../../domain/providers/card_management_state.dart';
 import '../view_models/card_list_notifier.dart';
 import '../widgets/card_list_view.dart';
 
