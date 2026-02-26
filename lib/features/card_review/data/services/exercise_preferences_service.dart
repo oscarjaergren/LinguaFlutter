@@ -8,8 +8,8 @@ class ExercisePreferencesService {
 
   /// Load exercise preferences from storage
   Future<ExercisePreferences> loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(_preferencesKey);
+    final prefs = SharedPreferencesAsync();
+    final jsonString = await prefs.getString(_preferencesKey);
 
     if (jsonString == null || jsonString.isEmpty) {
       return ExercisePreferences.defaults();
@@ -26,7 +26,7 @@ class ExercisePreferencesService {
 
   /// Save exercise preferences to storage
   Future<void> savePreferences(ExercisePreferences preferences) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     final jsonString = jsonEncode(preferences.toJson());
     await prefs.setString(_preferencesKey, jsonString);
   }
@@ -40,7 +40,7 @@ class ExercisePreferencesService {
 
   /// Clear all preferences
   Future<void> clearPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.remove(_preferencesKey);
   }
 }

@@ -8,8 +8,8 @@ class ThemeService {
 
   /// Get the current theme mode
   Future<AppThemeMode> getCurrentTheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final themeString = prefs.getString(_themeKey);
+    final prefs = SharedPreferencesAsync();
+    final themeString = await prefs.getString(_themeKey);
     return AppThemeMode.values.firstWhere(
       (mode) => mode.name == themeString,
       orElse: () => AppThemeMode.system,
@@ -18,14 +18,14 @@ class ThemeService {
 
   /// Save the theme mode
   Future<void> saveTheme(AppThemeMode theme) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.setString(_themeKey, theme.name);
   }
 
   /// Get the current color scheme
   Future<AppColorScheme> getCurrentColorScheme() async {
-    final prefs = await SharedPreferences.getInstance();
-    final colorSchemeString = prefs.getString(_colorSchemeKey);
+    final prefs = SharedPreferencesAsync();
+    final colorSchemeString = await prefs.getString(_colorSchemeKey);
     return AppColorScheme.values.firstWhere(
       (scheme) => scheme.name == colorSchemeString,
       orElse: () => AppColorScheme.blue,
@@ -34,25 +34,25 @@ class ThemeService {
 
   /// Save the color scheme
   Future<void> saveColorScheme(AppColorScheme colorScheme) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.setString(_colorSchemeKey, colorScheme.name);
   }
 
   /// Get the current font size scale
   Future<double> getCurrentFontSize() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getDouble(_fontSizeKey) ?? 1.0;
+    final prefs = SharedPreferencesAsync();
+    return await prefs.getDouble(_fontSizeKey) ?? 1.0;
   }
 
   /// Save the font size scale
   Future<void> saveFontSize(double fontSize) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.setDouble(_fontSizeKey, fontSize);
   }
 
   /// Reset all theme settings to defaults
   Future<void> resetToDefaults() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.remove(_themeKey);
     await prefs.remove(_colorSchemeKey);
     await prefs.remove(_fontSizeKey);

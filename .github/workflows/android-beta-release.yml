@@ -1,21 +1,24 @@
 # ============================================================================
-# Android Beta Release Pipeline
+# Android Beta Release Pipeline (DISABLED)
 # ============================================================================
 # Purpose: Automatically deploy Android app to Google Play Store Beta track
-# Triggers: Every push to master branch
+# Status: DISABLED until Play Store setup is complete
+# Triggers: Every push to master branch (currently disabled)
 # 
-# What it does:
+# What it does when enabled:
 # 1. Runs tests to ensure code quality
 # 2. Builds signed Android App Bundle (.aab)
 # 3. Uploads to Play Store Beta track for internal testing
 # 4. Saves build artifact for 30 days
 #
-# Required Secrets:
+# Required Secrets (when re-enabling):
 # - ANDROID_KEYSTORE_BASE64: Base64-encoded keystore file
 # - ANDROID_KEYSTORE_PASSWORD: Keystore password
 # - ANDROID_KEY_PASSWORD: Key password
 # - ANDROID_KEY_ALIAS: Key alias
 # - GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: Service account for Play Store API
+# 
+# To re-enable: Remove `if: false` from the job and configure secrets
 # ============================================================================
 
 name: Android Beta Release
@@ -28,10 +31,12 @@ on:
 env:
   JAVA_VERSION: '17'
 
+# Temporarily disabled - only run when Play Store secrets are properly configured
 jobs:
   deploy-beta:
     name: Build & Deploy to Play Store Beta
     runs-on: ubuntu-latest
+    if: false  # Disabled until Play Store setup is complete
     
     steps:
     - name: Checkout repository

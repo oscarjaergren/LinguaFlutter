@@ -193,13 +193,13 @@ abstract class AiConfigStorage {
 class SharedPrefsConfigStorage implements AiConfigStorage {
   @override
   Future<String?> getString(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(key);
+    final prefs = SharedPreferencesAsync();
+    return await prefs.getString(key);
   }
 
   @override
   Future<void> setString(String key, String value) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = SharedPreferencesAsync();
     await prefs.setString(key, value);
   }
 }

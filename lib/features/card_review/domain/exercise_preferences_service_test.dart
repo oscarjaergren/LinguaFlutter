@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:lingua_flutter/features/card_review/data/services/exercise_preferences_service.dart';
 import 'package:lingua_flutter/features/card_review/domain/models/exercise_preferences.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
@@ -10,9 +12,9 @@ void main() {
   group('ExercisePreferencesService', () {
     late ExercisePreferencesService service;
 
-    setUp(() async {
-      // Set up mock SharedPreferences for testing
-      SharedPreferences.setMockInitialValues({});
+    setUp(() {
+      SharedPreferencesAsyncPlatform.instance =
+          InMemorySharedPreferencesAsync.empty();
       service = ExercisePreferencesService();
     });
 
@@ -46,14 +48,14 @@ void main() {
     });
 
     test('loadPreferences handles corrupted data gracefully', () async {
-      final sp = await SharedPreferences.getInstance();
-      await sp.setString('exercise_preferences', 'invalid json');
+      final prefs = SharedPreferencesAsync();
+      await prefs.setString('exercise_preferences', 'invalid json');
 
-      final prefs = await service.loadPreferences();
+      final loadedPrefs = await service.loadPreferences();
 
       // Should return defaults on error
       final defaults = ExercisePreferences.defaults();
-      expect(prefs.enabledTypes.length, defaults.enabledTypes.length);
+      expect(loadedPrefs.enabledTypes.length, defaults.enabledTypes.length);
     });
 
     test('resetToDefaults restores default preferences', () async {
