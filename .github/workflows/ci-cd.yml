@@ -41,10 +41,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Flutter
-      uses: subosito/flutter-action@v2
+      uses: subosito/flutter-action@v2.21.0
       with:
         channel: 'stable'
         
@@ -69,10 +69,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Flutter
-      uses: subosito/flutter-action@v2
+      uses: subosito/flutter-action@v2.21.0
       with:
         channel: 'stable'
         
@@ -126,10 +126,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Flutter
-      uses: subosito/flutter-action@v2
+      uses: subosito/flutter-action@v2.21.0
       with:
         channel: 'stable'
         
@@ -152,7 +152,7 @@ jobs:
           --dart-define="SENTRY_RELEASE=${{ env.SENTRY_RELEASE }}"
       
     - name: Upload ${{ matrix.platform }} build artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.artifact-name }}
         path: ${{ matrix.artifact-path }}
@@ -178,10 +178,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Flutter
-      uses: subosito/flutter-action@v2
+      uses: subosito/flutter-action@v2.21.0
       with:
         channel: 'stable'
 
@@ -239,10 +239,10 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Flutter
-      uses: subosito/flutter-action@v2
+      uses: subosito/flutter-action@v2.21.0
       with:
         channel: 'stable'
         
