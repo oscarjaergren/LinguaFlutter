@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../../../shared/navigation/app_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../shared/navigation/app_router.dart';
+import '../../../dashboard/presentation/widgets/language_selector_widget.dart';
 import '../../../mascot/domain/mascot_notifier.dart';
 import '../../../streak/presentation/widgets/streak_status_widget.dart';
 import '../../domain/providers/card_management_notifier.dart';
 import '../view_models/card_list_notifier.dart';
 import '../widgets/card_list_view.dart';
-
-import '../../../dashboard/presentation/widgets/language_selector_widget.dart';
 
 /// Screen for displaying and managing the list of cards
 class CardsScreen extends ConsumerWidget {

@@ -37,22 +37,17 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
   // === Session Management ===
 
+  /// Starts a practice session with due cards.
+  /// If [cards] is provided, uses those cards (useful for testing).
+  /// Otherwise, automatically gets due cards from CardManagementState,
+  /// respecting the active language filter.
   void startSession({List<CardModel>? cards}) {
-    final cardsToUse =
-        cards ?? ref.read(cardManagementNotifierProvider).allCards;
-    // Filter cards by due status and language if needed (logic similar to PracticeSessionProvider)
-    // Actually, PracticeSessionProvider gets review cards from a callback.
-    // For now, let's just assume we get them from CardManagementNotifier.
+    final reviewCards = cards ?? _getDueCardsForReview();
 
-    final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
-    final reviewCards = cardsToUse
-        .where(
-          (c) =>
-              c.isDueForReview &&
-              !c.isArchived &&
-              (activeLanguage.isEmpty || c.language == activeLanguage),
-        )
-        .toList();
+    if (reviewCards.isEmpty) {
+      state = state.copyWith(isSessionActive: false);
+      return;
+    }
 
     if (reviewCards.isEmpty) {
       state = state.copyWith(isSessionActive: false);
@@ -75,6 +70,22 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     );
 
     _prepareCurrentExercise();
+  }
+
+  /// Gets due cards for review, respecting the active language filter.
+  /// This centralizes the logic for determining which cards should be reviewed.
+  List<CardModel> _getDueCardsForReview() {
+    final managementState = ref.read(cardManagementNotifierProvider);
+    final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
+
+    return managementState.allCards
+        .where(
+          (c) =>
+              c.isDueForReview &&
+              !c.isArchived &&
+              (activeLanguage.isEmpty || c.language == activeLanguage),
+        )
+        .toList();
   }
 
   List<PracticeItem> _buildPracticeQueue(List<CardModel> cards) {

@@ -151,6 +151,13 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final sessionState = ref.watch(practiceSessionNotifierProvider);
     final sessionNotifier = ref.read(practiceSessionNotifierProvider.notifier);
 
+    // Auto-start session if not active when screen opens
+    if (!sessionState.isSessionActive && !sessionState.isSessionComplete) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        sessionNotifier.startSession();
+      });
+    }
+
     return Focus(
       focusNode: _focusNode,
       onKeyEvent: _handleKeyEvent,

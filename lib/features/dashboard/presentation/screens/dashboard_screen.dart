@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../shared/navigation/app_router.dart';
 import '../../../auth/auth.dart';
 import '../../../card_management/card_management.dart';
@@ -188,7 +189,7 @@ class DashboardScreen extends ConsumerWidget {
                   height: 56,
                   child: ElevatedButton.icon(
                     onPressed: dueCount > 0
-                        ? () => _startExerciseSession(context, managementState)
+                        ? () => _startExerciseSession(context)
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
@@ -237,15 +238,9 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _startExerciseSession(
-    BuildContext context,
-    CardManagementState managementState,
-  ) {
-    if (managementState.reviewCards.isNotEmpty) {
-      context.pushPractice();
-    } else {
-      _showNoCardsMessage(context);
-    }
+  void _startExerciseSession(BuildContext context) {
+    // PracticeScreen will auto-start the session when opened
+    context.pushPractice();
   }
 
   void _showNoCardsMessage(BuildContext context) {
