@@ -98,20 +98,15 @@ class DashboardScreen extends ConsumerWidget {
       body: Consumer(
         builder: (context, ref, child) {
           final managementState = ref.watch(cardManagementNotifierProvider);
-          final dueCount = managementState.filteredCards
-              .where((c) => !c.isArchived && c.isDueForReview)
-              .length;
+          final dueCount = managementState.dueCount;
+          // filteredCards already excludes archived cards
           final learningCount = managementState.filteredCards
-              .where(
-                (c) => !c.isArchived && !c.isDueForReview && c.reviewCount > 0,
-              )
+              .where((c) => !c.isDueForReview && c.reviewCount > 0)
               .length;
           final masteredCount = managementState.filteredCards
-              .where((c) => !c.isArchived && c.masteryLevel == 'Mastered')
+              .where((c) => c.masteryLevel == 'Mastered')
               .length;
-          final totalCards = managementState.filteredCards
-              .where((c) => !c.isArchived)
-              .length;
+          final totalCards = managementState.filteredCards.length;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),

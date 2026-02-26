@@ -49,11 +49,6 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       return;
     }
 
-    if (reviewCards.isEmpty) {
-      state = state.copyWith(isSessionActive: false);
-      return;
-    }
-
     final queue = _buildPracticeQueue(reviewCards);
     state = state.copyWith(
       sessionQueue: queue,

@@ -21,6 +21,4 @@ sealed class CardManagementState with _$CardManagementState {
 
 extension CardManagementStateExtension on CardManagementState {
   int get dueCount => filteredCards.where((card) => card.isDueForReview).length;
-  List<CardModel> get reviewCards =>
-      allCards.where((card) => card.isDueForReview).toList();
 }

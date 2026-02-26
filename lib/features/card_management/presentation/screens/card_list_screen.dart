@@ -24,9 +24,7 @@ class CardsScreen extends ConsumerWidget {
     final listState = ref.watch(cardListNotifierProvider);
     final listNotifier = ref.read(cardListNotifierProvider.notifier);
     final managementState = ref.watch(cardManagementNotifierProvider);
-    final dueCount = managementState.filteredCards
-        .where((card) => card.isDueForReview)
-        .length;
+    final dueCount = managementState.dueCount;
     final canStartReview = dueCount > 0;
 
     return Scaffold(
