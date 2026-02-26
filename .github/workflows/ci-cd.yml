@@ -20,19 +20,9 @@ run-name: CI/CD Pipeline - ${{ github.event.head_commit.message || github.ref_na
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ master, main ]
-
-env:
-  # Common build variables for all platforms
-  SUPABASE_URL: "test_url"
-  SUPABASE_ANON_KEY: "test_key"
-  GEMINI_API_KEY: ""
-  GOOGLE_CLOUD_TTS_API_KEY: ""
-  SENTRY_DSN: ""
-  SENTRY_ENVIRONMENT: "ci"
-  SENTRY_RELEASE: "test"
+    branches: [ main ]
 
 jobs:
   analyze:
@@ -143,13 +133,13 @@ jobs:
       shell: bash
       run: |
         flutter ${{ matrix.build-command }} \
-          --dart-define="SUPABASE_URL=${{ env.SUPABASE_URL }}" \
-          --dart-define="SUPABASE_ANON_KEY=${{ env.SUPABASE_ANON_KEY }}" \
-          --dart-define="GEMINI_API_KEY=${{ env.GEMINI_API_KEY }}" \
-          --dart-define="GOOGLE_CLOUD_TTS_API_KEY=${{ env.GOOGLE_CLOUD_TTS_API_KEY }}" \
-          --dart-define="SENTRY_DSN=${{ env.SENTRY_DSN }}" \
-          --dart-define="SENTRY_ENVIRONMENT=${{ env.SENTRY_ENVIRONMENT }}" \
-          --dart-define="SENTRY_RELEASE=${{ env.SENTRY_RELEASE }}"
+          --dart-define="SUPABASE_URL=${{ secrets.SUPABASE_URL }}" \
+          --dart-define="SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" \
+          --dart-define="GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" \
+          --dart-define="GOOGLE_CLOUD_TTS_API_KEY=${{ secrets.GOOGLE_CLOUD_TTS_API_KEY }}" \
+          --dart-define="SENTRY_DSN=${{ secrets.SENTRY_DSN }}" \
+          --dart-define="SENTRY_ENVIRONMENT=ci" \
+          --dart-define="SENTRY_RELEASE=${{ github.sha }}"
       
     - name: Upload ${{ matrix.platform }} build artifacts
       uses: actions/upload-artifact@v7
