@@ -1,3 +1,5 @@
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -10,10 +12,11 @@ import 'package:lingua_flutter/shared/utils/rate_limiter.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 @GenerateMocks([CardManagementRepository])
-import 'security_integration_test.mocks.dart';
+import 'card_management_validation_test.mocks.dart';
 
+// Comprehensive unit tests for card management validation and business logic
 void main() {
-  group('Card Management Security Integration Tests', () {
+  group('Card Management Validation Tests', () {
     late MockCardManagementRepository mockRepository;
     late ProviderContainer container;
 
