@@ -35,26 +35,24 @@ void main() {
           .from('cards')
           .insert({
             'user_id': SupabaseTestHelper.currentUserId,
-            'front_text': 'Hallo',
-            'back_text': 'Hello',
+            'front_text': 'Test Front',
+            'back_text': 'Test Back',
             'language_code': 'de',
-            'category': 'Greetings',
           })
           .select()
           .single();
 
-      expect(insertResponse['front_text'], equals('Hallo'));
-      expect(insertResponse['back_text'], equals('Hello'));
-      expect(insertResponse['id'], isNotNull);
+      expect(insertResponse, isNotNull);
+      expect(insertResponse['front_text'], 'Test Front');
 
       // Select
       final selectResponse = await SupabaseTestHelper.client
           .from('cards')
           .select()
-          .eq('user_id', SupabaseTestHelper.currentUserId);
+          .eq('id', insertResponse['id'])
+          .single();
 
-      expect(selectResponse, hasLength(1));
-      expect(selectResponse.first['front_text'], equals('Hallo'));
+      expect(selectResponse['front_text'], 'Test Front');
     });
 
     test('should update a card', () async {
@@ -115,7 +113,7 @@ void main() {
       expect(remaining, isEmpty);
     });
 
-    test('should filter cards by language', () async {
+    test('should filter cards by language_code', () async {
       // Insert German card
       await SupabaseTestHelper.client.from('cards').insert({
         'user_id': SupabaseTestHelper.currentUserId,

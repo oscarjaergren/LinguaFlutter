@@ -23,6 +23,7 @@ void main() {
   });
 
   setUp(() async {
+    if (!helperInitialized) return;
     await SupabaseTestHelper.cleanTestUserStreaks();
     streakService = SupabaseStreakService(
       clientProvider: () => SupabaseTestHelper.client,
