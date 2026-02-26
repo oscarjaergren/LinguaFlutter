@@ -62,17 +62,6 @@ class DuplicateDetectionService {
     return duplicateMap;
   }
 
-  /// Check if a card has any duplicates
-  bool hasDuplicates(CardModel card, List<CardModel> allCards) {
-    return findDuplicates(card, allCards).isNotEmpty;
-  }
-
-  /// Get cards that have duplicates
-  List<CardModel> getCardsWithDuplicates(List<CardModel> cards) {
-    final duplicateMap = findAllDuplicates(cards);
-    return cards.where((card) => duplicateMap.containsKey(card.id)).toList();
-  }
-
   /// Find the best matching strategy for two cards
   DuplicateMatch? _findBestMatch(CardModel card1, CardModel card2) {
     DuplicateMatch? bestMatch;

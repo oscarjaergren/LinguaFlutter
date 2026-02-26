@@ -38,11 +38,13 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
   // === Session Management ===
 
   /// Starts a practice session with due cards.
-  /// If [cards] is provided, uses those cards (useful for testing).
+  /// If [cards] is provided, filters them to only include due cards (useful for testing).
   /// Otherwise, automatically gets due cards from CardManagementState,
   /// respecting the active language filter.
   void startSession({List<CardModel>? cards}) {
-    final reviewCards = cards ?? _getDueCardsForReview();
+    final reviewCards =
+        cards?.where((c) => c.isDueForReview && !c.isArchived).toList() ??
+        _getDueCardsForReview();
 
     if (reviewCards.isEmpty) {
       state = state.copyWith(isSessionActive: false);
@@ -251,11 +253,6 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
       int nextIndex = state.currentIndex - removedBeforeCount;
       if (nextIndex < 0) nextIndex = 0;
 
-      // Clamp index to valid range after removal
-      if (nextIndex >= updatedQueue.length) {
-        nextIndex = updatedQueue.isEmpty ? 0 : updatedQueue.length - 1;
-      }
-
       // Check if session is now complete
       if (updatedQueue.isEmpty) {
         state = state.copyWith(
@@ -267,6 +264,11 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
         );
         // endSession(); // Potentially call this after a delay or on user action
         return;
+      }
+
+      // Clamp index to valid range after removal
+      if (nextIndex >= updatedQueue.length) {
+        nextIndex = updatedQueue.length - 1;
       }
 
       state = state.copyWith(

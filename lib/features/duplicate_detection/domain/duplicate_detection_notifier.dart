@@ -49,10 +49,4 @@ class DuplicateDetectionNotifier extends Notifier<DuplicateDetectionState> {
 
   List<DuplicateMatch> getDuplicatesForCard(String cardId) =>
       state.duplicateMap[cardId] ?? [];
-
-  List<CardModel> filterCardsWithDuplicates(List<CardModel> cards) {
-    return cards
-        .where((card) => state.duplicateMap.containsKey(card.id))
-        .toList();
-  }
 }
