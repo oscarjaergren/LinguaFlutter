@@ -211,11 +211,11 @@ jobs:
         docker exec $(docker ps -q -f "name=supabase_db") psql -U postgres -d postgres -c "
         INSERT INTO auth.users (id, email, email_confirmed_at, created_at, updated_at)
         VALUES ('00000000-0000-0000-0000-000000000001', 'test@linguaflutter.dev', NOW(), NOW(), NOW())
-        ON CONFLICT (id) DO NOTHING;
+        ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email, email_confirmed_at = EXCLUDED.email_confirmed_at;
         
         INSERT INTO auth.identities (id, user_id, identity_data, provider, created_at, updated_at)
         VALUES (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', '{\"email\": \"test@linguaflutter.dev\"}', 'email', NOW(), NOW())
-        ON CONFLICT (user_id) DO NOTHING;
+        ON CONFLICT (user_id, provider) DO UPDATE SET identity_data = EXCLUDED.identity_data, updated_at = EXCLUDED.updated_at;
         "
 
     - name: Run all integration tests
