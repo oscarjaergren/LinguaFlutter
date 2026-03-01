@@ -120,11 +120,10 @@ Features communicate through:
 - **Dependencies**: `CardStorageService`, `IconifyService`
 
 #### 2. Card Review (`lib/features/card_review/`)
-- **Purpose**: Spaced repetition learning sessions
+- **Purpose**: Continuous spaced repetition practice (no explicit sessions)
 - **Key Components**:
-  - `CardReviewScreen` with book-like animations
-  - `ReviewCompletionScreen`
-  - Swipe gesture handling
+  - `PracticeScreen` with swipe-based interactions
+  - Exercise widgets (multiple choice, reading, listening, etc.)
 - **Dependencies**: `CardProvider`, `StreakProvider`
 
 #### 3. Streak Management (`lib/features/streak/`)
@@ -469,6 +468,14 @@ print('Success rate: ${score?.successRate}%');
 - Improve automated testing coverage
 - Enhance development tooling
 - Document architectural decisions
+
+### User Experience Enhancements
+- **Dashboard Statistics Integration**: Add comprehensive practice stats to the main dashboard
+  - Daily/weekly/monthly progress tracking
+  - Streak information and achievements
+  - Cards learned vs practiced metrics
+  - Progress charts and learning trends
+  - Performance analytics by exercise type
 
 ---
 

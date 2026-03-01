@@ -36,7 +36,7 @@ lib/
 │
 ├── features/                      # Feature modules
 │   ├── card_management/           # Card CRUD, filtering, search
-│   ├── card_review/               # Review sessions, spaced repetition
+│   ├── card_review/               # Continuous practice flow, spaced repetition
 │   ├── duplicate_detection/       # Duplicate card detection
 │   ├── dashboard/                 # Stats and overview
 │   ├── language/                  # Language selection
@@ -344,7 +344,7 @@ abstract class BaseProvider<T> { ... }
 
 ### What We Did Right
 
-1. **Separated responsibilities** - CardManagementProvider (CRUD), ReviewSessionProvider (sessions), DuplicateDetectionProvider (detection)
+1. **Separated responsibilities** - CardManagementProvider (CRUD), PracticeFlow (continuous practice), DuplicateDetectionProvider (detection)
 2. **Feature-specific models** - DuplicateMatch stays in duplicate_detection
 3. **Business logic in models** - CardModel.processAnswer(), CardModel.isDue
 
