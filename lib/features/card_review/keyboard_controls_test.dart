@@ -57,22 +57,18 @@ void main() {
 
     setUp(() {
       testState = PracticeSessionState(
-        isSessionActive: true,
         answerState: AnswerState.pending,
-        currentIndex: 0,
-        sessionQueue: [
-          PracticeItem(
-            card: CardModel(
-              id: 'test-1',
-              frontText: 'Front',
-              backText: 'Back',
-              language: 'de',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-            exerciseType: ExerciseType.readingRecognition,
+        currentItem: PracticeItem(
+          card: CardModel(
+            id: 'test-1',
+            frontText: 'Front',
+            backText: 'Back',
+            language: 'de',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
-        ],
+          exerciseType: ExerciseType.readingRecognition,
+        ),
       );
       testNotifier = _TestPracticeSessionNotifier(testState);
     });
@@ -203,12 +199,10 @@ void main() {
       // Setup: Multiple choice exercise
       testState = testState.copyWith(
         answerState: AnswerState.pending,
-        sessionQueue: [
-          PracticeItem(
-            card: testState.sessionQueue.first.card,
-            exerciseType: ExerciseType.multipleChoiceText,
-          ),
-        ],
+        currentItem: PracticeItem(
+          card: testState.currentItem!.card,
+          exerciseType: ExerciseType.multipleChoiceText,
+        ),
         multipleChoiceOptions: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
       );
 
@@ -229,12 +223,10 @@ void main() {
         // allowing it to be used in text fields for multi-word answers
         testState = testState.copyWith(
           answerState: AnswerState.pending,
-          sessionQueue: [
-            PracticeItem(
-              card: testState.sessionQueue.first.card,
-              exerciseType: ExerciseType.reverseTranslation,
-            ),
-          ],
+          currentItem: PracticeItem(
+            card: testState.currentItem!.card,
+            exerciseType: ExerciseType.reverseTranslation,
+          ),
         );
 
         await tester.pumpWidget(createTestWidget());

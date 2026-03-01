@@ -18,6 +18,7 @@ class ExerciseContentWidget extends StatefulWidget {
   final bool? currentAnswerCorrect;
   final Function(bool isCorrect) onCheckAnswer;
   final Function(bool isCorrect) onOverrideAnswer;
+  final VoidCallback? onEditCard;
 
   const ExerciseContentWidget({
     super.key,
@@ -28,6 +29,7 @@ class ExerciseContentWidget extends StatefulWidget {
     this.currentAnswerCorrect,
     required this.onCheckAnswer,
     required this.onOverrideAnswer,
+    this.onEditCard,
   });
 
   @override
@@ -168,6 +170,16 @@ class _ExerciseContentWidgetState extends State<ExerciseContentWidget> {
               autoPlay:
                   !isReverse, // Only auto-play for foreign language prompts
             ),
+            if (widget.onEditCard != null) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: widget.onEditCard,
+                icon: const Icon(Icons.edit_outlined),
+                tooltip: 'Edit card',
+                iconSize: 20,
+                color: Colors.grey[600],
+              ),
+            ],
           ],
         ),
 

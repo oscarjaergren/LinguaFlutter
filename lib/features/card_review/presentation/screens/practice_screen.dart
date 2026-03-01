@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/domain/models/card_model.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
+import '../../../../shared/services/logger_service.dart';
 import '../../../card_management/presentation/screens/card_creation_screen.dart';
 import '../../../card_review/domain/providers/practice_session_types.dart';
 import '../../../card_review/domain/providers/practice_session_notifier.dart';
@@ -9,10 +11,9 @@ import '../../../card_review/domain/providers/practice_session_state.dart';
 import '../../../card_review/domain/providers/exercise_preferences_notifier.dart';
 import '../widgets/exercise_filter_sheet.dart';
 import '../widgets/practice_progress_bar.dart';
-import '../widgets/practice_completion_screen.dart';
 import '../widgets/exercises/exercise_content_widget.dart';
 import '../widgets/swipeable_exercise_card.dart';
-import '../../../../shared/domain/models/card_model.dart';
+import '../widgets/practice_stats_modal.dart';
 
 /// Screen where users practice their cards through various exercises
 class PracticeScreen extends ConsumerStatefulWidget {
@@ -23,7 +24,6 @@ class PracticeScreen extends ConsumerStatefulWidget {
 }
 
 class _PracticeScreenState extends ConsumerState<PracticeScreen> {
-  final GlobalKey<_SwipeableCardWrapperState> _cardKey = GlobalKey();
   late FocusNode _focusNode;
 
   @override
@@ -58,12 +58,17 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     }
   }
 
+  void _showStatsModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const PracticeStatsModal(),
+    );
+  }
+
   Future<void> _editCurrentCard(
     BuildContext context,
-    CardModel? currentCard,
+    CardModel currentCard,
   ) async {
-    if (currentCard == null) return;
-
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -152,10 +157,50 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
     final sessionState = ref.watch(practiceSessionNotifierProvider);
     final sessionNotifier = ref.read(practiceSessionNotifierProvider.notifier);
 
-    // Auto-start session if not active when screen opens
-    if (!sessionState.isSessionActive && !sessionState.isSessionComplete) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        sessionNotifier.startSession();
+    // Ensure we have a current item when the screen opens.
+    if (!sessionState.noDueItems && sessionNotifier.currentItem == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+
+        // Capture context before async operations
+        final context = this.context;
+
+        try {
+          await sessionNotifier.startSession();
+        } catch (e) {
+          LoggerService.error('Failed to start practice session', e);
+          if (mounted && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Failed to start practice session: ${e.toString()}',
+                ),
+                backgroundColor: Colors.red,
+                action: SnackBarAction(
+                  label: 'Retry',
+                  textColor: Colors.white,
+                  onPressed: () async {
+                    try {
+                      await sessionNotifier.startSession();
+                    } catch (retryError) {
+                      LoggerService.error('Retry failed', retryError);
+                      if (mounted && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Retry failed: ${retryError.toString()}',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ),
+            );
+          }
+        }
       });
     }
 
@@ -177,12 +222,12 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
               tooltip: 'Filter exercise types',
               onPressed: _showFilterSheet,
             ),
-            // Progress counter
+            // Simple run counters (correct / incorrect)
             Padding(
               padding: const EdgeInsets.only(right: 16.0),
               child: Center(
                 child: Text(
-                  '${sessionState.currentIndex + 1}/${sessionState.sessionQueue.length}',
+                  '${sessionState.runCorrectCount} correct, ${sessionState.runIncorrectCount} incorrect',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -190,55 +235,107 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
           ],
         ),
         body: (() {
-          // Session completed
-          if (!sessionState.isSessionActive && sessionState.isSessionComplete) {
-            // Calculate duration (this is approximate if not stored in state)
-            final duration = sessionState.sessionStartTime != null
-                ? DateTime.now().difference(sessionState.sessionStartTime!)
-                : Duration.zero;
-
-            return PracticeCompletionScreen(
-              correctCount: sessionState.correctCount,
-              incorrectCount: sessionState.incorrectCount,
-              duration: duration,
-              onRestart: () => sessionNotifier.startSession(),
-              onClose: () => Navigator.of(context).pop(),
-            );
-          }
-
           final currentCard = sessionNotifier.currentCard;
           final currentType = sessionNotifier.currentExerciseType;
 
-          // No current card (shouldn't happen but handle gracefully)
-          if (currentCard == null || currentType == null) {
-            if (!sessionState.isSessionActive) {
-              // If not active and not complete, maybe we need to start?
-              // Or just show a message.
-              return const Center(
-                child: Text("Start a session from the card list"),
-              );
-            }
+          // No due items available
+          if (sessionState.noDueItems && currentCard == null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.check_circle,
+                      size: 64,
+                      color: Colors.green,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'You have no cards due right now.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Come back later, or browse and add cards from your library.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // No current card yet – still loading next item
+          final card = currentCard;
+          final type = currentType;
+          if (card == null || type == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
           return Column(
             children: [
-              // Progress bar
-              PracticeProgressBar(
-                progress: sessionState.progress,
-                correctCount: sessionState.correctCount,
-                incorrectCount: sessionState.incorrectCount,
+              // Progress bar with stats button
+              Row(
+                children: [
+                  Expanded(child: PracticeProgressBar()),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    onPressed: () => _showStatsModal(context),
+                    icon: const Icon(Icons.analytics_outlined),
+                    tooltip: 'Practice Stats',
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
 
               // Swipeable card with exercise content
               Expanded(
-                child: _SwipeableCardWrapper(
-                  key: _cardKey,
-                  sessionState: sessionState,
-                  sessionNotifier: sessionNotifier,
-                  onEditCard: () => _editCurrentCard(context, currentCard),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: 500,
+                      maxHeight: 600,
+                    ),
+                    child: SwipeableExerciseCard(
+                      canSwipe: sessionNotifier.canSwipe,
+                      onSwipeRight: () async {
+                        sessionNotifier.confirmAnswerAndAdvance(
+                          markedCorrect: true,
+                        );
+                      },
+                      onSwipeLeft: () async {
+                        sessionNotifier.confirmAnswerAndAdvance(
+                          markedCorrect: false,
+                        );
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: ExerciseContentWidget(
+                          card: card,
+                          exerciseType: type,
+                          answerState: sessionState.answerState,
+                          multipleChoiceOptions:
+                              sessionState.multipleChoiceOptions,
+                          currentAnswerCorrect:
+                              sessionState.currentAnswerCorrect,
+                          onCheckAnswer: (isCorrect) {
+                            sessionNotifier.checkAnswer(isCorrect: isCorrect);
+                          },
+                          onOverrideAnswer: (isCorrect) {
+                            sessionNotifier.checkAnswer(isCorrect: isCorrect);
+                          },
+                          onEditCard: () => _editCurrentCard(context, card),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
@@ -259,64 +356,6 @@ class _PracticeScreenState extends ConsumerState<PracticeScreen> {
             ],
           );
         })(),
-      ),
-    );
-  }
-}
-
-class _SwipeableCardWrapper extends StatefulWidget {
-  final PracticeSessionState sessionState;
-  final PracticeSessionNotifier sessionNotifier;
-  final VoidCallback onEditCard;
-
-  const _SwipeableCardWrapper({
-    super.key,
-    required this.sessionState,
-    required this.sessionNotifier,
-    required this.onEditCard,
-  });
-
-  @override
-  State<_SwipeableCardWrapper> createState() => _SwipeableCardWrapperState();
-}
-
-class _SwipeableCardWrapperState extends State<_SwipeableCardWrapper> {
-  @override
-  Widget build(BuildContext context) {
-    final card = widget.sessionNotifier.currentCard!;
-    final type = widget.sessionNotifier.currentExerciseType!;
-    final options = widget.sessionState.multipleChoiceOptions;
-
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-        child: SwipeableExerciseCard(
-          canSwipe: widget.sessionNotifier.canSwipe,
-          onSwipeRight: () async {
-            widget.sessionNotifier.confirmAnswerAndAdvance(markedCorrect: true);
-          },
-          onSwipeLeft: () async {
-            widget.sessionNotifier.confirmAnswerAndAdvance(
-              markedCorrect: false,
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: ExerciseContentWidget(
-              card: card,
-              exerciseType: type,
-              answerState: widget.sessionState.answerState,
-              multipleChoiceOptions: options,
-              currentAnswerCorrect: widget.sessionState.currentAnswerCorrect,
-              onCheckAnswer: (isCorrect) {
-                widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
-              },
-              onOverrideAnswer: (isCorrect) {
-                widget.sessionNotifier.checkAnswer(isCorrect: isCorrect);
-              },
-            ),
-          ),
-        ),
       ),
     );
   }

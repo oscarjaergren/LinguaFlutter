@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/services/logger_service.dart';
 import '../../../../shared/domain/models/card_model.dart';
+import '../../../../shared/domain/models/card_model_extensions.dart';
 import '../../../../shared/domain/models/exercise_type.dart';
 import '../../../card_management/domain/providers/card_management_notifier.dart';
-import '../../domain/providers/exercise_preferences_notifier.dart';
-import '../../../language/language.dart';
-import 'practice_session_types.dart';
+import '../../../language/domain/language_notifier.dart';
 import 'practice_session_state.dart';
+import 'practice_session_types.dart';
+import 'exercise_preferences_notifier.dart';
+import 'card_filter_utils.dart';
 
 final practiceSessionNotifierProvider =
     NotifierProvider<PracticeSessionNotifier, PracticeSessionState>(
@@ -14,8 +17,6 @@ final practiceSessionNotifierProvider =
     );
 
 class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
-  static const int _minCardsForMultipleChoice = 4;
-
   @override
   PracticeSessionState build() {
     // Keep this notifier state stable across dependency updates.
@@ -25,72 +26,106 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
 
   // === Getters (Proxied from state) ===
 
-  PracticeItem? get currentItem =>
-      state.isSessionActive && state.currentIndex < state.sessionQueue.length
-      ? state.sessionQueue[state.currentIndex]
-      : null;
+  PracticeItem? get currentItem => state.currentItem;
 
   CardModel? get currentCard => currentItem?.card;
   ExerciseType? get currentExerciseType => currentItem?.exerciseType;
 
   bool get canSwipe => state.answerState == AnswerState.answered;
 
-  // === Session Management ===
+  bool get hasCurrentItem => currentItem != null && !state.noDueItems;
 
-  /// Starts a practice session with due cards.
-  /// If [cards] is provided, filters them to only include due cards (useful for testing).
-  /// Otherwise, automatically gets due cards from CardManagementState,
-  /// respecting the active language filter.
-  void startSession({List<CardModel>? cards}) {
-    final reviewCards =
-        cards?.where((c) => c.isDueForReview && !c.isArchived).toList() ??
-        _getDueCardsForReview();
+  // === Continuous Practice Flow Management ===
 
-    if (reviewCards.isEmpty) {
-      state = state.copyWith(isSessionActive: false);
+  /// Starts practice by loading the next item.
+  ///
+  /// When [cards] is provided (primarily in tests), selects the next item
+  /// from that explicit list instead of reading from CardManagementState.
+  Future<void> startSession({List<CardModel>? cards}) async {
+    if (cards != null) {
+      _loadNextItemFromCards(cards);
+    } else {
+      await loadNextItem();
+    }
+  }
+
+  /// Load the next due practice item from the global card state.
+  ///
+  /// If no due items are available, sets [noDueItems] and clears [currentItem].
+  Future<void> loadNextItem() async {
+    final managementState = ref.read(cardManagementNotifierProvider);
+    final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
+    final prefs = ref.read(exercisePreferencesNotifierProvider).preferences;
+
+    // Use shared filtering logic
+    final reviewCards = managementState.allCards.filterForPractice(
+      prefs,
+      activeLanguage,
+    );
+
+    _selectAndSetNextItem(reviewCards);
+  }
+
+  /// Internal helper used by tests to select the next item from an explicit
+  /// list of cards rather than the global card management state.
+  void _loadNextItemFromCards(List<CardModel> cards) {
+    final prefs = ref.read(exercisePreferencesNotifierProvider).preferences;
+    final reviewCards = cards
+        .where((c) => c.isDueForAnyExercise(prefs) && !c.isArchived)
+        .toList();
+
+    _selectAndSetNextItem(reviewCards);
+  }
+
+  /// Build candidate practice items from cards and select the next one,
+  /// updating state accordingly.
+  void _selectAndSetNextItem(List<CardModel> cards) {
+    if (cards.isEmpty) {
+      _resetToEmptyState();
       return;
     }
 
-    final queue = _buildPracticeQueue(reviewCards);
+    final items = _buildPracticeItems(cards);
+    if (items.isEmpty) {
+      _resetToEmptyState();
+      return;
+    }
+
+    // Set session start time only if this is the first item of the session
+    final startTime = state.sessionStartTime ?? DateTime.now();
+
+    final nextItem = items.first;
+
     state = state.copyWith(
-      sessionQueue: queue,
-      currentIndex: 0,
-      isSessionActive: queue.isNotEmpty,
-      isSessionComplete: false,
-      sessionStartTime: DateTime.now(),
-      correctCount: 0,
-      incorrectCount: 0,
+      currentItem: nextItem,
+      noDueItems: false,
       answerState: AnswerState.pending,
       currentAnswerCorrect: null,
       userInput: null,
-      progress: 0.0,
+      sessionStartTime: startTime,
     );
 
     _prepareCurrentExercise();
   }
 
-  /// Gets due cards for review, respecting the active language filter.
-  /// This centralizes the logic for determining which cards should be reviewed.
-  List<CardModel> _getDueCardsForReview() {
-    final managementState = ref.read(cardManagementNotifierProvider);
-    final activeLanguage = ref.read(languageNotifierProvider).activeLanguage;
-
-    return managementState.allCards
-        .where(
-          (c) =>
-              c.isDueForReview &&
-              !c.isArchived &&
-              (activeLanguage.isEmpty || c.language == activeLanguage),
-        )
-        .toList();
+  /// Resets state to empty when no cards are available
+  void _resetToEmptyState() {
+    state = state.copyWith(
+      currentItem: null,
+      noDueItems: true,
+      answerState: AnswerState.pending,
+      currentAnswerCorrect: null,
+      multipleChoiceOptions: null,
+      userInput: null,
+    );
   }
 
-  List<PracticeItem> _buildPracticeQueue(List<CardModel> cards) {
-    final queue = <PracticeItem>[];
-    final allCards = ref.read(cardManagementNotifierProvider).allCards;
+  List<PracticeItem> _buildPracticeItems(List<CardModel> cards) {
+    final items = <PracticeItem>[];
     final prefs = ref.read(exercisePreferencesNotifierProvider).preferences;
-    final hasEnoughCardsForMultipleChoice =
-        allCards.length >= _minCardsForMultipleChoice;
+    final allCards = ref.read(cardManagementNotifierProvider).allCards;
+    final hasEnoughCardsForMultipleChoice = allCards
+        .hasEnoughForMultipleChoice();
 
     for (final card in cards) {
       final dueTypes = card.dueExerciseTypes
@@ -103,63 +138,40 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
           )
           .toList();
 
-      if (dueTypes.isEmpty) {
-        final availableTypes = ExerciseType.values
-            .where((t) => t.isImplemented && prefs.isEnabled(t))
-            .where(
-              (t) => t.canUse(
-                card,
-                hasEnoughCardsForMultipleChoice:
-                    hasEnoughCardsForMultipleChoice,
-              ),
-            )
-            .toList();
+      if (dueTypes.isNotEmpty) {
+        final bestExercise = prefs.prioritizeWeaknesses
+            ? (dueTypes..sort((a, b) => _compareByWeakness(card, a, b))).first
+            : dueTypes.first;
 
-        if (availableTypes.isNotEmpty) {
-          if (prefs.prioritizeWeaknesses) {
-            availableTypes.sort((a, b) => _compareByWeakness(card, a, b));
-            queue.add(
-              PracticeItem(card: card, exerciseType: availableTypes.first),
-            );
-          } else {
-            availableTypes.shuffle();
-            queue.add(
-              PracticeItem(card: card, exerciseType: availableTypes.first),
-            );
-          }
-        }
-      } else {
-        if (prefs.prioritizeWeaknesses) {
-          dueTypes.sort((a, b) => _compareByWeakness(card, a, b));
-          queue.add(PracticeItem(card: card, exerciseType: dueTypes.first));
-        } else {
-          for (final type in dueTypes) {
-            queue.add(PracticeItem(card: card, exerciseType: type));
-          }
-        }
+        items.add(PracticeItem(card: card, exerciseType: bestExercise));
       }
+      // If no due exercises, skip this card entirely
     }
 
+    // Sort by weakness if enabled, otherwise shuffle
     if (prefs.prioritizeWeaknesses) {
-      queue.sort(
+      items.sort(
         (a, b) => _compareByWeakness(a.card, a.exerciseType, b.exerciseType),
       );
     } else {
-      queue.shuffle();
+      items.shuffle();
     }
 
-    return queue;
+    return items;
   }
 
   int _compareByWeakness(CardModel card, ExerciseType a, ExerciseType b) {
     final scoreA = card.getExerciseScore(a);
     final scoreB = card.getExerciseScore(b);
-    final rateA = scoreA?.totalAttempts == 0
-        ? -1.0
-        : (scoreA?.successRate ?? 0.0);
-    final rateB = scoreB?.totalAttempts == 0
-        ? -1.0
-        : (scoreB?.successRate ?? 0.0);
+
+    // Handle new cards (no attempts) - give them neutral priority
+    if (scoreA?.totalAttempts == 0 && scoreB?.totalAttempts == 0) return 0;
+    if (scoreA?.totalAttempts == 0) return 1; // New cards after practiced ones
+    if (scoreB?.totalAttempts == 0) return -1;
+
+    // Compare success rates for practiced cards
+    final rateA = scoreA?.successRate ?? 0.0;
+    final rateB = scoreB?.successRate ?? 0.0;
     return rateA.compareTo(rateB);
   }
 
@@ -173,123 +185,73 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     } else {
       state = state.copyWith(multipleChoiceOptions: null);
     }
-    state = state.copyWith(userInput: null);
+
+    // Only update userInput if it's not already null to avoid unnecessary rebuilds
+    if (state.userInput != null) {
+      state = state.copyWith(userInput: null);
+    }
   }
 
   void _generateMultipleChoiceOptions() {
     final card = currentCard;
-    if (card == null) return;
+    if (card == null || card.backText.isEmpty) {
+      state = state.copyWith(multipleChoiceOptions: null);
+      return;
+    }
+
+    final allCards = ref.read(cardManagementNotifierProvider).allCards;
+    final wrongAnswerCards = card.filterWrongAnswerCards(allCards);
+
+    // Validate we have enough cards for multiple choice
+    if (wrongAnswerCards.length < 3) {
+      LoggerService.warning(
+        'Not enough cards for multiple choice options (need at least 3 wrong answers, found ${wrongAnswerCards.length})',
+      );
+      state = state.copyWith(multipleChoiceOptions: null);
+      return;
+    }
 
     final correctAnswer = card.backText;
-    final allCards =
-        ref
-            .read(cardManagementNotifierProvider)
-            .allCards
-            .where((c) => c.id != card.id && c.backText != correctAnswer)
-            .toList()
-          ..shuffle();
-
-    final wrongAnswers = allCards.take(3).map((c) => c.backText).toList();
+    wrongAnswerCards.shuffle();
+    final wrongAnswers = wrongAnswerCards
+        .take(3)
+        .map((c) => c.backText)
+        .toList();
     final options = [correctAnswer, ...wrongAnswers]..shuffle();
     state = state.copyWith(multipleChoiceOptions: options);
   }
 
-  void endSession() {
-    state = state.copyWith(
-      isSessionActive: false,
-      isSessionComplete: false,
-      sessionQueue: [],
-      currentIndex: 0,
-    );
-  }
-
   /// Update a card in the session queue when it's edited externally
   void updateCardInQueue(CardModel updatedCard) {
-    if (!state.isSessionActive) return;
+    final item = currentItem;
+    if (item == null) return;
 
-    final updatedQueue = List<PracticeItem>.from(state.sessionQueue);
-    bool changed = false;
-
-    // Update all practice items for this card
-    for (int i = 0; i < updatedQueue.length; i++) {
-      if (updatedQueue[i].card.id == updatedCard.id) {
-        updatedQueue[i] = PracticeItem(
+    if (item.card.id == updatedCard.id) {
+      state = state.copyWith(
+        currentItem: PracticeItem(
           card: updatedCard,
-          exerciseType: updatedQueue[i].exerciseType,
-        );
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      state = state.copyWith(sessionQueue: updatedQueue);
-      // If current card was updated, regenerate options if needed
-      if (currentCard?.id == updatedCard.id) {
-        _prepareCurrentExercise();
-      }
+          exerciseType: item.exerciseType,
+        ),
+      );
+      _prepareCurrentExercise();
     }
   }
 
   /// Remove a deleted card from the queue and skip if it's the current card
   Future<void> removeCardFromQueue(String cardId) async {
-    if (!state.isSessionActive) return;
+    final item = currentItem;
+    if (item == null) return;
 
-    final currentCardId = currentCard?.id;
-    final wasCurrentCard = currentCardId == cardId;
-
-    final updatedQueue = List<PracticeItem>.from(state.sessionQueue);
-
-    // Count how many entries for this card appear strictly before the current
-    // index — needed to correctly adjust the index after removal.
-    final removedBeforeCount = updatedQueue
-        .take(state.currentIndex)
-        .where((item) => item.card.id == cardId)
-        .length;
-
-    // Remove all practice items for this card
-    updatedQueue.removeWhere((item) => item.card.id == cardId);
-
-    if (wasCurrentCard) {
-      int nextIndex = state.currentIndex - removedBeforeCount;
-      if (nextIndex < 0) nextIndex = 0;
-
-      // Check if session is now complete
-      if (updatedQueue.isEmpty) {
-        state = state.copyWith(
-          sessionQueue: [],
-          currentIndex: 0,
-          isSessionComplete: true,
-          isSessionActive: false,
-          incorrectCount: state.incorrectCount + 1,
-        );
-        // endSession(); // Potentially call this after a delay or on user action
-        return;
-      }
-
-      // Clamp index to valid range after removal
-      if (nextIndex >= updatedQueue.length) {
-        nextIndex = updatedQueue.length - 1;
-      }
-
+    if (item.card.id == cardId) {
+      // Clear current item and immediately move to the next one.
       state = state.copyWith(
-        sessionQueue: updatedQueue,
-        currentIndex: nextIndex,
-        incorrectCount: state.incorrectCount + 1,
+        currentItem: null,
         answerState: AnswerState.pending,
         currentAnswerCorrect: null,
+        multipleChoiceOptions: null,
         userInput: null,
       );
-
-      _prepareCurrentExercise();
-    } else if (removedBeforeCount > 0) {
-      int nextIndex = state.currentIndex - removedBeforeCount;
-      if (nextIndex < 0) nextIndex = 0;
-      state = state.copyWith(
-        sessionQueue: updatedQueue,
-        currentIndex: nextIndex,
-      );
-    } else {
-      state = state.copyWith(sessionQueue: updatedQueue);
+      await loadNextItem();
     }
   }
 
@@ -311,39 +273,49 @@ class PracticeSessionNotifier extends Notifier<PracticeSessionState> {
     final type = currentExerciseType;
     if (card == null || type == null) return;
 
-    final updatedCard = card.copyWithExerciseResult(
+    // First, update the exercise-specific score.
+    final cardWithExerciseResult = card.copyWithExerciseResult(
       exerciseType: type,
       wasCorrect: markedCorrect,
     );
 
-    await ref
-        .read(cardManagementNotifierProvider.notifier)
-        .updateCard(updatedCard);
+    // Derive the card-level nextReview from the earliest exercise nextReview.
+    final nextReviewFromExercises = cardWithExerciseResult.exerciseScores.values
+        .map((score) => score.nextReview)
+        .whereType<DateTime>()
+        .fold<DateTime?>(
+          null,
+          (earliest, candidate) =>
+              earliest == null || candidate.isBefore(earliest)
+              ? candidate
+              : earliest,
+        );
 
-    final updatedQueue = List<PracticeItem>.from(state.sessionQueue);
-    updatedQueue[state.currentIndex] = PracticeItem(
-      card: updatedCard,
-      exerciseType: type,
+    // Then update the overall review counters and card.nextReview.
+    final updatedCard = cardWithExerciseResult.copyWithReview(
+      wasCorrect: markedCorrect,
+      nextReviewDate: nextReviewFromExercises,
     );
 
-    final nextIndex = state.currentIndex + 1;
-    final isComplete = nextIndex >= updatedQueue.length;
+    try {
+      await ref
+          .read(cardManagementNotifierProvider.notifier)
+          .updateCard(updatedCard);
 
-    state = state.copyWith(
-      sessionQueue: updatedQueue,
-      currentIndex: isComplete ? state.currentIndex : nextIndex,
-      correctCount: state.correctCount + (markedCorrect ? 1 : 0),
-      incorrectCount: state.incorrectCount + (markedCorrect ? 0 : 1),
-      isSessionComplete: isComplete,
-      isSessionActive: !isComplete,
-      answerState: AnswerState.pending,
-      currentAnswerCorrect: null,
-      userInput: null,
-      progress: (nextIndex) / updatedQueue.length,
-    );
+      // Update state immediately after successful card update, before loading next item
+      state = state.copyWith(
+        runCorrectCount: state.runCorrectCount + (markedCorrect ? 1 : 0),
+        runIncorrectCount: state.runIncorrectCount + (markedCorrect ? 0 : 1),
+        answerState: AnswerState.pending,
+        currentAnswerCorrect: null,
+        userInput: null,
+      );
 
-    if (!isComplete) {
-      _prepareCurrentExercise();
+      // Only advance after state is updated
+      await loadNextItem();
+    } catch (e) {
+      LoggerService.error('Failed to update card ${card.id}', e);
+      // Don't advance if update failed - keep current state for retry
     }
   }
 }

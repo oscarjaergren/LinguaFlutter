@@ -26,7 +26,6 @@ class CardsScreen extends ConsumerWidget {
     final listNotifier = ref.read(cardListNotifierProvider.notifier);
     final managementState = ref.watch(cardManagementNotifierProvider);
     final dueCount = managementState.dueCount;
-    final canStartReview = dueCount > 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -63,13 +62,12 @@ class CardsScreen extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           // Review button
-          if (canStartReview)
-            FloatingActionButton.extended(
-              onPressed: () => _startReview(context),
-              heroTag: 'review',
-              icon: const Icon(Icons.quiz),
-              label: Text('Review ($dueCount)'),
-            ),
+          FloatingActionButton.extended(
+            onPressed: () => _startReview(context),
+            heroTag: 'review',
+            icon: const Icon(Icons.quiz),
+            label: Text(dueCount > 0 ? 'Review ($dueCount)' : 'Review'),
+          ),
           const SizedBox(height: 16),
           // Add card button
           FloatingActionButton(

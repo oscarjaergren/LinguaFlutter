@@ -10,6 +10,7 @@ import 'package:lingua_flutter/features/language/domain/language_notifier.dart';
 import 'package:lingua_flutter/features/language/domain/language_state.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
+import 'package:lingua_flutter/shared/domain/models/exercise_score.dart';
 
 /// Integration test to verify practice session behavior with real card due dates
 void main() {
@@ -65,106 +66,131 @@ void main() {
       container.dispose();
     });
 
-    test('practice session only includes due cards', () {
+    test('practice flow only selects due cards', () async {
       final notifier = container.read(practiceSessionNotifierProvider.notifier);
 
-      // Start session with all cards
-      notifier.startSession(cards: testCards);
+      // Start practice with all cards
+      await notifier.startSession(cards: testCards);
 
       final state = container.read(practiceSessionNotifierProvider);
 
-      // Should only include 3 due cards (Hund, Katze, Wasser)
-      expect(state.sessionQueue.length, 3);
-      expect(state.isSessionActive, isTrue);
-
-      // Verify the correct cards are included
-      final cardFrontTexts = state.sessionQueue
-          .map((item) => item.card.frontText)
-          .toList();
-
-      expect(cardFrontTexts, contains('Hund'));
-      expect(cardFrontTexts, contains('Katze'));
-      expect(cardFrontTexts, contains('Wasser'));
-      expect(cardFrontTexts, isNot(contains('Baum'))); // Future card excluded
+      // The currently selected item should be one of the due cards
+      expect(state.currentItem, isNotNull);
+      final currentFront = state.currentItem!.card.frontText;
+      expect(currentFront, isIn(['Hund', 'Katze', 'Wasser']));
+      expect(currentFront, isNot('Baum')); // Future card excluded
     });
 
-    test('practice session empty when no cards are due', () {
-      final futureCards = [
-        CardModel.create(
-          frontText: 'Zukunft',
-          backText: 'future',
-          language: 'de',
-        ).copyWith(nextReview: DateTime.now().add(const Duration(days: 1))),
-      ];
-
-      final testContainer = ProviderContainer(
-        overrides: [
-          cardManagementNotifierProvider.overrideWith(
-            () => _TestCardManagementNotifier(futureCards),
+    test(
+      'practice flow reports no due items when all cards are future-dated',
+      () async {
+        final futureCards = [
+          CardModel.create(
+            frontText: 'Zukunft',
+            backText: 'future',
+            language: 'de',
+          ).copyWith(
+            nextReview: DateTime.now().add(const Duration(days: 1)),
+            // Add exercise scores that are not due
+            exerciseScores: {
+              ExerciseType.readingRecognition: ExerciseScore(
+                type: ExerciseType.readingRecognition,
+                correctCount: 1,
+                incorrectCount: 0,
+                lastPracticed: DateTime.now().subtract(const Duration(days: 1)),
+                nextReview: DateTime.now().add(const Duration(days: 1)),
+              ),
+            },
           ),
-          exercisePreferencesNotifierProvider.overrideWith(
-            () => _TestExercisePreferencesNotifier(),
-          ),
-          languageNotifierProvider.overrideWith(
-            () => _TestLanguageNotifier(''),
-          ),
-        ],
-      );
+        ];
 
-      final notifier = testContainer.read(
-        practiceSessionNotifierProvider.notifier,
-      );
-      notifier.startSession(cards: futureCards);
+        final testContainer = ProviderContainer(
+          overrides: [
+            cardManagementNotifierProvider.overrideWith(
+              () => _TestCardManagementNotifier(futureCards),
+            ),
+            exercisePreferencesNotifierProvider.overrideWith(
+              () => _TestExercisePreferencesNotifier(),
+            ),
+            languageNotifierProvider.overrideWith(
+              () => _TestLanguageNotifier(''),
+            ),
+          ],
+        );
 
-      final state = testContainer.read(practiceSessionNotifierProvider);
+        final notifier = testContainer.read(
+          practiceSessionNotifierProvider.notifier,
+        );
+        await notifier.startSession(cards: futureCards);
 
-      expect(state.sessionQueue.isEmpty, isTrue);
-      expect(state.isSessionActive, isFalse);
+        final state = testContainer.read(practiceSessionNotifierProvider);
 
-      testContainer.dispose();
-    });
+        expect(state.currentItem, isNull);
+        expect(state.noDueItems, isTrue);
 
-    test('demonstrates the empty session issue', () {
-      // This test reproduces the user's issue:
-      // 47 cards exist but none are due for review
+        testContainer.dispose();
+      },
+    );
 
-      final manyFutureCards = List.generate(
-        47,
-        (index) => CardModel.create(
-          frontText: 'Card $index',
-          backText: 'Translation $index',
-          language: 'de',
-        ).copyWith(nextReview: DateTime.now().add(const Duration(days: 1))),
-      );
+    test(
+      'practice flow reports no due items for many future-dated cards',
+      () async {
+        // This test reproduces the user's issue:
+        // 47 cards exist but none are due for review
 
-      final testContainer = ProviderContainer(
-        overrides: [
-          cardManagementNotifierProvider.overrideWith(
-            () => _TestCardManagementNotifier(manyFutureCards),
-          ),
-          exercisePreferencesNotifierProvider.overrideWith(
-            () => _TestExercisePreferencesNotifier(),
-          ),
-          languageNotifierProvider.overrideWith(
-            () => _TestLanguageNotifier(''),
-          ),
-        ],
-      );
+        final manyFutureCards = List.generate(
+          47,
+          (index) =>
+              CardModel.create(
+                frontText: 'Card $index',
+                backText: 'Translation $index',
+                language: 'de',
+              ).copyWith(
+                nextReview: DateTime.now().add(const Duration(days: 1)),
+                // Add exercise scores that are not due
+                exerciseScores: {
+                  ExerciseType.readingRecognition: ExerciseScore(
+                    type: ExerciseType.readingRecognition,
+                    correctCount: 1,
+                    incorrectCount: 0,
+                    lastPracticed: DateTime.now().subtract(
+                      const Duration(days: 1),
+                    ),
+                    nextReview: DateTime.now().add(const Duration(days: 1)),
+                  ),
+                },
+              ),
+        );
 
-      final notifier = testContainer.read(
-        practiceSessionNotifierProvider.notifier,
-      );
-      notifier.startSession(cards: manyFutureCards);
+        final testContainer = ProviderContainer(
+          overrides: [
+            cardManagementNotifierProvider.overrideWith(
+              () => _TestCardManagementNotifier(manyFutureCards),
+            ),
+            exercisePreferencesNotifierProvider.overrideWith(
+              () => _TestExercisePreferencesNotifier(),
+            ),
+            languageNotifierProvider.overrideWith(
+              () => _TestLanguageNotifier(''),
+            ),
+          ],
+        );
 
-      final state = testContainer.read(practiceSessionNotifierProvider);
+        final notifier = testContainer.read(
+          practiceSessionNotifierProvider.notifier,
+        );
+        await notifier.startSession(cards: manyFutureCards);
 
-      // This is the bug: 47 cards exist but session is empty
-      expect(manyFutureCards.length, 47);
-      expect(state.sessionQueue.isEmpty, isTrue);
-      expect(state.isSessionActive, isFalse);
+        final state = testContainer.read(practiceSessionNotifierProvider);
 
-      testContainer.dispose();
-    });
+        // 47 cards exist but none are due - practice should report no due items
+        expect(manyFutureCards.length, 47);
+        expect(state.currentItem, isNull);
+        expect(state.noDueItems, isTrue);
+
+        testContainer.dispose();
+      },
+    );
   });
 }
 

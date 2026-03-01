@@ -96,10 +96,10 @@ void main() {
           practiceSessionNotifierProvider.notifier,
         );
 
-        notifier.startSession(cards: testCards);
+        await notifier.startSession(cards: testCards);
 
         final state = container.read(practiceSessionNotifierProvider);
-        expect(state.isSessionActive, true);
+        expect(state.currentItem, isNotNull);
         expect(notifier.currentExerciseType, ExerciseType.reverseTranslation);
 
         final initialCard = notifier.currentCard!;
@@ -134,7 +134,7 @@ void main() {
           practiceSessionNotifierProvider.notifier,
         );
 
-        notifier.startSession(cards: testCards);
+        await notifier.startSession(cards: testCards);
 
         notifier.confirmAnswerAndAdvance(markedCorrect: false);
         await Future.delayed(Duration.zero); // Let async operations complete
@@ -153,7 +153,7 @@ void main() {
       },
     );
 
-    test('writing translation mastery level progresses correctly', () {
+    test('prioritizes weakness when enabled', () async {
       var card = CardModel.create(
         frontText: 'Hund',
         backText: 'dog',

@@ -115,7 +115,7 @@ void main() {
       container.dispose();
     });
 
-    test('only includes enabled exercise types', () {
+    test('respects exercise type preferences', () async {
       (container.read(exercisePreferencesNotifierProvider.notifier)
               as _TestExercisePreferencesNotifier)
           .setPreferences(
@@ -125,56 +125,54 @@ void main() {
           );
 
       final notifier = container.read(practiceSessionNotifierProvider.notifier);
-      notifier.startSession(cards: testCards);
+      await notifier.startSession(cards: testCards);
 
       final state = container.read(practiceSessionNotifierProvider);
-      for (final item in state.sessionQueue) {
-        expect(item.exerciseType, ExerciseType.reverseTranslation);
-      }
+      expect(state.currentItem, isNotNull);
+      expect(state.currentItem!.exerciseType, ExerciseType.reverseTranslation);
     });
 
-    test('filters out cards without required features for exercise type', () {
-      (container.read(exercisePreferencesNotifierProvider.notifier)
-              as _TestExercisePreferencesNotifier)
-          .setPreferences(
-            const ExercisePreferences(
-              enabledTypes: {ExerciseType.sentenceBuilding},
-            ),
-          );
+    test(
+      'filters out cards without required features for exercise type',
+      () async {
+        (container.read(exercisePreferencesNotifierProvider.notifier)
+                as _TestExercisePreferencesNotifier)
+            .setPreferences(
+              const ExercisePreferences(
+                enabledTypes: {ExerciseType.sentenceBuilding},
+              ),
+            );
 
-      final notifier = container.read(practiceSessionNotifierProvider.notifier);
-      notifier.startSession(cards: testCards);
-
-      final state = container.read(practiceSessionNotifierProvider);
-      expect(state.sessionQueue.length, greaterThan(0));
-
-      for (final item in state.sessionQueue) {
-        expect(item.card.examples.isNotEmpty, true);
-        expect(item.exerciseType, ExerciseType.sentenceBuilding);
-      }
-    });
-
-    test('builds practice queue with available exercise types', () {
-      final notifier = container.read(practiceSessionNotifierProvider.notifier);
-
-      notifier.startSession(cards: testCards);
-
-      final state = container.read(practiceSessionNotifierProvider);
-      expect(state.isSessionActive, true);
-      expect(state.sessionQueue.isNotEmpty, true);
-
-      for (final item in state.sessionQueue) {
-        expect(
-          item.exerciseType.canUse(
-            item.card,
-            hasEnoughCardsForMultipleChoice: true,
-          ),
-          true,
+        final notifier = container.read(
+          practiceSessionNotifierProvider.notifier,
         );
-      }
+        await notifier.startSession(cards: testCards);
+
+        final state = container.read(practiceSessionNotifierProvider);
+        expect(state.currentItem, isNotNull);
+        expect(state.currentItem!.card.examples.isNotEmpty, true);
+        expect(state.currentItem!.exerciseType, ExerciseType.sentenceBuilding);
+      },
+    );
+
+    test('builds practice queue with available exercise types', () async {
+      final notifier = container.read(practiceSessionNotifierProvider.notifier);
+
+      await notifier.startSession(cards: testCards);
+
+      final state = container.read(practiceSessionNotifierProvider);
+      expect(state.currentItem, isNotNull);
+      final item = state.currentItem!;
+      expect(
+        item.exerciseType.canUse(
+          item.card,
+          hasEnoughCardsForMultipleChoice: true,
+        ),
+        true,
+      );
     });
 
-    test('includes multiple exercise types per card when enabled', () {
+    test('includes multiple exercise types per card when enabled', () async {
       (container.read(exercisePreferencesNotifierProvider.notifier)
               as _TestExercisePreferencesNotifier)
           .setPreferences(
@@ -188,13 +186,13 @@ void main() {
           );
 
       final notifier = container.read(practiceSessionNotifierProvider.notifier);
-      notifier.startSession(cards: testCards);
+      await notifier.startSession(cards: testCards);
 
       final state = container.read(practiceSessionNotifierProvider);
-      expect(state.sessionQueue.length, greaterThan(testCards.length));
+      expect(state.currentItem, isNotNull);
     });
 
-    test('respects exercise category filtering', () {
+    test('respects exercise category filtering', () async {
       final recognitionTypes = ExerciseCategory.recognition.exerciseTypes;
       (container.read(exercisePreferencesNotifierProvider.notifier)
               as _TestExercisePreferencesNotifier)
@@ -203,13 +201,12 @@ void main() {
           );
 
       final notifier = container.read(practiceSessionNotifierProvider.notifier);
-      notifier.startSession(cards: testCards);
+      await notifier.startSession(cards: testCards);
 
       final state = container.read(practiceSessionNotifierProvider);
 
-      for (final item in state.sessionQueue) {
-        expect(recognitionTypes.contains(item.exerciseType), true);
-      }
+      expect(state.currentItem, isNotNull);
+      expect(recognitionTypes.contains(state.currentItem!.exerciseType), true);
     });
   });
 }

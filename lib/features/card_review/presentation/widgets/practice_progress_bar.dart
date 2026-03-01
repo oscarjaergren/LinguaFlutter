@@ -1,50 +1,92 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/providers/practice_session_notifier.dart';
+import '../../domain/providers/due_cards_provider.dart';
 
-/// Progress bar for practice sessions showing progress and score
-class PracticeProgressBar extends StatelessWidget {
-  final double progress;
-  final int correctCount;
-  final int incorrectCount;
-
-  const PracticeProgressBar({
-    super.key,
-    required this.progress,
-    required this.correctCount,
-    required this.incorrectCount,
-  });
+/// Enhanced progress bar for practice, showing due cards remaining and score counts.
+class PracticeProgressBar extends ConsumerWidget {
+  const PracticeProgressBar({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Progress bar
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: Colors.grey[300],
-          minHeight: 4,
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessionState = ref.watch(practiceSessionNotifierProvider);
+    final totalDueCards = ref.watch(dueCardsProvider);
 
-        // Score indicators
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildScoreChip(
-                icon: Icons.check_circle,
-                count: correctCount,
-                color: Colors.green,
+    // Calculate remaining due cards
+    final completedInSession =
+        sessionState.runCorrectCount + sessionState.runIncorrectCount;
+    final remainingDueCards = (totalDueCards - completedInSession).clamp(
+      0,
+      totalDueCards,
+    );
+    final progress = totalDueCards > 0
+        ? (completedInSession / totalDueCards).clamp(0.0, 1.0)
+        : 0.0;
+
+    return SizedBox(
+      height: 80, // Fixed height to prevent overflow
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Progress indicator
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(width: 16),
-              _buildScoreChip(
-                icon: Icons.cancel,
-                count: incorrectCount,
-                color: Colors.red,
-              ),
-            ],
-          ),
+              minHeight: 6,
+            ),
+
+            const SizedBox(height: 8),
+
+            // Progress text and score chips
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Left side: Progress info
+                Flexible(
+                  child: Text(
+                    remainingDueCards > 0
+                        ? '$remainingDueCards cards left'
+                        : 'All caught up!',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // Score chips
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildScoreChip(
+                      icon: Icons.check_circle,
+                      count: sessionState.runCorrectCount,
+                      color: Colors.green,
+                    ),
+                    const SizedBox(width: 12),
+                    _buildScoreChip(
+                      icon: Icons.cancel,
+                      count: sessionState.runIncorrectCount,
+                      color: Colors.red,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -56,12 +98,12 @@ class PracticeProgressBar extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: color),
+        Icon(icon, size: 16, color: color),
         const SizedBox(width: 4),
         Text(
           '$count',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             color: color,
           ),

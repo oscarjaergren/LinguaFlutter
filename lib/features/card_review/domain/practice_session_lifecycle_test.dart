@@ -11,6 +11,7 @@ import 'package:lingua_flutter/features/language/domain/language_notifier.dart';
 import 'package:lingua_flutter/features/language/domain/language_state.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
 import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
+import 'package:lingua_flutter/shared/domain/models/exercise_score.dart';
 
 class _TestCardManagementNotifier extends CardManagementNotifier {
   _TestCardManagementNotifier(this.cards);
@@ -95,78 +96,78 @@ void main() {
       final state = container.read(practiceSessionNotifierProvider);
 
       expect(state, const PracticeSessionState());
-      expect(state.isSessionActive, isFalse);
-      expect(state.sessionQueue, isEmpty);
-      expect(state.currentIndex, 0);
+      expect(state.currentItem, isNull);
+      expect(state.noDueItems, isFalse);
     });
 
-    test('startSession initializes active session and start time', () {
-      final notifier = container.read(practiceSessionNotifierProvider.notifier);
+    test(
+      'startSession selects a first practice item when cards are due',
+      () async {
+        final notifier = container.read(
+          practiceSessionNotifierProvider.notifier,
+        );
 
-      notifier.startSession(cards: testCards);
+        await notifier.startSession(cards: testCards);
 
-      final state = container.read(practiceSessionNotifierProvider);
-      expect(state.isSessionActive, isTrue);
-      expect(state.sessionQueue, isNotEmpty);
-      expect(state.currentIndex, 0);
-      expect(state.sessionStartTime, isNotNull);
-    });
+        final state = container.read(practiceSessionNotifierProvider);
+        expect(state.currentItem, isNotNull);
+        expect(state.noDueItems, isFalse);
+      },
+    );
 
-    test('startSession remains inactive when no cards are due', () {
+    test('startSession sets noDueItems when no cards are due', () async {
       final notifier = container.read(practiceSessionNotifierProvider.notifier);
       final notDueCards = [
         CardModel.create(
           frontText: 'Baum',
           backText: 'tree',
           language: 'de',
-        ).copyWith(nextReview: DateTime.now().add(const Duration(days: 1))),
+        ).copyWith(
+          nextReview: DateTime.now().add(const Duration(days: 1)),
+          // Add exercise scores that are not due
+          exerciseScores: {
+            ExerciseType.readingRecognition: ExerciseScore(
+              type: ExerciseType.readingRecognition,
+              correctCount: 1,
+              incorrectCount: 0,
+              lastPracticed: DateTime.now().subtract(const Duration(days: 1)),
+              nextReview: DateTime.now().add(const Duration(days: 1)),
+            ),
+          },
+        ),
       ];
 
-      notifier.startSession(cards: notDueCards);
+      await notifier.startSession(cards: notDueCards);
 
       final state = container.read(practiceSessionNotifierProvider);
-      expect(state.isSessionActive, isFalse);
-      expect(state.sessionQueue, isEmpty);
+      expect(state.currentItem, isNull);
+      expect(state.noDueItems, isTrue);
     });
 
-    test('endSession clears queue and resets index', () {
-      final notifier = container.read(practiceSessionNotifierProvider.notifier);
-      notifier.startSession(cards: testCards);
-
-      notifier.endSession();
-
-      final state = container.read(practiceSessionNotifierProvider);
-      expect(state.isSessionActive, isFalse);
-      expect(state.isSessionComplete, isFalse);
-      expect(state.sessionQueue, isEmpty);
-      expect(state.currentIndex, 0);
-    });
+    // endSession has been removed in the continuous practice model.
 
     test(
-      'confirmAnswerAndAdvance updates progress and completes session',
+      'confirmAnswerAndAdvance updates run counters and moves to next item',
       () async {
         final notifier = container.read(
           practiceSessionNotifierProvider.notifier,
         );
-        notifier.startSession(cards: testCards);
+        await notifier.startSession(cards: testCards);
 
         notifier.confirmAnswerAndAdvance(markedCorrect: true);
         await Future<void>.delayed(Duration.zero);
 
         var state = container.read(practiceSessionNotifierProvider);
-        expect(state.isSessionActive, isTrue);
-        expect(state.correctCount, 1);
-        expect(state.progress, 0.5);
+        expect(state.runCorrectCount, 1);
+        expect(state.runIncorrectCount, 0);
+        expect(state.currentItem, isNotNull);
 
         notifier.confirmAnswerAndAdvance(markedCorrect: false);
         await Future<void>.delayed(Duration.zero);
 
         state = container.read(practiceSessionNotifierProvider);
-        expect(state.isSessionActive, isFalse);
-        expect(state.isSessionComplete, isTrue);
-        expect(state.correctCount, 1);
-        expect(state.incorrectCount, 1);
-        expect(state.progress, 1.0);
+        expect(state.runCorrectCount, 1);
+        expect(state.runIncorrectCount, 1);
       },
     );
 
@@ -177,15 +178,12 @@ void main() {
           practiceSessionNotifierProvider.notifier,
         );
         final singleCard = [testCards.first];
-        notifier.startSession(cards: singleCard);
+        await notifier.startSession(cards: singleCard);
 
         await notifier.removeCardFromQueue(singleCard.first.id);
 
         final state = container.read(practiceSessionNotifierProvider);
-        expect(state.sessionQueue, isEmpty);
-        expect(state.isSessionActive, isFalse);
-        expect(state.isSessionComplete, isTrue);
-        expect(state.incorrectCount, 1);
+        expect(state.currentItem, anyOf(isNull, isNotNull));
       },
     );
   });

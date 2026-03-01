@@ -187,16 +187,27 @@ class DashboardScreen extends ConsumerWidget {
                         ? () => _startExerciseSession(context)
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      disabledBackgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
+                      backgroundColor: dueCount > 0
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                      foregroundColor: dueCount > 0
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.6),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(28),
                       ),
                     ),
-                    icon: const Icon(Icons.play_arrow_rounded, size: 28),
+                    icon: dueCount > 0
+                        ? const Icon(Icons.play_arrow_rounded, size: 28)
+                        : Icon(
+                            Icons.check_circle,
+                            size: 28,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                     label: Text(
                       dueCount > 0
                           ? 'START LEARNING ($dueCount due)'
@@ -208,6 +219,20 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+
+                if (dueCount == 0) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add more cards to continue learning',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
 
                 const SizedBox(height: 24),
 

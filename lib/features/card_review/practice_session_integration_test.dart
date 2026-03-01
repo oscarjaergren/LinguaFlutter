@@ -15,6 +15,8 @@ import 'package:lingua_flutter/features/card_review/presentation/screens/practic
 import 'package:lingua_flutter/features/language/domain/language_notifier.dart';
 import 'package:lingua_flutter/features/language/domain/language_state.dart';
 import 'package:lingua_flutter/shared/domain/models/card_model.dart';
+import 'package:lingua_flutter/shared/domain/models/exercise_type.dart';
+import 'package:lingua_flutter/shared/domain/models/exercise_score.dart';
 import 'package:lingua_flutter/shared/services/logger_service.dart';
 
 class _TestCardManagementNotifier extends CardManagementNotifier {
@@ -76,70 +78,76 @@ void main() {
           frontText: 'Baum',
           backText: 'tree',
           language: 'de',
-        ).copyWith(nextReview: now.add(const Duration(days: 1))),
+        ).copyWith(
+          nextReview: now.add(const Duration(days: 1)),
+          // Add exercise scores that are not due
+          exerciseScores: {
+            ExerciseType.readingRecognition: ExerciseScore(
+              type: ExerciseType.readingRecognition,
+              correctCount: 1,
+              incorrectCount: 0,
+              lastPracticed: now.subtract(const Duration(days: 1)),
+              nextReview: now.add(const Duration(days: 1)),
+            ),
+          },
+        ),
       ];
     });
 
-    testWidgets(
-      'PracticeScreen auto-starts session with due cards when opened',
-      (tester) async {
-        final allCards = [...dueCards, ...notDueCards];
-        final container = ProviderContainer(
-          overrides: [
-            cardManagementNotifierProvider.overrideWith(
-              () => _TestCardManagementNotifier(allCards),
-            ),
-            languageNotifierProvider.overrideWith(
-              () => _TestLanguageNotifier('de'),
-            ),
-            exercisePreferencesNotifierProvider.overrideWith(
-              () => _TestExercisePreferencesNotifier(),
-            ),
-          ],
-        );
+    testWidgets('PracticeScreen auto-loads a due card when opened', (
+      tester,
+    ) async {
+      final allCards = [...dueCards, ...notDueCards];
+      final container = ProviderContainer(
+        overrides: [
+          cardManagementNotifierProvider.overrideWith(
+            () => _TestCardManagementNotifier(allCards),
+          ),
+          languageNotifierProvider.overrideWith(
+            () => _TestLanguageNotifier('de'),
+          ),
+          exercisePreferencesNotifierProvider.overrideWith(
+            () => _TestExercisePreferencesNotifier(),
+          ),
+        ],
+      );
 
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: MaterialApp.router(
-              routerConfig: GoRouter(
-                routes: [
-                  GoRoute(
-                    path: '/practice',
-                    builder: (context, state) => const PracticeScreen(),
-                  ),
-                ],
-                initialLocation: '/practice',
-              ),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            routerConfig: GoRouter(
+              routes: [
+                GoRoute(
+                  path: '/practice',
+                  builder: (context, state) => const PracticeScreen(),
+                ),
+              ],
+              initialLocation: '/practice',
             ),
           ),
-        );
+        ),
+      );
 
-        // Wait for post-frame callback to execute
-        await tester.pumpAndSettle();
+      // Wait for post-frame callback to execute
+      await tester.pumpAndSettle();
 
-        final sessionState = container.read(practiceSessionNotifierProvider);
-        expect(
-          sessionState.isSessionActive,
-          isTrue,
-          reason: 'Session should auto-start when PracticeScreen opens',
-        );
-        expect(
-          sessionState.sessionQueue.length,
-          greaterThan(0),
-          reason: 'Session should have practice items for due cards',
-        );
-        expect(
-          sessionState.currentIndex,
-          0,
-          reason: 'Should start at first card',
-        );
+      final sessionState = container.read(practiceSessionNotifierProvider);
+      expect(
+        sessionState.currentItem != null,
+        isTrue,
+        reason: 'Practice should auto-load a card when opened with due cards',
+      );
+      expect(
+        sessionState.currentItem!.card.frontText,
+        isIn(['Hund', 'Katze']),
+        reason: 'Current item should be one of the due cards',
+      );
 
-        container.dispose();
-      },
-    );
+      container.dispose();
+    });
 
-    testWidgets('PracticeScreen shows message when no due cards available', (
+    testWidgets('PracticeScreen shows no-due-items state when no cards due', (
       tester,
     ) async {
       final container = ProviderContainer(
@@ -149,6 +157,9 @@ void main() {
           ),
           languageNotifierProvider.overrideWith(
             () => _TestLanguageNotifier('de'),
+          ),
+          exercisePreferencesNotifierProvider.overrideWith(
+            () => _TestExercisePreferencesNotifier(),
           ),
         ],
       );
@@ -174,19 +185,19 @@ void main() {
 
       final sessionState = container.read(practiceSessionNotifierProvider);
       expect(
-        sessionState.isSessionActive,
-        isFalse,
-        reason: 'Session should not start when no cards are due',
+        sessionState.noDueItems,
+        isTrue,
+        reason: 'Practice should report no due items when none are due',
       );
 
-      // Should show message about starting from card list
-      expect(find.text('Start a session from the card list'), findsOneWidget);
+      // Should show \"no cards due\" style message
+      expect(find.textContaining('no cards due'), findsOneWidget);
 
       container.dispose();
     });
 
     testWidgets(
-      'PracticeScreen auto-starts when navigated to from external source',
+      'PracticeScreen auto-loads due card when navigated to from external source',
       (tester) async {
         final allCards = [...dueCards, ...notDueCards];
         final container = ProviderContainer(
@@ -223,19 +234,9 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        // Session should be active with due cards
+        // Practice should have a current item with a due card
         final sessionState = container.read(practiceSessionNotifierProvider);
-        expect(
-          sessionState.isSessionActive,
-          isTrue,
-          reason:
-              'Session should auto-start when PracticeScreen is navigated to',
-        );
-        expect(
-          sessionState.sessionQueue.length,
-          greaterThan(0),
-          reason: 'Session should have practice items for due cards',
-        );
+        expect(sessionState.currentItem, isNotNull);
 
         container.dispose();
       },

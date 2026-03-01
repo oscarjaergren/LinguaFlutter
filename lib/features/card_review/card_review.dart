@@ -19,7 +19,7 @@ export 'presentation/screens/practice_screen.dart';
 // Presentation Layer - Widgets
 export 'presentation/widgets/swipeable_exercise_card.dart';
 export 'presentation/widgets/practice_progress_bar.dart';
-export 'presentation/widgets/practice_completion_screen.dart';
+export 'presentation/widgets/practice_stats_modal.dart';
 export 'presentation/widgets/exercises/exercise_content_widget.dart';
 export 'presentation/widgets/exercise_filter_sheet.dart';
 export 'presentation/widgets/exercise_mastery_widget.dart';
