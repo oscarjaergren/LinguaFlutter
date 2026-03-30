@@ -76,7 +76,7 @@ jobs:
       run: flutter test lib/ --coverage --exclude-tags integration
       
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v6
       with:
         files: coverage/lcov.info
         name: codecov-umbrella
